@@ -33,8 +33,8 @@ omp plugin install github:LoneExile/omp-superpowers#omp-6.1.1
 
 | Branch | Contents |
 |---|---|
-| `main` | upstream `v6.3.0` + the omp tool-mapping fix (after PR #1 merges) — default install target |
-| `omp-6.1.1` | pinned alternative: upstream `v6.1.1` + the fix, for installs that want to track the older release |
+| `main` | upstream latest + the omp tool-mapping fix — default install target |
+| `omp-6.1.1` | pinned alternative tracking upstream `v6.1.1` + the fix (older README there; fix content identical) |
 
 ## Maintenance
 
