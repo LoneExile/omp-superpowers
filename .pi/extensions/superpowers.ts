@@ -86,15 +86,15 @@ function stripFrontmatter(content: string): string {
 }
 
 function piToolMapping(): string {
-	return `## Pi tool mapping
+	return `## omp tool mapping
 
-Pi has native skills but does not expose Claude Code's \`Skill\` tool. When a Superpowers instruction says to invoke a skill, use Pi's native skill system instead: load the relevant \`SKILL.md\` with \`read\` when the skill applies, or let a human invoke \`/skill:name\` explicitly.
+This harness is omp (Oh My Pi). It has native skills but does not expose Claude Code's \`Skill\` tool. When a Superpowers instruction says to invoke a skill, read it with \`read skill://<name>\` when the skill applies, or let a human invoke \`/skill:name\` explicitly.
 
-Pi's built-in coding tools are lowercase: \`read\`, \`write\`, \`edit\`, \`bash\`, plus optional \`grep\`, \`find\`, and \`ls\`. Use those for the corresponding actions: read a file, create or edit files, run shell commands, search file contents, find files by name, and list directories.
+omp's built-in coding tools are lowercase: \`read\`, \`write\`, \`edit\`, \`bash\`, \`grep\`, \`glob\`. Use \`read\` for a file OR a directory listing, \`grep\` for file contents, and \`glob\` for finding paths by name. omp's own system prompt directs you to prefer these over shell \`ls\`, \`find\`, \`grep\`, and \`rg\`; follow that preference.
 
-Pi does not ship a standard subagent tool. If a subagent tool such as \`subagent\` from \`pi-subagents\` is available, use it for Superpowers subagent workflows. If no subagent tool is available, do the work in this session or explain the missing capability instead of inventing \`Task\` calls.
+omp ships a built-in subagent tool: \`task\`. Use it for all Superpowers subagent workflows. Batch shape: ONE call carries \`{ context, tasks[] }\` — one subagent per item, run concurrently. Dispatch N parallel subagents as N entries in a single \`task\` call, never N sequential calls. Pick the most specific agent type per item from the roster in the \`task\` tool's own description (typically \`scout\` for read-only research, \`reviewer\`, \`security-reviewer\`, \`sonic\` for strictly mechanical work, and \`task\` for general-purpose). The tool is lowercase \`task\`; \`Task\` does not exist here. Never conclude that subagent capability is missing.
 
-Pi does not ship a standard task-list tool. If an installed todo/task tool is available, use it. Otherwise track work in plan files or a repo-local \`TODO.md\` when task tracking is needed. Treat older \`TodoWrite\` references as this task-tracking action.`;
+omp ships a built-in task-list tool: \`todo\` (\`init\`, \`start\`, \`done\`, \`rm\`, \`drop\`, \`block\`, \`unblock\`, \`append\`, \`view\`). Use it for all task tracking. Do not track work in plan files or a repo-local \`TODO.md\`. Treat older \`TodoWrite\` references as the \`todo\` tool.`;
 }
 
 function messageContainsBootstrap(message: unknown): boolean {
