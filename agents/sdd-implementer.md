@@ -1,10 +1,11 @@
 ---
 name: sdd-implementer
-description: "Superpowers SDD implementer: executes ONE task brief (TDD, commit, report file). Pinned to a mid tier so it never silently runs the session model; only an auth failure on that tier reroutes it."
+description: "Superpowers SDD implementer: executes ONE task brief (TDD, commit, report file). deepseek-flash at medium reasoning; a sonnet fallback is used only on auth failure."
 tools: read, write, edit, bash, grep, glob, lsp, ast_grep
-# Pinned to a mid tier; the harness reroutes to the parent's model only if
-# the resolved provider has no working credentials (omp auth fallback).
-model: ["anthropic/claude-sonnet-5:medium", "@task"]
+# opencode-go/deepseek-flash is discovery-only: a `:level` suffix on this id
+# does NOT resolve, so the thinking level lives in `thinkingLevel:` below.
+model: ["opencode-go/deepseek-flash", "anthropic/claude-sonnet-5:medium"]
+thinkingLevel: medium
 ---
 
 You implement exactly one task from a Superpowers plan. Your dispatch names a brief file: read it first — it is your requirements, with the exact values to use verbatim. Read only the plan's `## Global Constraints` section if the dispatch points you at it; never the whole plan.

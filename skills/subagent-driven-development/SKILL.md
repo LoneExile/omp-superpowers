@@ -192,19 +192,22 @@ model) and the bundled `reviewer` to `@slow` — in a real 157-subagent
 session both were the slowest tier over the widest tool set, which is where
 most of the wall-clock went.
 
-| Role | `agent:` | Tier | Tools |
+| Role | `agent:` | Model · thinking | Tools |
 |---|---|---|---|
-| Implementer (every task, fix rounds 1-2) | `sdd-implementer` | mid (sonnet-class) | edit/test set, no subagents |
-| Fix round 3 | `sdd-escalation-implementer` | frontier (opus-class, pinned) | same as implementer |
-| Task reviewer | `sdd-reviewer` | mid, higher reasoning | `read`, `grep`, `glob` — no file writes, no shell (see note) |
-| Scoped re-review | `sdd-rereviewer` | cheapest sonnet tier (1M window), haiku fallback | `read`, `grep`; ≤4 tool calls (a justified fifth is allowed) |
-| Final whole-branch review | `sdd-final-reviewer` | frontier (opus-class, pinned) | read-only + focused bash |
+| Implementer (every task, fix rounds 1-2) | `sdd-implementer` | deepseek-flash · medium | edit/test set, no subagents |
+| Fix round 3 | `sdd-escalation-implementer` | deepseek-flash · **xhigh** | same as implementer |
+| Task reviewer | `sdd-reviewer` | deepseek-flash · high | `read`, `grep`, `glob` — no file writes, no shell (see note) |
+| Scoped re-review | `sdd-rereviewer` | deepseek-flash · low | `read`, `grep`; ≤4 tool calls (a justified fifth is allowed) |
+| Final whole-branch review | `sdd-final-reviewer` | deepseek-flash · **xhigh** | read-only + focused bash |
 
-The two frontier seats pin an explicit model and use `@slow` only as a
-fallback: role aliases are whatever the host configured, and on a host
-where `modelRoles.slow` is a cheap model an alias-first seat would silently
-be weaker than `sdd-implementer`. Those seats run once per plan or once per
-stuck task, so their cost is bounded.
+All five seats run `opencode-go/deepseek-flash` (DeepSeek V4.1 Flash: 1M
+context, flat-rate plan, measured fastest per turn of every model profiled
+here). The tiers are a **thinking ladder**, not a model ladder: escalation
+and the final review raise reasoning to `xhigh`, re-reviews drop to `low`.
+Each agent carries an Anthropic fallback (sonnet / opus) that omp uses only
+when the primary has no working credentials. Note for editors: this model
+id is discovery-only, so a `:level` suffix on it does NOT resolve — the
+level lives in each agent's `thinkingLevel:` field.
 
 **What "no shell" enforces (measured, omp 18.1.15).** A `tools:` list is
 honoured: the reviewers get no `bash`/`edit`, and their `write` is only the
@@ -220,11 +223,13 @@ process". The prompts forbid mutation; the harness enforces the file and
 shell parts.
 
 **Turn count beats token price.** Wall-clock scales with how many turns a
-subagent takes; the cheapest models routinely take 2-3× the turns on
-multi-step work. Mid-tier is the floor for implementers and task reviewers.
-Re-reviews are verdict-only work over a small diff — the cheapest tier
-whose context window absorbs the package is correct for them, not a
-compromise.
+subagent takes, and the cheap model here takes 2-3× the turns of a
+sonnet-class model on multi-step work — that is the trade this
+configuration makes deliberately (flat-rate cost, ~17 s/turn). Watch the
+ledger: a task whose implementer needs 100+ turns, or a re-review that
+wanders, is the signal to rule that task onto the escalation seat.
+Re-reviews are verdict-only work over a small diff — `low` reasoning is
+correct for them, not a compromise.
 
 **Escalation (fix round 3):** the implementer that got stuck cannot see its
 own problem. Dispatch a FRESH `sdd-escalation-implementer` with the
@@ -519,7 +524,7 @@ The final whole-branch review gets a package too: run
 branch started from, e.g. `git merge-base main HEAD`) and include the
 printed path in the final review dispatch, so the final reviewer reads
 one file instead of re-deriving the branch diff with git commands. Dispatch
-`sdd-final-reviewer` (the one SDD seat on the most capable tier — see Agent
+`sdd-final-reviewer` (xhigh reasoning, once per plan — see Agent
 Selection), using superpowers:requesting-code-review's
 [code-reviewer.md](../requesting-code-review/code-reviewer.md) as the
 prompt. Point it at the ledger's deferred-minor and parked lines so it can

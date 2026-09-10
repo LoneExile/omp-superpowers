@@ -1,12 +1,11 @@
 ---
 name: sdd-rereviewer
-description: "Superpowers SDD scoped re-reviewer: verdicts each prior finding ADDRESSED / NOT ADDRESSED against the fix diff only. Cheap tier with a large context window; ≤4 tool calls."
+description: "Superpowers SDD scoped re-reviewer: verdicts each prior finding ADDRESSED / NOT ADDRESSED against the fix diff only. Low reasoning, 1M context; ≤4 tool calls."
 tools: read, grep
-# sonnet:low first — a scoped re-review is verdict-only work, and a 1M window
-# absorbs any review package (real ones range 6 KB–192 KB); a 200k-window model
-# in first position hard-fails the dispatch on a large package instead of
-# degrading. haiku stays as the fallback when sonnet is unavailable.
-model: ["anthropic/claude-sonnet-5:low", "anthropic/claude-haiku-4-5:medium", "@smol"]
+# opencode-go/deepseek-flash is discovery-only: a `:level` suffix on this id
+# does NOT resolve, so the thinking level lives in `thinkingLevel:` below.
+model: ["opencode-go/deepseek-flash", "anthropic/claude-sonnet-5:low"]
+thinkingLevel: low
 output:
   properties:
     round_verdict:
