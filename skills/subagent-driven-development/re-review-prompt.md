@@ -12,7 +12,7 @@ that the fix itself broke nothing.
   tasks: [ {
   name: "ReReviewTaskNRoundR",
   agent: "sdd-rereviewer",   # REQUIRED — cheapest tier with a 1M window,
-                             # read/grep only, four-call budget by construction.
+                             # read/grep only (no file writes, no shell), four-call budget.
   task: |
     You are re-reviewing one task's fix round. A previous review produced
     findings; an implementer has attempted to fix them. Your job is to
