@@ -195,14 +195,16 @@ most of the wall-clock went.
 | Role | `agent:` | Tier | Tools |
 |---|---|---|---|
 | Implementer (every task, fix rounds 1-2) | `sdd-implementer` | mid (sonnet-class) | edit/test set, no subagents |
-| Fix round 3 | `sdd-escalation-implementer` | most capable (`@slow`) | same as implementer |
+| Fix round 3 | `sdd-escalation-implementer` | frontier (opus-class, pinned) | same as implementer |
 | Task reviewer | `sdd-reviewer` | mid, higher reasoning | `read`, `grep`, `glob` only — diff-only review by construction |
 | Scoped re-review | `sdd-rereviewer` | cheapest sonnet tier (1M window), haiku fallback | `read`, `grep`; ≤4 tool calls (a justified fifth is allowed) |
-| Final whole-branch review | `sdd-final-reviewer` | most capable (`@slow`) | read-only + focused bash |
+| Final whole-branch review | `sdd-final-reviewer` | frontier (opus-class, pinned) | read-only + focused bash |
 
-`@slow` is omp's designated most-capable role (`modelRoles.slow`); the two
-seats that use it are the ones that run once per plan or once per stuck
-task, so its cost is bounded.
+The two frontier seats pin an explicit model and use `@slow` only as a
+fallback: role aliases are whatever the host configured, and on a host
+where `modelRoles.slow` is a cheap model an alias-first seat would silently
+be weaker than `sdd-implementer`. Those seats run once per plan or once per
+stuck task, so their cost is bounded.
 
 **Turn count beats token price.** Wall-clock scales with how many turns a
 subagent takes; the cheapest models routinely take 2-3× the turns on

@@ -2,7 +2,10 @@
 name: sdd-final-reviewer
 description: "Superpowers SDD final whole-branch reviewer: integration seams across all tasks, adjudicates ledgered deferred-minors and parked rulings. Most capable tier — dispatched once per plan."
 tools: read, grep, glob, bash, lsp, ast_grep
-model: ["@slow", "anthropic/claude-opus-5:high"]
+# Explicit frontier model first: @slow is only "most capable" by convention —
+# on a host where modelRoles.slow is a cheap model, an alias-first list would
+# silently make this seat WEAKER than sdd-implementer.
+model: ["anthropic/claude-opus-5:high", "@slow"]
 ---
 
 You review a whole branch once, after every task has passed its task-scoped review. Per-task reviews cannot see cross-file seams; you can. Your dispatch gives the merge-base..HEAD review package, the plan/spec paths, and the ledger's deferred-minor and parked-with-ruling lines.
