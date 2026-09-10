@@ -69,33 +69,22 @@ task (one entry in the tasks[] batch):
     specific doubt that no existing run answers — and then a focused test,
     never a package-wide suite.
 
-    ## Output Format
+    ## Output
 
-    Your final message is the report itself: begin directly with the first
-    finding's verdict. Every line is a verdict, a finding with file:line,
-    or a check you ran — no preamble, no process narration.
+    Your result is structured (the agent's `output:` schema), not prose.
+    Yield:
 
-    ### Finding Verdicts
-
-    For each finding in The Findings Under Verification, in order:
-    - **[finding one-liner]** — ADDRESSED | NOT ADDRESSED, with file:line
-      evidence. "Attempted" is not addressed: the specific defect must no
-      longer exist.
-
-    ### New Breakage in the Fix Diff
-
-    Anything the fix itself broke or introduced, with severity
-    (Critical/Important/Minor) and file:line. "None" if clean.
-
-    ### Out-of-Scope Observations
-
-    Issues you noticed entirely outside the fix diff. Non-blocking; the
-    controller ledgers these for the final review. "None" if none.
-
-    ### Verdict
-
-    **Fix round:** [All findings addressed, no new Critical/Important
-    breakage | Findings remain open] — list the open ones.
+    - `finding_verdicts[]`, one per finding in The Findings Under
+      Verification, in order: `{finding: the one-liner, status: ADDRESSED |
+      NOT_ADDRESSED, evidence: file:line}`. "Attempted" is not addressed:
+      the specific defect must no longer exist.
+    - `new_breakage[]`: only what the fix itself broke or introduced —
+      `{severity: Critical|Important|Minor, location: file:line, body}`.
+      Empty when clean.
+    - `out_of_scope[]`: issues entirely outside the fix diff. Non-blocking;
+      the controller ledgers these for the final review.
+    - `round_verdict`: `all_addressed` (every finding ADDRESSED and no new
+      Critical/Important breakage) | `findings_open`.
 ```
 
 **Placeholders:**
@@ -109,5 +98,6 @@ task (one entry in the tasks[] batch):
 - `[HEAD_SHA]` — current commit
 - `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE HEAD` printed
 
-**Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),
-new breakage in the fix diff, out-of-scope observations, and a round verdict.
+**Re-reviewer returns** (structured): `finding_verdicts[]` (ADDRESSED /
+NOT_ADDRESSED with file:line), `new_breakage[]` for the fix diff only,
+`out_of_scope[]`, and `round_verdict`.

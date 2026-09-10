@@ -137,10 +137,9 @@ task (one entry in the tasks[] batch):
     "yes." A tight report that cites lines gives the controller everything
     it needs.
 
-    Your final message is the report itself: begin directly with the
-    spec-compliance verdict. Every line is a verdict, a finding with
-    file:line, or a check you ran — no preamble, no process narration,
-    no closing summary.
+    Your result is structured (the agent's `output:` schema), not prose:
+    every entry is a verdict, a finding with file:line, or a check you
+    ran — no preamble, no process narration.
 
     ## Calibration
 
@@ -158,33 +157,22 @@ task (one entry in the tasks[] batch):
     Acknowledge what was done well before listing issues — accurate praise
     helps the implementer trust the rest of the feedback.
 
-    ## Output Format
+    ## Output
 
-    ### Spec Compliance
+    Yield the structured result:
 
-    - ✅ Spec compliant | ❌ Issues found: [what's missing/extra/misunderstood,
-      with file:line references]
-    - ⚠️ Cannot verify from diff: [requirements you could not verify from the
-      diff alone, and what the controller should check — report alongside the
-      ✅/❌ verdict for everything you could verify]
-
-    ### Strengths
-    [What's well done? Be specific.]
-
-    ### Issues
-
-    #### Critical (Must Fix)
-    #### Important (Should Fix)
-    #### Minor (Nice to Have)
-
-    For each issue: file:line, what's wrong, why it matters, how to fix
-    (if not obvious).
-
-    ### Assessment
-
-    **Task quality:** [Approved | Needs fixes]
-
-    **Reasoning:** [1-2 sentence technical assessment]
+    - `spec_compliance`: `compliant` | `issues`
+    - `spec_issues[]`: what's missing / extra / misunderstood, each with
+      file:line
+    - `cannot_verify[]`: requirements you could not verify from the diff
+      alone, and what the controller should check — alongside the verdict
+      for everything you could verify
+    - `strengths[]`: what's well done, specifically
+    - `findings[]`: `{severity: Critical|Important|Minor, location:
+      file:line, body: what's wrong / why it matters / how to fix,
+      plan_mandated: true|false}`
+    - `task_quality`: `approved` | `needs_fixes`
+    - `reasoning`: 1-2 sentence technical assessment
 ```
 
 **Placeholders:**
@@ -203,5 +191,8 @@ task (one entry in the tasks[] batch):
   package to (`scripts/review-package PLAN_FILE BASE HEAD` prints the unique
   path it wrote; the package never enters the controller's context)
 
-**Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues
-(Critical/Important/Minor), Task quality verdict
+**Reviewer returns** (structured): `spec_compliance`, `spec_issues[]`,
+`cannot_verify[]`, `strengths[]`, `findings[]` (Critical/Important/Minor with
+file:line), `task_quality`, `reasoning`. The loop triggers on
+`spec_compliance: issues`, any Critical/Important finding, or a
+`cannot_verify` item the controller confirms as a real gap.
