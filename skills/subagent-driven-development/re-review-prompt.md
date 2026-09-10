@@ -11,7 +11,7 @@ that the fix itself broke nothing.
 { context: "<one line: plan name, branch, read-only re-review of one fix round>",
   tasks: [ {
   name: "ReReviewTaskNRoundR",
-  agent: "sdd-rereviewer",   # REQUIRED — cheapest tier with a 1M window,
+  agent: "sdd-rereviewer",   # REQUIRED — deepseek-flash at low thinking (1M ctx),
                              # read/grep only (no file writes, no shell), four-call budget.
   task: |
     You are re-reviewing one task's fix round. A previous review produced

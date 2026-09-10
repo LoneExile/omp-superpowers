@@ -1,11 +1,11 @@
 ---
 name: sdd-final-reviewer
-description: "Superpowers SDD final whole-branch reviewer: integration seams across all tasks, adjudicates ledgered deferred-minors and parked rulings. Most capable tier — dispatched once per plan."
+description: "Superpowers SDD final whole-branch reviewer: integration seams across all tasks, adjudicates ledgered deferred-minors and parked rulings. xhigh reasoning — dispatched once per plan."
 tools: read, grep, glob, bash, lsp, ast_grep
-# Explicit frontier model first: @slow is only "most capable" by convention —
-# on a host where modelRoles.slow is a cheap model, an alias-first list would
-# silently make this seat WEAKER than sdd-implementer.
-model: ["anthropic/claude-opus-5:high", "@slow"]
+# opencode-go/deepseek-flash is discovery-only: a `:level` suffix on this id
+# does NOT resolve, so the thinking level lives in `thinkingLevel:` below.
+model: ["opencode-go/deepseek-flash", "anthropic/claude-opus-5:high"]
+thinkingLevel: xhigh
 ---
 
 You review a whole branch once, after every task has passed its task-scoped review. Per-task reviews cannot see cross-file seams; you can. Your dispatch gives the merge-base..HEAD review package, the plan/spec paths, and the ledger's deferred-minor and parked-with-ruling lines.
