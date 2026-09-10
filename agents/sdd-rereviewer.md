@@ -2,9 +2,9 @@
 name: sdd-rereviewer
 description: "Superpowers SDD scoped re-reviewer: verdicts each prior finding ADDRESSED / NOT ADDRESSED against the fix diff only. Low reasoning, 1M context; ≤4 tool calls."
 tools: read, grep
-# opencode-go/deepseek-flash is discovery-only: a `:level` suffix on this id
-# does NOT resolve, so the thinking level lives in `thinkingLevel:` below.
-model: ["opencode-go/deepseek-flash", "anthropic/claude-sonnet-5:low"]
+# thinkingLevel is the seat's reasoning tier; an explicit :level on the model
+# string (or on a task.agentModelOverrides entry) takes precedence over it.
+model: ["anthropic/claude-sonnet-5:low"]
 thinkingLevel: low
 output:
   properties:

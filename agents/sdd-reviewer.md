@@ -2,9 +2,9 @@
 name: sdd-reviewer
 description: "Superpowers SDD task reviewer: spec compliance + code quality for ONE task from its review package. No file writes, no shell — the diff file is the view of the change."
 tools: read, grep, glob
-# opencode-go/deepseek-flash is discovery-only: a `:level` suffix on this id
-# does NOT resolve, so the thinking level lives in `thinkingLevel:` below.
-model: ["opencode-go/deepseek-flash", "anthropic/claude-sonnet-5:high"]
+# thinkingLevel is the seat's reasoning tier; an explicit :level on the model
+# string (or on a task.agentModelOverrides entry) takes precedence over it.
+model: ["anthropic/claude-sonnet-5:high"]
 thinkingLevel: high
 output:
   properties:
