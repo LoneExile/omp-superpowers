@@ -1,8 +1,12 @@
 ---
 name: sdd-rereviewer
-description: "Superpowers SDD scoped re-reviewer: verdicts each prior finding ADDRESSED / NOT ADDRESSED against the fix diff only. Cheapest tier; ≤4 tool calls."
+description: "Superpowers SDD scoped re-reviewer: verdicts each prior finding ADDRESSED / NOT ADDRESSED against the fix diff only. Cheap tier with a large context window; ≤4 tool calls."
 tools: read, grep
-model: ["anthropic/claude-haiku-4-5:medium", "anthropic/claude-sonnet-5:low", "@smol"]
+# sonnet:low first — a scoped re-review is verdict-only work, and a 1M window
+# absorbs any review package (real ones range 6 KB–192 KB); a 200k-window model
+# in first position hard-fails the dispatch on a large package instead of
+# degrading. haiku stays as the fallback when sonnet is unavailable.
+model: ["anthropic/claude-sonnet-5:low", "anthropic/claude-haiku-4-5:medium", "@smol"]
 output:
   properties:
     round_verdict:
