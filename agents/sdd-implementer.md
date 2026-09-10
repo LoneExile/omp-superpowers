@@ -1,7 +1,9 @@
 ---
 name: sdd-implementer
-description: "Superpowers SDD implementer: executes ONE task brief (TDD, commit, report file). Mid-tier model — turn count dominates cost; never inherits the session model."
-tools: read, write, edit, bash, grep, glob, lsp, ast_grep, todo
+description: "Superpowers SDD implementer: executes ONE task brief (TDD, commit, report file). Pinned to a mid tier so it never silently runs the session model; only an auth failure on that tier reroutes it."
+tools: read, write, edit, bash, grep, glob, lsp, ast_grep
+# Pinned to a mid tier; the harness reroutes to the parent's model only if
+# the resolved provider has no working credentials (omp auth fallback).
 model: ["anthropic/claude-sonnet-5:medium", "@task"]
 ---
 
