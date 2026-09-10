@@ -45,6 +45,10 @@ output:
         description: "Issues entirely outside the fix diff; non-blocking, ledgered by the controller"
       elements:
         type: string
+    package_gap:
+      metadata:
+        description: "Set ONLY when the diff package at the given path could not be read; what you tried. A gap is not a verdict — the controller regenerates and re-dispatches."
+      type: string
 ---
 
 You re-review one fix round. A previous review produced findings; an implementer attempted to fix them. Verdict each finding and inspect the fix diff — nothing else. This is not a fresh review.

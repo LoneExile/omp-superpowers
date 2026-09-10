@@ -184,36 +184,44 @@ implementation.
 ## Agent Selection
 
 On omp the `task` tool has no `model:` field — the agent TYPE carries the
-model, the thinking level, and the tool set. This fork ships four SDD
+model, the thinking level, and the tool set. This fork ships five SDD
 agents (`agents/sdd-*.md`); they appear in the `task` tool's own roster.
-**Always dispatch SDD work with one of them.** Dispatching `task` or
-`reviewer` instead silently inherits the session's slowest tier over the
-largest tool set, which is where a real 157-subagent session lost most of
-its wall-clock.
+**Always dispatch SDD work with one of them.** The bundled `task` agent
+resolves to whatever `modelRoles.task` is configured to (else the session
+model) and the bundled `reviewer` to `@slow` — in a real 157-subagent
+session both were the slowest tier over the widest tool set, which is where
+most of the wall-clock went.
 
 | Role | `agent:` | Tier | Tools |
 |---|---|---|---|
-| Implementer (every task, every fix round) | `sdd-implementer` | mid (sonnet-class) | full edit/test set, no subagents |
+| Implementer (every task, fix rounds 1-2) | `sdd-implementer` | mid (sonnet-class) | edit/test set, no subagents |
+| Fix round 3 | `sdd-escalation-implementer` | most capable (`@slow`) | same as implementer |
 | Task reviewer | `sdd-reviewer` | mid, higher reasoning | `read`, `grep`, `glob` only — diff-only review by construction |
-| Scoped re-review | `sdd-rereviewer` | cheapest (haiku-class) | `read`, `grep`; ≤4 tool calls |
+| Scoped re-review | `sdd-rereviewer` | cheapest sonnet tier (1M window), haiku fallback | `read`, `grep`; ≤4 tool calls (a justified fifth is allowed) |
 | Final whole-branch review | `sdd-final-reviewer` | most capable (`@slow`) | read-only + focused bash |
+
+`@slow` is omp's designated most-capable role (`modelRoles.slow`); the two
+seats that use it are the ones that run once per plan or once per stuck
+task, so its cost is bounded.
 
 **Turn count beats token price.** Wall-clock scales with how many turns a
 subagent takes; the cheapest models routinely take 2-3× the turns on
 multi-step work. Mid-tier is the floor for implementers and task reviewers.
-Re-reviews are verdict-only work over a small diff — the cheapest tier is
-correct for them, not a compromise.
+Re-reviews are verdict-only work over a small diff — the cheapest tier
+whose context window absorbs the package is correct for them, not a
+compromise.
 
 **Escalation (fix round 3):** the implementer that got stuck cannot see its
-own problem. Dispatch a FRESH `sdd-implementer` with the framing below, and
-pass `effort: "high"` if your `task` tool exposes it (`task.enableEffort`);
-otherwise dispatch the bundled `task` agent for that one round — it runs the
-session's strongest tier.
+own problem. Dispatch a FRESH `sdd-escalation-implementer` with the
+framing below. If `task.enableEffort` is on you may add `effort: "hi"`
+(the only accepted values are `"lo"`, `"med"`, `"hi"`) to raise thinking
+further; it is optional — the agent's own tier is the escalation.
 
 **Override, never omit.** If a task genuinely needs the strongest tier for
-its implementation (design judgment across many files), say so in the
-ledger as a ruling and dispatch `task` for it; the default remains
-`sdd-implementer`.
+its first implementation (design judgment across many files), say so in
+the ledger as a ruling and dispatch `sdd-escalation-implementer` for it;
+the default remains `sdd-implementer`. Never reach for the bundled `task`
+agent for an SDD seat — its tier is whatever the session configured.
 
 ## The Task Loop
 
@@ -276,23 +284,34 @@ and fix-round diffs need it.
   a pointer to that ledger entry in the dispatch.
 - Record the implementer's agent identity from the dispatch result —
   fix-loop rounds 1-2 resume this agent.
-- **Waves, not a serial line.** Two implementers editing the same file
-  conflict; two editing disjoint files do not. Your pre-flight table already
-  names every pair of tasks that share a file or interface — it IS the
-  dependency graph. Group the remaining tasks into waves: a wave holds tasks
-  with no shared file/interface row between them and no unfinished
-  producer. Dispatch a wave as ONE `task` call with one `sdd-implementer`
-  per task (each with its own brief, report path, and BASE — the same BASE
-  for the whole wave). Tasks that share a row run in later waves, in
+- **Waves, only with isolation.** Disjoint files are not enough on omp:
+  subagents share the controller's checkout — one index, one HEAD, one
+  working tree — unless `task.isolation.mode` is set (its default is
+  `none`). Two concurrent implementers in one tree sweep each other's
+  half-written files into their commits and test against each other's
+  in-flight code. So: check `task.isolation.mode` once at setup and ledger
+  it. If it is `none`, every implementer runs alone, in plan order, and the
+  rest of this bullet does not apply. If isolation is on, group tasks into
+  waves from your pre-flight table (it already names every pair sharing a
+  file or interface — it IS the dependency graph): a wave holds tasks with
+  no shared row between them and no unfinished producer. Dispatch a wave as
+  ONE `task` call, one `sdd-implementer` per task with `isolated: true`,
+  each with its own brief and report path; record the same BASE for every
+  task in the wave. Tasks that share a row run in later waves, in
   producer→consumer order. A task whose brief you had to amend with a
   ruling runs alone. When in doubt about a shared file, serialize — a
   conflict costs more than the parallelism buys.
-- **Review a wave as one package.** After every implementer in a wave
-  reports, run one `review-package PLAN_FILE BASE HEAD` over the wave's
-  range and dispatch ONE `sdd-reviewer` per task in the same `task` call,
-  each pointed at its own brief and report but the shared package: a
-  reviewer's spec check is per task, its quality check sees the wave.
-  Fix rounds stay per task.
+- **A wave shares the dispatch call, never the diff.** Each task keeps its
+  own review package: after the wave's results integrate, run
+  `review-package PLAN_FILE <task BASE> <task HEAD>` per task — the range
+  the harness reports as that task's integrated commits — and dispatch one
+  `sdd-reviewer` per task in one `task` call, each pointed at its own brief,
+  report, and package. A reviewer that sees sibling hunks cannot decide
+  "nothing extra" for its own brief. Fix rounds stay per task and per
+  package: FIX_BASE for a task is that task's own previous review head, and
+  two tasks' fix rounds may share a dispatch call only if they are isolated
+  too. Findings the final whole-branch review raises across wave seams are
+  the normal cross-task case — that review exists for them.
 
 Template: [implementer-prompt.md](implementer-prompt.md)
 
@@ -369,8 +388,14 @@ Template: [task-reviewer-prompt.md](task-reviewer-prompt.md)
 
 ### 4. The fix loop
 
-The loop triggers when the review reports spec ❌, any Critical or Important
-finding, or a ⚠️ item you confirmed as a real gap.
+The loop triggers when the review reports `spec_compliance: issues`, any
+Critical or Important finding, or a `cannot_verify` item you confirmed as a
+real gap.
+
+A review that comes back with a `package_gap` set (the reviewer could not
+read the package you named) is not a verdict: regenerate the package,
+check the path, re-dispatch, and ledger the retry. Never treat a gap as
+"clean" or as a finding.
 
 Before the loop starts, three routes leave it immediately:
 
@@ -405,8 +430,8 @@ choices. If your harness cannot send another message to a live subagent,
 dispatch a fresh `sdd-implementer` carrying the brief path, the report-file
 path, and the findings — the report file is the persistent memory either way.
 
-**Round 3 — escalate** per Agent Selection: a fresh implementer with the
-brief path, the report-file path, the open findings, and this framing: "A
+**Round 3 — escalate:** dispatch a fresh `sdd-escalation-implementer` with
+the brief path, the report-file path, the open findings, and this framing: "A
 prior implementer attempted this task [N] times; you own it now. Read the
 report file for what was tried." A loop that survives two resumes usually
 means the implementer cannot see its own problem — fresh eyes and a
