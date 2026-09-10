@@ -4,7 +4,7 @@ description: "Superpowers SDD round-3 escalation: a fresh implementer at xhigh r
 tools: read, write, edit, bash, grep, glob, lsp, ast_grep
 # opencode-go/deepseek-flash is discovery-only: a `:level` suffix on this id
 # does NOT resolve, so the thinking level lives in `thinkingLevel:` below.
-model: ["opencode-go/deepseek-flash", "anthropic/claude-opus-5:high"]
+model: ["opencode-go/deepseek-flash", "anthropic/claude-opus-5:xhigh"]
 thinkingLevel: xhigh
 ---
 
