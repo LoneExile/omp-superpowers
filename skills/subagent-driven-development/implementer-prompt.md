@@ -3,10 +3,11 @@
 Use this template when dispatching an implementer subagent.
 
 ```
-Subagent (general-purpose):
-  description: "Implement Task N: [task name]"
-  model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
-         model silently inherits the session's most expensive one]
+task (one entry in the tasks[] batch):
+  name: "ImplTaskN"
+  agent: sdd-implementer   # REQUIRED — carries model, thinking level, tools.
+                           # `task` inherits the slowest tier; use it only for a
+                           # ledgered round-3 escalation or a ruled exception.
   prompt: |
     You are implementing Task N: [task name]
 
