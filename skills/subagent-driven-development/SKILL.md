@@ -212,9 +212,12 @@ honoured: the reviewers get no `bash`/`edit`, and their `write` is only the
 writes are not available elsewhere"). Two things the frontmatter cannot
 remove: `hub` (always-on for every non-restricted subagent) and, with it,
 `hub start`, which launches an executable directly — a probe from
-`sdd-reviewer` ran `echo` that way. So the guarantee is "cannot edit the
-tree and cannot run a shell", not "cannot spawn a process". The prompts
-forbid mutation; the harness enforces the file and shell parts.
+`sdd-reviewer` ran `echo` that way. The executor's `restrictToolNames`
+option would strip it, but only omp's own compression and security
+sessions set it; no agent frontmatter field maps to it. So the guarantee
+is "cannot edit the tree and cannot run a shell", not "cannot spawn a
+process". The prompts forbid mutation; the harness enforces the file and
+shell parts.
 
 **Turn count beats token price.** Wall-clock scales with how many turns a
 subagent takes; the cheapest models routinely take 2-3× the turns on
