@@ -18,6 +18,21 @@ Agent types: pick the most specific one per item from the roster in the `task` t
 
 The tool is lowercase `task`; `Task` does not exist. Optional: `task.isolation.enabled` runs each subagent in an isolated checkout copy and integrates the result, replacing manual `git worktree` plumbing.
 
+### Model selection on omp
+
+The `task` tool has **no `model:` field**. Every `model: [...]` line in a Superpowers template is inert here — the agent TYPE carries model, thinking level, and tool set. Choosing `task` "because it can do everything" means the slowest tier over the widest tool set on every dispatch.
+
+This fork ships SDD-specific agents (they appear in the `task` roster once the plugin is installed):
+
+| Superpowers role | `agent:` | What it pins |
+| --- | --- | --- |
+| Implementer, every fix round | `sdd-implementer` | mid tier; edit/test tools; no subagents |
+| Task reviewer | `sdd-reviewer` | mid tier, high reasoning; `read`/`grep`/`glob` only — diff-only by construction |
+| Scoped re-review | `sdd-rereviewer` | cheapest tier; `read`/`grep`; ≤4 calls |
+| Final whole-branch review | `sdd-final-reviewer` | most capable tier (`@slow`); read-only + focused bash |
+
+Use `task` for an SDD role only as a ledgered exception (round-3 escalation, or a task ruled to need the strongest tier). If `task.enableEffort` is on, `effort: "high"` on a dispatch raises thinking for that one subagent without changing its model.
+
 ## Task lists
 
 omp ships a built-in `todo` tool (`init`, `start`, `done`, `rm`, `drop`, `block`, `unblock`, `append`, `view`). Use it for all task tracking. Do not use Superpowers plan files, Markdown checklists, or a repo-local `TODO.md` for this. Older Superpowers docs may refer to `TodoWrite`; treat that as the `todo` tool.

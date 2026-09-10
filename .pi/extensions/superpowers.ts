@@ -94,6 +94,8 @@ omp's built-in coding tools are lowercase: \`read\`, \`write\`, \`edit\`, \`bash
 
 omp ships a built-in subagent tool: \`task\`. Use it for all Superpowers subagent workflows. Batch shape: ONE call carries \`{ context, tasks[] }\` — one subagent per item, run concurrently. Dispatch N parallel subagents as N entries in a single \`task\` call, never N sequential calls. Pick the most specific agent type per item from the roster in the \`task\` tool's own description (typically \`scout\` for read-only research, \`reviewer\`, \`security-reviewer\`, \`sonic\` for strictly mechanical work, and \`task\` for general-purpose). The tool is lowercase \`task\`; \`Task\` does not exist here. Never conclude that subagent capability is missing.
 
+The \`task\` tool has NO \`model:\` field — a template's \`model:\` line is inert; the agent TYPE carries the model, thinking level, and tools. For subagent-driven-development use this plugin's own agents: \`sdd-implementer\` (every implementation and fix round), \`sdd-reviewer\` (task review, read-only, no shell), \`sdd-rereviewer\` (scoped re-review, cheapest tier), \`sdd-final-reviewer\` (whole-branch review, strongest tier). Dispatching plain \`task\` for those roles inherits the slowest tier over the widest tool set.
+
 omp ships a built-in task-list tool: \`todo\` (\`init\`, \`start\`, \`done\`, \`rm\`, \`drop\`, \`block\`, \`unblock\`, \`append\`, \`view\`). Use it for all task tracking. Do not track work in plan files or a repo-local \`TODO.md\`. Treat older \`TodoWrite\` references as the \`todo\` tool.`;
 }
 

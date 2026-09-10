@@ -8,10 +8,10 @@ new breakage. It is not a fresh review — the full review already happened.
 that the fix itself broke nothing.
 
 ```
-Subagent (general-purpose):
-  description: "Re-review Task N fix round R"
-  model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
-         model silently inherits the session's most expensive one]
+task (one entry in the tasks[] batch):
+  name: "ReReviewTaskNRoundR"
+  agent: sdd-rereviewer    # REQUIRED — cheapest tier, read/grep only,
+                           # four-call budget by construction.
   prompt: |
     You are re-reviewing one task's fix round. A previous review produced
     findings; an implementer has attempted to fix them. Your job is to
@@ -35,10 +35,8 @@ Subagent (general-purpose):
     **Diff file:** [DIFF_FILE]
 
     Read the diff file once — it contains the fix commits, a stat summary,
-    and the fix diff with surrounding context. Do not re-run git commands.
-    If the diff file is missing, fetch the diff yourself:
-    `git diff --stat [FIX_BASE_SHA]..[HEAD_SHA]` and
-    `git diff [FIX_BASE_SHA]..[HEAD_SHA]`.
+    and the fix diff with surrounding context. You have no shell; if the
+    diff file is missing, report that as a gap and stop.
 
     Your review is read-only on this checkout. Do not mutate the working
     tree, the index, HEAD, or branch state in any way.
@@ -101,8 +99,8 @@ Subagent (general-purpose):
 ```
 
 **Placeholders:**
-- `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection; scoped
-  re-reviews of small fix diffs take a cheap-to-mid tier
+- `agent: sdd-rereviewer` — REQUIRED (see SKILL.md Agent Selection); a
+  scoped re-review is verdict-only work over a small diff
 - `[BRIEF_FILE]` — the task brief file (same file the implementer worked from)
 - `[FINDINGS]` — the Critical/Important findings and spec gaps from the
   previous review, copied verbatim, one per bullet
