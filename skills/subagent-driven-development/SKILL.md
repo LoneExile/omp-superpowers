@@ -205,7 +205,8 @@ context, flat-rate plan, measured fastest per turn of every model profiled
 here). The tiers are a **thinking ladder**, not a model ladder: escalation
 and the final review raise reasoning to `xhigh`, re-reviews drop to `low`.
 Each agent carries an Anthropic fallback (sonnet / opus) that omp uses only
-when the primary has no working credentials. Note for editors: this model
+when the primary has no working credentials; the fallback's own `:level`
+suffix wins over `thinkingLevel:`, so each fallback pins the same level. Note for editors: this model
 id is discovery-only, so a `:level` suffix on it does NOT resolve — the
 level lives in each agent's `thinkingLevel:` field.
 
