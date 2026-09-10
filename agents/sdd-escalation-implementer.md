@@ -2,9 +2,9 @@
 name: sdd-escalation-implementer
 description: "Superpowers SDD round-3 escalation: a fresh implementer at xhigh reasoning for a task that survived two fix rounds. Same tools and contract as sdd-implementer."
 tools: read, write, edit, bash, grep, glob, lsp, ast_grep
-# opencode-go/deepseek-flash is discovery-only: a `:level` suffix on this id
-# does NOT resolve, so the thinking level lives in `thinkingLevel:` below.
-model: ["opencode-go/deepseek-flash", "anthropic/claude-opus-5:xhigh"]
+# thinkingLevel is the seat's reasoning tier; an explicit :level on the model
+# string (or on a task.agentModelOverrides entry) takes precedence over it.
+model: ["anthropic/claude-opus-5:xhigh"]
 thinkingLevel: xhigh
 ---
 

@@ -43,43 +43,87 @@ The skills drive themselves once loaded. The usual path:
 
 On omp the agent invokes a skill by reading it (`read skill://<name>`); you can also invoke one explicitly with `/skill:<name>`.
 
+### What subagent-driven-development does per task
+
+```mermaid
+flowchart TD
+    B["task-brief: one task's text from the plan"] --> I
+    I["sdd-implementer: TDD, commit, report file"] --> P["review-package: git diff -U10 to a file"]
+    P --> R["sdd-reviewer: spec + quality, structured result"]
+    R -->|"approved"| D["ledger: Task N complete"]
+    R -->|"Critical or Important findings"| F
+    F["fix round 1 or 2: resume sdd-implementer"] --> RR["sdd-rereviewer: verdict per finding"]
+    RR -->|"all addressed"| D
+    RR -->|"still open, round 3"| E["sdd-escalation-implementer: xhigh reasoning"]
+    E --> RR
+    RR -->|"still open after round 3"| A["controller adjudicates and parks with a ruling"]
+    A --> D
+    D --> N{"more tasks?"}
+    N -->|"yes"| B
+    N -->|"no"| W["sdd-final-reviewer: whole-branch, once per plan"]
+    W --> X["finishing-a-development-branch"]
+
+    classDef seat fill:#1e3a8a,stroke:#3b82f6,color:#dbeafe
+    class I,R,RR,E,W seat
+```
+
+Blue nodes are the five omp agents this fork ships. A reviewer that cannot read its package returns `package_gap` instead of a verdict, and the controller regenerates and re-dispatches.
+
 ### The SDD seats
 
-| Seat | agent | default model · thinking | tools |
+| Seat | agent | shipped default · thinking | tools |
 |---|---|---|---|
-| implementer (every task, fix rounds 1–2) | `sdd-implementer` | deepseek-flash · medium | read, write, edit, bash, grep, glob, lsp, ast_grep |
-| task reviewer | `sdd-reviewer` | deepseek-flash · high | read, grep, glob |
-| scoped re-review | `sdd-rereviewer` | deepseek-flash · low | read, grep |
-| fix round 3 / ruled strongest-tier task | `sdd-escalation-implementer` | deepseek-flash · xhigh | same as implementer |
-| final whole-branch review | `sdd-final-reviewer` | deepseek-flash · xhigh | read, grep, glob, bash, lsp, ast_grep |
+| implementer (every task, fix rounds 1–2) | `sdd-implementer` | sonnet-5 · medium | read, write, edit, bash, grep, glob, lsp, ast_grep |
+| task reviewer | `sdd-reviewer` | sonnet-5 · high | read, grep, glob |
+| scoped re-review | `sdd-rereviewer` | sonnet-5 · low | read, grep |
+| fix round 3 / ruled strongest-tier task | `sdd-escalation-implementer` | opus-5 · xhigh | same as implementer |
+| final whole-branch review | `sdd-final-reviewer` | opus-5 · xhigh | read, grep, glob, bash, lsp, ast_grep |
 
-All five default to `opencode-go/deepseek-flash` (DeepSeek V4.1 Flash, 1M context) and differ by **thinking level** — the tiers are a reasoning ladder, not a model ladder. Each carries an Anthropic fallback that omp uses only when the primary has no working credentials.
+The shipped defaults are Anthropic: sonnet for the seats that run on every task, opus for the two that run once per plan or once per stuck task. The tiers are a **thinking ladder** as much as a model ladder — re-reviews reason at `low`, escalation and the final review at `xhigh`.
 
 The two reviewer seats have no `bash`, `edit`, or filesystem `write`: the review package (`git diff -U10` written to a file) is their whole view of the change, and they return a structured result (`spec_compliance`, `task_quality`, `findings[]`, `cannot_verify[]`; `finding_verdicts[]`, `new_breakage[]`, `round_verdict`) plus `package_gap` when they could not read the package. Note the honest boundary: omp always attaches `hub` to subagents, and `hub start` can launch a process, so "no shell" means *cannot edit the tree and cannot run a shell*, not a sandbox.
 
 ### Changing models — no file edits
 
-Use omp's built-in per-agent override. It beats the agent file's `model:` line and applies on the next dispatch:
+omp resolves each seat's model and thinking level in a fixed order. The override map is the layer meant for you:
+
+```mermaid
+flowchart LR
+    subgraph model["model"]
+        M1["task.agentModelOverrides"] -->|"unset"| M2["agent file model:"]
+    end
+    subgraph level["thinking level"]
+        L1["explicit :level on the winning model string"] -->|"none"| L2["agent file thinkingLevel:"]
+        L2 -->|"none"| L3["model default"]
+    end
+    model --> level
+
+    classDef you fill:#1e3a8a,stroke:#3b82f6,color:#dbeafe
+    class M1 you
+```
+
+Set the override in `~/.omp/agent/config.yml`, or interactively with `/agents` in any session (it edits the same map). It applies on the next dispatch; delete a line to fall back to the agent file.
+
+This is how the fork's own author runs it — every seat on a flat-rate model, keeping the ladder:
 
 ```yaml
-# ~/.omp/agent/config.yml
 task:
   agentModelOverrides:
     sdd-implementer: opencode-go/deepseek-flash:medium
-    sdd-reviewer: anthropic/claude-sonnet-5:high
-    sdd-rereviewer: anthropic/claude-haiku-4-5:low
-    sdd-escalation-implementer: anthropic/claude-opus-5:xhigh
-    sdd-final-reviewer: anthropic/claude-opus-5:xhigh
+    sdd-reviewer: opencode-go/deepseek-flash:high
+    sdd-rereviewer: opencode-go/deepseek-flash:low
+    sdd-escalation-implementer: opencode-go/deepseek-flash:xhigh
+    sdd-final-reviewer: opencode-go/deepseek-flash:xhigh
 ```
 
-Or interactively: `/agents` in any session opens the same map for editing.
+Measured on a real fix-round re-review with identical inputs: a grok-4.6 seat took 9.7 min / 4 turns, sonnet-5 about 50 s / 1 turn, deepseek-flash 100 s / 4 turns — same verdict, full structured result, all three.
 
 Rules that are easy to get wrong:
 
 - A **bare model** (`anthropic/claude-haiku-4-5`) keeps the agent file's own `thinkingLevel`. Add `:level` (`…:high`) to change reasoning too.
-- Delete a line to fall back to the agent file.
 - The `task` tool has **no `model:` field**. Never dispatch the bundled `task` or `reviewer` agent for an SDD seat — they resolve to `modelRoles.task` / `@slow`, which on many hosts is a cheap model.
 - `effort` on a dispatch (when `task.enableEffort` is on) accepts only `"lo"`, `"med"`, `"hi"`.
+- Discovery-only model ids (the OpenCode Go catalog, for example) accept `:level` in config and in overrides but not on the `--model` CLI flag.
 
 ### Optional settings that matter
 
