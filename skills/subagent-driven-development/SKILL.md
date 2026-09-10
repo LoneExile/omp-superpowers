@@ -192,23 +192,37 @@ model) and the bundled `reviewer` to `@slow` — in a real 157-subagent
 session both were the slowest tier over the widest tool set, which is where
 most of the wall-clock went.
 
-| Role | `agent:` | Model · thinking | Tools |
+| Role | `agent:` | Shipped default · thinking | Tools |
 |---|---|---|---|
-| Implementer (every task, fix rounds 1-2) | `sdd-implementer` | deepseek-flash · medium | edit/test set, no subagents |
-| Fix round 3 | `sdd-escalation-implementer` | deepseek-flash · **xhigh** | same as implementer |
-| Task reviewer | `sdd-reviewer` | deepseek-flash · high | `read`, `grep`, `glob` — no file writes, no shell (see note) |
-| Scoped re-review | `sdd-rereviewer` | deepseek-flash · low | `read`, `grep`; ≤4 tool calls (a justified fifth is allowed) |
-| Final whole-branch review | `sdd-final-reviewer` | deepseek-flash · **xhigh** | read-only + focused bash |
+| Implementer (every task, fix rounds 1-2) | `sdd-implementer` | sonnet-5 · medium | edit/test set, no subagents |
+| Fix round 3 | `sdd-escalation-implementer` | opus-5 · **xhigh** | same as implementer |
+| Task reviewer | `sdd-reviewer` | sonnet-5 · high | `read`, `grep`, `glob` — no file writes, no shell (see note) |
+| Scoped re-review | `sdd-rereviewer` | sonnet-5 · low | `read`, `grep`; ≤4 tool calls (a justified fifth is allowed) |
+| Final whole-branch review | `sdd-final-reviewer` | opus-5 · **xhigh** | read-only + focused bash |
 
-All five seats run `opencode-go/deepseek-flash` (DeepSeek V4.1 Flash: 1M
-context, flat-rate plan, measured fastest per turn of every model profiled
-here). The tiers are a **thinking ladder**, not a model ladder: escalation
-and the final review raise reasoning to `xhigh`, re-reviews drop to `low`.
-Each agent carries an Anthropic fallback (sonnet / opus) that omp uses only
-when the primary has no working credentials; the fallback's own `:level`
-suffix wins over `thinkingLevel:`, so each fallback pins the same level. Note for editors: this model
-id is discovery-only, so a `:level` suffix on it does NOT resolve — the
-level lives in each agent's `thinkingLevel:` field.
+The shipped defaults are Anthropic (sonnet for the per-task seats, opus for
+the two seats that run once per plan or once per stuck task). The tiers are
+a **thinking ladder** as much as a model ladder: escalation and the final
+review raise reasoning to `xhigh`, re-reviews drop to `low`.
+
+**Per-host override, no file edits:** `task.agentModelOverrides` in
+`~/.omp/agent/config.yml` (or the `/agents` hub) beats the agent file's
+`model:` line and applies on the next dispatch. A bare model keeps the
+agent's `thinkingLevel:`; an explicit `:level` on the override replaces it.
+Example — every seat on a flat-rate model, keeping the ladder:
+
+```yaml
+task:
+  agentModelOverrides:
+    sdd-implementer: opencode-go/deepseek-flash:medium
+    sdd-reviewer: opencode-go/deepseek-flash:high
+    sdd-rereviewer: opencode-go/deepseek-flash:low
+    sdd-escalation-implementer: opencode-go/deepseek-flash:xhigh
+    sdd-final-reviewer: opencode-go/deepseek-flash:xhigh
+```
+
+(That id is discovery-only: the `:level` suffix resolves in config and in
+overrides, but not on the `--model` CLI flag.)
 
 **What "no shell" enforces (measured, omp 18.1.15).** A `tools:` list is
 honoured: the reviewers get no `bash`/`edit`, and their `write` is only the

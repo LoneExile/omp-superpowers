@@ -1,10 +1,10 @@
 ---
 name: sdd-implementer
-description: "Superpowers SDD implementer: executes ONE task brief (TDD, commit, report file). deepseek-flash at medium reasoning; a sonnet fallback is used only on auth failure."
+description: "Superpowers SDD implementer: executes ONE task brief (TDD, commit, report file). sonnet-5 at medium reasoning by default; override per host with task.agentModelOverrides."
 tools: read, write, edit, bash, grep, glob, lsp, ast_grep
-# opencode-go/deepseek-flash is discovery-only: a `:level` suffix on this id
-# does NOT resolve, so the thinking level lives in `thinkingLevel:` below.
-model: ["opencode-go/deepseek-flash", "anthropic/claude-sonnet-5:medium"]
+# thinkingLevel is the seat's reasoning tier; an explicit :level on the model
+# string (or on a task.agentModelOverrides entry) takes precedence over it.
+model: ["anthropic/claude-sonnet-5:medium"]
 thinkingLevel: medium
 ---
 

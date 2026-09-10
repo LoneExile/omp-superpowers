@@ -26,13 +26,13 @@ This fork ships SDD-specific agents (they appear in the `task` roster once the p
 
 | Superpowers role | `agent:` | What it pins |
 | --- | --- | --- |
-| Implementer, fix rounds 1-2 | `sdd-implementer` | deepseek-flash · medium; edit/test tools; no subagents |
-| Task reviewer | `sdd-reviewer` | deepseek-flash · high; `read`/`grep`/`glob` — no file writes, no shell (`hub start` can still launch a process; the harness cannot remove `hub`) |
-| Scoped re-review | `sdd-rereviewer` | deepseek-flash · low; `read`/`grep`; ≤4 calls |
-| Fix round 3 / ruled strongest-tier task | `sdd-escalation-implementer` | deepseek-flash · xhigh; same tools as the implementer |
-| Final whole-branch review | `sdd-final-reviewer` | deepseek-flash · xhigh; read-only + focused bash |
+| Implementer, fix rounds 1-2 | `sdd-implementer` | sonnet-5 · medium; edit/test tools; no subagents |
+| Task reviewer | `sdd-reviewer` | sonnet-5 · high; `read`/`grep`/`glob` — no file writes, no shell (`hub start` can still launch a process; the harness cannot remove `hub`) |
+| Scoped re-review | `sdd-rereviewer` | sonnet-5 · low; `read`/`grep`; ≤4 calls |
+| Fix round 3 / ruled strongest-tier task | `sdd-escalation-implementer` | opus-5 · xhigh; same tools as the implementer |
+| Final whole-branch review | `sdd-final-reviewer` | opus-5 · xhigh; read-only + focused bash |
 
-One model, a thinking ladder: every seat is `opencode-go/deepseek-flash` (1M ctx, flat-rate), differentiated by `thinkingLevel`; each carries an Anthropic fallback used only on auth failure. This id is discovery-only — a `:level` suffix does not resolve on it, which is why the level is a frontmatter field, not part of the model string.
+Shipped defaults are Anthropic; the tiers are a thinking ladder (low / medium / high / xhigh). Re-point any seat per host with `task.agentModelOverrides` in `~/.omp/agent/config.yml` (or `/agents`) — it beats the agent file's `model:`, applies on the next dispatch, and a bare model keeps the agent's `thinkingLevel:` while an explicit `:level` replaces it.
 
 Never use the bundled `task` agent for an SDD seat: it resolves to `modelRoles.task` (else the session model), which may be weaker than `sdd-implementer`. If `task.enableEffort` is on, `effort: "hi"` on a dispatch raises that one subagent's thinking without changing its model — the only accepted values are `"lo"`, `"med"`, `"hi"`.
 
