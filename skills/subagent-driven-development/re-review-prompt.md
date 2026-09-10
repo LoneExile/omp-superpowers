@@ -8,11 +8,12 @@ new breakage. It is not a fresh review — the full review already happened.
 that the fix itself broke nothing.
 
 ```
-task (one entry in the tasks[] batch):
-  name: "ReReviewTaskNRoundR"
-  agent: sdd-rereviewer    # REQUIRED — cheapest tier, read/grep only,
-                           # four-call budget by construction.
-  prompt: |
+{ context: "<one line: plan name, branch, read-only re-review of one fix round>",
+  tasks: [ {
+  name: "ReReviewTaskNRoundR",
+  agent: "sdd-rereviewer",   # REQUIRED — cheapest tier with a 1M window,
+                             # read/grep only, four-call budget by construction.
+  task: |
     You are re-reviewing one task's fix round. A previous review produced
     findings; an implementer has attempted to fix them. Your job is to
     verdict each finding and inspect the fix diff — nothing else.
@@ -55,19 +56,19 @@ task (one entry in the tasks[] batch):
     Your scope is the findings list and the fix diff. Verdict every finding.
     Inspect the fix diff for new problems the fix itself introduced. Do NOT
     re-review code the fix did not touch: if you notice an issue entirely
-    outside the fix diff, report it under Out-of-Scope Observations — it
-    does not block this task and does not extend the loop. A broad
-    whole-branch review happens after all tasks are complete.
+    outside the fix diff, report it in `out_of_scope[]` — it does not
+    block this task and does not extend the loop. A broad whole-branch
+    review happens after all tasks are complete.
 
     ## Tests
 
     The implementer re-ran the tests covering the amended code and appended
     the results to the report file. Treat the report as unverified claims:
     confirm the fix report names the covering tests and shows their output,
-    and verify the claims against the diff. Do not re-run the suite to
-    confirm their report. Run a test only when reading the code raises a
-    specific doubt that no existing run answers — and then a focused test,
-    never a package-wide suite.
+    and verify the claims against the diff. You have no shell: if reading
+    the code raises a specific doubt that no existing run answers, name the
+    focused test you would run in that finding's evidence and verdict on
+    what the diff shows.
 
     ## Output
 
@@ -85,6 +86,10 @@ task (one entry in the tasks[] batch):
       the controller ledgers these for the final review.
     - `round_verdict`: `all_addressed` (every finding ADDRESSED and no new
       Critical/Important breakage) | `findings_open`.
+    - `package_gap`: set ONLY when you could not read the diff package at
+      the path given; say what you tried. A gap is not a verdict — the
+      controller regenerates the package and re-dispatches.
+  } ] }
 ```
 
 **Placeholders:**

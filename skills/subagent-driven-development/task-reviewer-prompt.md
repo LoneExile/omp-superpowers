@@ -8,11 +8,12 @@ code quality.
 more, nothing less) and is well-built (clean, tested, maintainable)
 
 ```
-task (one entry in the tasks[] batch):
-  name: "ReviewTaskN"
-  agent: sdd-reviewer      # REQUIRED — read/grep/glob only, no shell: the
-                           # review package IS its view of the change.
-  prompt: |
+{ context: "<one line: plan name, branch, read-only task review>",
+  tasks: [ {
+  name: "ReviewTaskN",
+  agent: "sdd-reviewer",     # REQUIRED — read/grep/glob only, no shell: the
+                             # review package IS its view of the change.
+  task: |
     You are reviewing one task's implementation: first whether it matches its
     requirements, then whether it is well-built. This is a task-scoped gate,
     not a merge review — a broad whole-branch review happens separately after
@@ -73,13 +74,12 @@ task (one entry in the tasks[] batch):
     ## Tests
 
     The implementer already ran the tests and reported results with TDD
-    evidence for exactly this code. Do not re-run the suite to confirm their
-    report. Run a test only when reading the code raises a specific doubt
-    that no existing run answers — and then a focused test, never a
-    package-wide suite, race detector run, or repeated/high-count loop. If
-    heavy validation seems warranted, recommend it in your report instead of
-    running it. If you cannot run commands in this environment, name the
-    test you would run.
+    evidence for exactly this code. You have no shell and cannot re-run
+    anything: verify their claims against the diff. If reading the code
+    raises a specific doubt that no existing run answers, name the focused
+    test you would run in that finding's body and verdict on what the diff
+    shows. If heavy validation seems warranted, recommend it in a finding
+    for the controller to run.
 
     Warnings or other noise in the implementer's reported test output are
     findings — test output should be pristine.
@@ -109,8 +109,8 @@ task (one entry in the tasks[] batch):
     batch looks.
 
     If a requirement cannot be verified from this diff alone (it lives in
-    unchanged code or spans tasks), report it as a ⚠️ item instead of
-    broadening your search.
+    unchanged code or spans tasks), report it in `cannot_verify[]` instead
+    of broadening your search.
 
     ## Part 2: Code Quality
 
@@ -173,6 +173,10 @@ task (one entry in the tasks[] batch):
       plan_mandated: true|false}`
     - `task_quality`: `approved` | `needs_fixes`
     - `reasoning`: 1-2 sentence technical assessment
+    - `package_gap`: set ONLY when you could not read the diff package at
+      the path given; say what you tried. A gap is not a verdict — the
+      controller regenerates the package and re-dispatches.
+  } ] }
 ```
 
 **Placeholders:**
