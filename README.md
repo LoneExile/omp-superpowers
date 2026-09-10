@@ -121,6 +121,7 @@ Measured on a real fix-round re-review with identical inputs: a grok-4.6 seat to
 Rules that are easy to get wrong:
 
 - A **bare model** (`anthropic/claude-haiku-4-5`) keeps the agent file's own `thinkingLevel`. Add `:level` (`…:high`) to change reasoning too.
+- **Delete a line** to fall back to the agent file's default for that seat. Overrides apply on the next dispatch — no restart.
 - The `task` tool has **no `model:` field**. Never dispatch the bundled `task` or `reviewer` agent for an SDD seat — they resolve to `modelRoles.task` / `@slow`, which on many hosts is a cheap model.
 - `effort` on a dispatch (when `task.enableEffort` is on) accepts only `"lo"`, `"med"`, `"hi"`.
 - Discovery-only model ids (the OpenCode Go catalog, for example) accept `:level` in config and in overrides but not on the `--model` CLI flag.
