@@ -1,6 +1,6 @@
 ---
 name: sdd-reviewer
-description: "Superpowers SDD task reviewer: spec compliance + code quality for ONE task from its review package. Read-only, no bash — the diff file is the view of the change."
+description: "Superpowers SDD task reviewer: spec compliance + code quality for ONE task from its review package. No file writes, no shell — the diff file is the view of the change."
 tools: read, grep, glob
 model: ["anthropic/claude-sonnet-5:high", "@task"]
 output:
