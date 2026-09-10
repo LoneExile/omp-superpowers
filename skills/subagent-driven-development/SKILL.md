@@ -196,7 +196,7 @@ most of the wall-clock went.
 |---|---|---|---|
 | Implementer (every task, fix rounds 1-2) | `sdd-implementer` | mid (sonnet-class) | edit/test set, no subagents |
 | Fix round 3 | `sdd-escalation-implementer` | frontier (opus-class, pinned) | same as implementer |
-| Task reviewer | `sdd-reviewer` | mid, higher reasoning | `read`, `grep`, `glob` only — diff-only review by construction |
+| Task reviewer | `sdd-reviewer` | mid, higher reasoning | `read`, `grep`, `glob` — no file writes, no shell (see note) |
 | Scoped re-review | `sdd-rereviewer` | cheapest sonnet tier (1M window), haiku fallback | `read`, `grep`; ≤4 tool calls (a justified fifth is allowed) |
 | Final whole-branch review | `sdd-final-reviewer` | frontier (opus-class, pinned) | read-only + focused bash |
 
@@ -205,6 +205,16 @@ fallback: role aliases are whatever the host configured, and on a host
 where `modelRoles.slow` is a cheap model an alias-first seat would silently
 be weaker than `sdd-implementer`. Those seats run once per plan or once per
 stuck task, so their cost is bounded.
+
+**What "no shell" enforces (measured, omp 18.1.15).** A `tools:` list is
+honoured: the reviewers get no `bash`/`edit`, and their `write` is only the
+`xd://` device transport — a filesystem write is refused ("Filesystem
+writes are not available elsewhere"). Two things the frontmatter cannot
+remove: `hub` (always-on for every non-restricted subagent) and, with it,
+`hub start`, which launches an executable directly — a probe from
+`sdd-reviewer` ran `echo` that way. So the guarantee is "cannot edit the
+tree and cannot run a shell", not "cannot spawn a process". The prompts
+forbid mutation; the harness enforces the file and shell parts.
 
 **Turn count beats token price.** Wall-clock scales with how many turns a
 subagent takes; the cheapest models routinely take 2-3× the turns on
@@ -451,7 +461,7 @@ whole suite.
 where FIX_BASE is the head the previous review saw, and dispatch
 `sdd-rereviewer` with [re-review-prompt.md](re-review-prompt.md): the
 findings list, the brief, the report file, and the printed diff path. It
-has no shell and a four-call budget by construction. It yields
+has no shell and no file writes, and a four-call budget. It yields
 `finding_verdicts[]` (ADDRESSED / NOT_ADDRESSED with file:line),
 `new_breakage[]` for the fix diff only, `out_of_scope[]`, and
 `round_verdict`. New Critical/Important entries in `new_breakage` join the

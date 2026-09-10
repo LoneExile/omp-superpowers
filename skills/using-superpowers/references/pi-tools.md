@@ -27,7 +27,7 @@ This fork ships SDD-specific agents (they appear in the `task` roster once the p
 | Superpowers role | `agent:` | What it pins |
 | --- | --- | --- |
 | Implementer, every fix round | `sdd-implementer` | mid tier; edit/test tools; no subagents |
-| Task reviewer | `sdd-reviewer` | mid tier, high reasoning; `read`/`grep`/`glob` only — diff-only by construction |
+| Task reviewer | `sdd-reviewer` | mid tier, high reasoning; `read`/`grep`/`glob` — no file writes, no shell (`hub start` can still launch a process; the harness cannot remove `hub`) |
 | Scoped re-review | `sdd-rereviewer` | cheapest sonnet tier (1M window), haiku fallback; `read`/`grep`; ≤4 calls |
 | Fix round 3 / ruled strongest-tier task | `sdd-escalation-implementer` | frontier model pinned (opus-class), `@slow` fallback; same tools as the implementer |
 | Final whole-branch review | `sdd-final-reviewer` | frontier model pinned (opus-class), `@slow` fallback; read-only + focused bash |
