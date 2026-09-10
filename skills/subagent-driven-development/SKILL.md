@@ -355,8 +355,11 @@ needed.
   loop. If the prompt you are writing contains "do not flag," "don't treat X
   as a defect," "at most Minor," or "the plan chose" — stop: you are
   pre-judging, usually to spare yourself a review loop.
-The task reviewer may report "⚠️ Cannot verify from diff" items — requirements
-that live in unchanged code or span tasks. These do not block the rest of the
+Both SDD reviewers yield a structured result (their `output:` schema), so
+read fields, not prose: `spec_compliance` / `task_quality` are the two
+verdicts; `findings[].severity` drives the loop; `cannot_verify[]` lists
+requirements that live in unchanged code or span tasks. Those `cannot_verify`
+items — the old "⚠️ Cannot verify from diff" — do not block the rest of the
 review, but you must resolve each one yourself before marking the task
 complete: you hold the plan and cross-task context the reviewer
 lacks. If you confirm an item is a real gap, treat it as a failed spec
@@ -421,11 +424,12 @@ whole suite.
 where FIX_BASE is the head the previous review saw, and dispatch
 `sdd-rereviewer` with [re-review-prompt.md](re-review-prompt.md): the
 findings list, the brief, the report file, and the printed diff path. It
-has no shell and a four-call budget by construction. The re-reviewer
-verdicts each finding ADDRESSED or NOT ADDRESSED and flags new breakage in
-the fix diff only. New Critical/Important breakage in the fix diff joins
-the open findings list. Out-of-scope observations go to the ledger as
-deferred minors — they never extend the loop.
+has no shell and a four-call budget by construction. It yields
+`finding_verdicts[]` (ADDRESSED / NOT_ADDRESSED with file:line),
+`new_breakage[]` for the fix diff only, `out_of_scope[]`, and
+`round_verdict`. New Critical/Important entries in `new_breakage` join the
+open findings list. `out_of_scope` goes to the ledger as deferred minors —
+it never extends the loop.
 
 **After each round,** append to the ledger:
 `Task <N>: fix round <R>/3 (<X> addressed, <Y> open — <finding one-liners>; commits <a7>..<b7>)`
