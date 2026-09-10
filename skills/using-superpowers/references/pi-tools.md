@@ -29,8 +29,8 @@ This fork ships SDD-specific agents (they appear in the `task` roster once the p
 | Implementer, every fix round | `sdd-implementer` | mid tier; edit/test tools; no subagents |
 | Task reviewer | `sdd-reviewer` | mid tier, high reasoning; `read`/`grep`/`glob` only — diff-only by construction |
 | Scoped re-review | `sdd-rereviewer` | cheapest sonnet tier (1M window), haiku fallback; `read`/`grep`; ≤4 calls |
-| Fix round 3 / ruled strongest-tier task | `sdd-escalation-implementer` | most capable tier (`@slow`); same tools as the implementer |
-| Final whole-branch review | `sdd-final-reviewer` | most capable tier (`@slow`); read-only + focused bash |
+| Fix round 3 / ruled strongest-tier task | `sdd-escalation-implementer` | frontier model pinned (opus-class), `@slow` fallback; same tools as the implementer |
+| Final whole-branch review | `sdd-final-reviewer` | frontier model pinned (opus-class), `@slow` fallback; read-only + focused bash |
 
 Never use the bundled `task` agent for an SDD seat: it resolves to `modelRoles.task` (else the session model), which may be weaker than `sdd-implementer`. If `task.enableEffort` is on, `effort: "hi"` on a dispatch raises that one subagent's thinking without changing its model — the only accepted values are `"lo"`, `"med"`, `"hi"`.
 
