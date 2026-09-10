@@ -525,7 +525,7 @@ Use superpowers:finishing-a-development-branch.
 | "One more round will converge" | Past three rounds, rounds don't converge — the failure is structural. Adjudicate and route. |
 | "The reviewer will just find something new anyway" | Scoped re-reviews verify fixes; they cannot wander. New findings on untouched code go to the ledger, not the loop. |
 | "This finding is obviously wrong, I'll drop it" | You adjudicate only at the cap, and every ruling is a ledger entry. Silent discards are forbidden. |
-| "The fix was small, skip the re-review" | Unreviewed fixes are how regressions land. Every round ends with a scoped re-review. |
+| "The fix was small, skip the re-review" | Small is not the test — proven is. If you cannot run one command that proves the exact property (and ledger it), the round ends with a scoped re-review. |
 | "Reviews slow the loop down" | The loop without reviews is just unverified churn. Reviews are the loop's brakes and steering. |
 | "Ledger bookkeeping is overhead" | The ledger is what survives compaction. Controllers without one have re-dispatched entire completed task sequences. |
 | "The implementer spawned its own reviewer — free extra assurance" | It's a duplicate seat reviewing the same diff; the task review is the gate. A worker-spawned reviewer is a defect to flag, not rigor. |
@@ -554,9 +554,9 @@ Implementer: [Later]
   - Self-review: Found I missed --force flag, added it
   - Committed
 
-[Run review-package PLAN_FILE BASE HEAD; dispatch task reviewer with the printed path]
-Task reviewer: Spec ✅ - all requirements met, nothing extra.
-  Strengths: Good test coverage, clean. Issues: None. Task quality: Approved.
+[Run review-package PLAN_FILE BASE HEAD; dispatch sdd-reviewer with the printed path]
+sdd-reviewer: spec_compliance: compliant · task_quality: approved
+  strengths: ["Good test coverage", "clean"] · findings: []
 
 [Ledger: Task 1: complete (commits a1b2c3d..d4e5f6a, review clean)]
 
@@ -569,28 +569,29 @@ Implementer: [No questions]
   - 8/8 tests passing
   - Committed
 
-[Run review-package PLAN_FILE BASE HEAD; dispatch task reviewer with the printed path]
-Task reviewer: Spec ❌:
-  - Missing: Progress reporting (spec says "report every 100 items")
-  Issues (Important): Magic number (100)
+[Run review-package PLAN_FILE BASE HEAD; dispatch sdd-reviewer with the printed path]
+sdd-reviewer: spec_compliance: issues · task_quality: needs_fixes
+  spec_issues: ["Missing: progress reporting (spec says 'report every 100 items')"]
+  findings: [{severity: Important, location: src/recovery.js:7, body: "Magic number (100)"}]
 
 [Fix round 1: resume the implementer with both findings]
 Implementer: Added progress reporting, extracted PROGRESS_INTERVAL constant.
   Re-ran test/recovery.test.js — 10/10 passing. Fix report appended.
 
-[Run review-package PLAN_FILE FIX_BASE HEAD; dispatch scoped re-review]
-Re-reviewer: Missing progress reporting — ADDRESSED (src/recovery.js:41).
-  Magic number — ADDRESSED (src/recovery.js:7). New breakage: none.
-  Verdict: all findings addressed.
+[Run review-package PLAN_FILE FIX_BASE HEAD; dispatch sdd-rereviewer]
+sdd-rereviewer: round_verdict: all_addressed
+  finding_verdicts: [{Missing progress reporting: ADDRESSED, src/recovery.js:41},
+                     {Magic number: ADDRESSED, src/recovery.js:7}]
+  new_breakage: [] · out_of_scope: []
 
-[Ledger: Task 2: fix round 1/5 (2 addressed, 0 open; commits d4e5f6a..b7c8d9e)]
+[Ledger: Task 2: fix round 1/3 (2 addressed, 0 open; commits d4e5f6a..b7c8d9e)]
 [Ledger: Task 2: complete (commits d4e5f6a..b7c8d9e, review clean)]
 
 ...
 
 [After all tasks]
 [Run review-package PLAN_FILE MERGE_BASE HEAD; dispatch sdd-final-reviewer]
-Final reviewer: All requirements met. Deferred minors triaged: none block merge.
+sdd-final-reviewer: Mergeable: yes. Ledger triage: deferred minors — none block merge.
 
 [Delete this plan's workspace — the record now lives in git]
 
