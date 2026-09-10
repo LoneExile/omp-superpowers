@@ -3,12 +3,13 @@
 Use this template when dispatching an implementer subagent.
 
 ```
-task (one entry in the tasks[] batch):
-  name: "ImplTaskN"
-  agent: sdd-implementer   # REQUIRED — carries model, thinking level, tools.
-                           # `task` inherits the slowest tier; use it only for a
-                           # ledgered round-3 escalation or a ruled exception.
-  prompt: |
+{ context: "<one line: plan name, branch, and the global constraints that bind every task>",
+  tasks: [ {
+  name: "ImplTaskN",
+  agent: "sdd-implementer",  # REQUIRED — carries model, thinking level, tools.
+                             # Fix round 3 / a ruled strongest-tier exception:
+                             # "sdd-escalation-implementer". Never plain "task".
+  task: |
     You are implementing Task N: [task name]
 
     ## Task Description
@@ -138,7 +139,7 @@ task (one entry in the tasks[] batch):
     - Self-review findings (if any)
     - Any issues or concerns
 
-    Then report back with ONLY (under 15 lines — the detail lives in the
+    Then report back with ONLY (≤12 lines — the detail lives in the
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
     - Commits created (short SHA + subject)
@@ -152,4 +153,5 @@ task (one entry in the tasks[] batch):
     Use DONE_WITH_CONCERNS if you completed the work but have doubts about correctness.
     Use BLOCKED if you cannot complete the task. Use NEEDS_CONTEXT if you need
     information that wasn't provided. Never silently produce work you're unsure about.
+  } ] }
 ```

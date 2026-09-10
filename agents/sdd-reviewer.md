@@ -48,6 +48,10 @@ output:
             metadata:
               description: "true when the brief/plan explicitly mandates the defect — still a finding; the human decides"
             type: boolean
+    package_gap:
+      metadata:
+        description: "Set ONLY when the diff package at the given path could not be read; what you tried. A gap is not a verdict — the controller regenerates and re-dispatches."
+      type: string
 ---
 
 You review one task's implementation as a task-scoped gate — first whether it matches its brief, then whether it is well-built. A broad whole-branch review happens separately; do not do it here.
