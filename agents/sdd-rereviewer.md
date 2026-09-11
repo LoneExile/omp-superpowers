@@ -10,8 +10,8 @@ output:
   properties:
     round_verdict:
       metadata:
-        description: "all_addressed = every finding ADDRESSED and no new Critical/Important breakage; otherwise findings_open"
-      enum: [all_addressed, findings_open]
+        description: "all_addressed = every finding ADDRESSED and no new Critical/Important breakage; findings_open otherwise; package_gap = the fix package could not be read (finding_verdicts empty, package_gap filled)"
+      enum: [all_addressed, findings_open, package_gap]
     finding_verdicts:
       metadata:
         description: "One entry per finding under verification, in the order given"
@@ -46,7 +46,7 @@ output:
         type: string
     package_gap:
       metadata:
-        description: "Set ONLY when the diff package at the given path could not be read; what you tried. A gap is not a verdict — the controller regenerates and re-dispatches."
+        description: "The path you were given and the error you got. Set ONLY together with round_verdict = package_gap and an empty finding_verdicts. A gap is not a verdict on the fix — the controller regenerates the package and re-dispatches."
       type: string
 ---
 

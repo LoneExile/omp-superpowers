@@ -72,7 +72,7 @@ digraph process {
         "Spec ✅ and quality approved?" [shape=diamond];
         "Finding conflicts with plan text?" [shape=diamond];
         "Rule on the conflict, ledger the ruling" [shape=box];
-        "Fix round R of 3: R≤2 resume implementer; R=3 fresh sdd-implementer, escalated" [shape=box];
+        "Fix round R of 3: R≤2 resume implementer; R=3 fresh sdd-escalation-implementer" [shape=box];
         "Dispatch scoped re-review (./re-review-prompt.md)" [shape=box];
         "All findings addressed?" [shape=diamond];
         "R = 3?" [shape=diamond];
@@ -85,7 +85,7 @@ digraph process {
 
     "Setup: worktree, ledger check, read plan, pre-flight review" [shape=box];
     "More tasks remain?" [shape=diamond];
-    "Dispatch final reviewer: sdd-final-reviewer (../requesting-code-review/code-reviewer.md)" [shape=box];
+    "Dispatch final reviewer: sdd-final-reviewer (package + ledger lines; its agent file governs the output)" [shape=box];
     "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" [shape=box];
     "Final review clean: delete this plan's workspace" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
@@ -100,13 +100,13 @@ digraph process {
     "Spec ✅ and quality approved?" -> "Append completion to ledger, mark todo complete" [label="yes"];
     "Spec ✅ and quality approved?" -> "Finding conflicts with plan text?" [label="no"];
     "Finding conflicts with plan text?" -> "Rule on the conflict, ledger the ruling" [label="yes"];
-    "Rule on the conflict, ledger the ruling" -> "Fix round R of 3: R≤2 resume implementer; R=3 fresh sdd-implementer, escalated";
-    "Finding conflicts with plan text?" -> "Fix round R of 3: R≤2 resume implementer; R=3 fresh sdd-implementer, escalated" [label="no"];
-    "Fix round R of 3: R≤2 resume implementer; R=3 fresh sdd-implementer, escalated" -> "Dispatch scoped re-review (./re-review-prompt.md)";
+    "Rule on the conflict, ledger the ruling" -> "Fix round R of 3: R≤2 resume implementer; R=3 fresh sdd-escalation-implementer";
+    "Finding conflicts with plan text?" -> "Fix round R of 3: R≤2 resume implementer; R=3 fresh sdd-escalation-implementer" [label="no"];
+    "Fix round R of 3: R≤2 resume implementer; R=3 fresh sdd-escalation-implementer" -> "Dispatch scoped re-review (./re-review-prompt.md)";
     "Dispatch scoped re-review (./re-review-prompt.md)" -> "All findings addressed?";
     "All findings addressed?" -> "Append completion to ledger, mark todo complete" [label="yes"];
     "All findings addressed?" -> "R = 3?" [label="no"];
-    "R = 3?" -> "Fix round R of 3: R≤2 resume implementer; R=3 fresh sdd-implementer, escalated" [label="no - next round"];
+    "R = 3?" -> "Fix round R of 3: R≤2 resume implementer; R=3 fresh sdd-escalation-implementer" [label="no - next round"];
     "R = 3?" -> "Adjudicate each open finding" [label="yes - breaker trips"];
     "Adjudicate each open finding" -> "Any load-bearing finding?";
     "Any load-bearing finding?" -> "Rule and continue; stop only if every path forward is a guess" [label="yes"];
@@ -114,8 +114,8 @@ digraph process {
     "Park findings in ledger with rulings" -> "Append completion to ledger, mark todo complete";
     "Append completion to ledger, mark todo complete" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
-    "More tasks remain?" -> "Dispatch final reviewer: sdd-final-reviewer (../requesting-code-review/code-reviewer.md)" [label="no"];
-    "Dispatch final reviewer: sdd-final-reviewer (../requesting-code-review/code-reviewer.md)" -> "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals";
+    "More tasks remain?" -> "Dispatch final reviewer: sdd-final-reviewer (package + ledger lines; its agent file governs the output)" [label="no"];
+    "Dispatch final reviewer: sdd-final-reviewer (package + ledger lines; its agent file governs the output)" -> "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals";
     "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" -> "Final review clean: delete this plan's workspace";
     "Final review clean: delete this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
 }
@@ -438,10 +438,13 @@ The loop triggers when the review reports `spec_compliance: issues`, any
 Critical or Important finding, or a `cannot_verify` item you confirmed as a
 real gap.
 
-A review that comes back with a `package_gap` set (the reviewer could not
-read the package you named) is not a verdict: regenerate the package,
-check the path, re-dispatch, and ledger the retry. Never treat a gap as
-"clean" or as a finding.
+A review whose verdict is `package_gap` (`spec_compliance`/`task_quality`
+on a task review, `round_verdict` on a re-review — the reviewer could not
+read the package you named; the `package_gap` field says what it tried) is
+not a verdict on the code: regenerate the package, check the path,
+re-dispatch, and ledger the retry. Never treat a gap as "clean" or as a
+finding. The schema admits the gap outright so a reviewer is never pushed
+to invent verdicts for a package it did not read.
 
 Before the loop starts, three routes leave it immediately:
 
@@ -551,10 +554,14 @@ branch started from, e.g. `git merge-base main HEAD`) and include the
 printed path in the final review dispatch, so the final reviewer reads
 one file instead of re-deriving the branch diff with git commands. Dispatch
 `sdd-final-reviewer` (xhigh reasoning, once per plan — see Agent
-Selection), using superpowers:requesting-code-review's
-[code-reviewer.md](../requesting-code-review/code-reviewer.md) as the
-prompt. Point it at the ledger's deferred-minor and parked lines so it can
-triage which must be fixed before merge.
+Selection) with a `task` that names: the package path, the plan/spec
+paths, and the ledger's deferred-minor and parked-with-ruling lines
+verbatim. Do not wrap it in requesting-code-review's `code-reviewer.md` —
+that template asks a prose "Ready to merge?" and has no slot for the
+package or the ledger. The agent file's `<output>` governs: findings with
+file:line, a `### Ledger triage` section (each line → fix-before-merge |
+accept, with reason), and a closing **Mergeable:** yes | no — the two
+things you read next.
 
 If the final whole-branch review returns findings, dispatch ONE fix subagent
 with the complete findings list — not one fixer per finding.

@@ -85,10 +85,12 @@ that the fix itself broke nothing.
     - `out_of_scope[]`: issues entirely outside the fix diff. Non-blocking;
       the controller ledgers these for the final review.
     - `round_verdict`: `all_addressed` (every finding ADDRESSED and no new
-      Critical/Important breakage) | `findings_open`.
-    - `package_gap`: set ONLY when you could not read the diff package at
-      the path given; say what you tried. A gap is not a verdict — the
-      controller regenerates the package and re-dispatches.
+      Critical/Important breakage) | `findings_open` | `package_gap`.
+    - `package_gap`: ONLY when you could not read the diff package at the
+      path given. Then yield exactly: `round_verdict: package_gap`,
+      `finding_verdicts: []`, `package_gap` = the path and the error — and
+      nothing else. Never verdict findings against a package you did not
+      read; the controller regenerates the package and re-dispatches.
   } ] }
 ```
 
