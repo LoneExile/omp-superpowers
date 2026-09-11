@@ -161,7 +161,7 @@ more, nothing less) and is well-built (clean, tested, maintainable)
 
     Yield the structured result:
 
-    - `spec_compliance`: `compliant` | `issues`
+    - `spec_compliance`: `compliant` | `issues` | `package_gap`
     - `spec_issues[]`: what's missing / extra / misunderstood, each with
       file:line
     - `cannot_verify[]`: requirements you could not verify from the diff
@@ -171,11 +171,14 @@ more, nothing less) and is well-built (clean, tested, maintainable)
     - `findings[]`: `{severity: Critical|Important|Minor, location:
       file:line, body: what's wrong / why it matters / how to fix,
       plan_mandated: true|false}`
-    - `task_quality`: `approved` | `needs_fixes`
+    - `task_quality`: `approved` | `needs_fixes` | `package_gap`
     - `reasoning`: 1-2 sentence technical assessment
-    - `package_gap`: set ONLY when you could not read the diff package at
-      the path given; say what you tried. A gap is not a verdict — the
-      controller regenerates the package and re-dispatches.
+    - `package_gap`: ONLY when you could not read the diff package at the
+      path given. Then yield exactly: `spec_compliance: package_gap`,
+      `task_quality: package_gap`, `reasoning` = what you tried,
+      `package_gap` = the path and the error — and nothing else. Never
+      substitute a real-looking verdict for a package you did not read;
+      the controller regenerates the package and re-dispatches.
   } ] }
 ```
 

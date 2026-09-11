@@ -10,13 +10,15 @@ output:
   properties:
     spec_compliance:
       metadata:
-        description: "compliant = every brief requirement present, nothing extra; issues = missing/extra/misunderstood found"
-      enum: [compliant, issues]
+        description: "compliant = every brief requirement present, nothing extra; issues = missing/extra/misunderstood found; package_gap = the diff package could not be read (set task_quality to package_gap too, fill package_gap)"
+      enum: [compliant, issues, package_gap]
     task_quality:
-      enum: [approved, needs_fixes]
+      metadata:
+        description: "approved | needs_fixes; package_gap when the diff package could not be read"
+      enum: [approved, needs_fixes, package_gap]
     reasoning:
       metadata:
-        description: "1-2 sentence technical assessment"
+        description: "1-2 sentence technical assessment; on a package_gap, what you tried"
       type: string
   optionalProperties:
     spec_issues:
@@ -53,7 +55,7 @@ output:
             type: boolean
     package_gap:
       metadata:
-        description: "Set ONLY when the diff package at the given path could not be read; what you tried. A gap is not a verdict — the controller regenerates and re-dispatches."
+        description: "The path you were given and the error you got. Set ONLY together with spec_compliance and task_quality both = package_gap. A gap is not a verdict on the code — the controller regenerates the package and re-dispatches."
       type: string
 ---
 
