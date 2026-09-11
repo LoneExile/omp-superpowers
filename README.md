@@ -104,19 +104,21 @@ flowchart LR
 
 Set the override in `~/.omp/agent/config.yml`, or interactively with `/agents` in any session (it edits the same map). It applies on the next dispatch; delete a line to fall back to the agent file.
 
-This is how the fork's own author runs it — every seat on a flat-rate model, keeping the ladder:
+This is how the fork's own author runs it — every seat on a flat-rate model, mapped onto that model's own thinking ladder:
 
 ```yaml
 task:
   agentModelOverrides:
-    sdd-implementer: opencode-go/deepseek-flash:medium
-    sdd-reviewer: opencode-go/deepseek-flash:high
-    sdd-rereviewer: opencode-go/deepseek-flash:low
-    sdd-escalation-implementer: opencode-go/deepseek-flash:xhigh
-    sdd-final-reviewer: opencode-go/deepseek-flash:xhigh
+    sdd-implementer: opencode-go/deepseek-v4.1-flash:high
+    sdd-reviewer: opencode-go/deepseek-v4.1-flash:high
+    sdd-rereviewer: opencode-go/deepseek-v4.1-flash:low
+    sdd-escalation-implementer: opencode-go/deepseek-v4.1-flash:max
+    sdd-final-reviewer: opencode-go/deepseek-v4.1-flash:max
 ```
 
-Measured on a real fix-round re-review with identical inputs: a grok-4.6 seat took 9.7 min / 4 turns, sonnet-5 about 50 s / 1 turn, deepseek-flash 100 s / 4 turns — same verdict, full structured result, all three.
+**Use the exact catalog id and a level the model actually offers.** `omp models ls <provider>` shows each model's ladder. A level that is not on it is silently clamped to the nearest valid one — `deepseek-v4.1-flash` offers only `low, high, max`, so `:medium` would run at `low` and `:xhigh` at `high`, collapsing the ladder without any error. Check `session_init.resolvedModel` in a subagent transcript if in doubt: it shows the level that actually ran. Catalog ids also get renamed (this one was `deepseek-flash` a day earlier, and the old string now matches an empty placeholder row).
+
+Measured on a real fix-round re-review with identical inputs: a grok-4.6 seat took 9.7 min / 4 turns, sonnet-5 about 50 s / 1 turn, the DeepSeek flash seat 100 s / 4 turns — same verdict, full structured result, all three.
 
 Rules that are easy to get wrong:
 

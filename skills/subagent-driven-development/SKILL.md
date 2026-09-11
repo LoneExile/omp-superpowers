@@ -209,20 +209,26 @@ review raise reasoning to `xhigh`, re-reviews drop to `low`.
 `~/.omp/agent/config.yml` (or the `/agents` hub) beats the agent file's
 `model:` line and applies on the next dispatch. A bare model keeps the
 agent's `thinkingLevel:`; an explicit `:level` on the override replaces it.
-Example — every seat on a flat-rate model, keeping the ladder:
+Example — every seat on a flat-rate model, mapped onto that model's own
+ladder:
 
 ```yaml
 task:
   agentModelOverrides:
-    sdd-implementer: opencode-go/deepseek-flash:medium
-    sdd-reviewer: opencode-go/deepseek-flash:high
-    sdd-rereviewer: opencode-go/deepseek-flash:low
-    sdd-escalation-implementer: opencode-go/deepseek-flash:xhigh
-    sdd-final-reviewer: opencode-go/deepseek-flash:xhigh
+    sdd-implementer: opencode-go/deepseek-v4.1-flash:high
+    sdd-reviewer: opencode-go/deepseek-v4.1-flash:high
+    sdd-rereviewer: opencode-go/deepseek-v4.1-flash:low
+    sdd-escalation-implementer: opencode-go/deepseek-v4.1-flash:max
+    sdd-final-reviewer: opencode-go/deepseek-v4.1-flash:max
 ```
 
-(That id is discovery-only: the `:level` suffix resolves in config and in
-overrides, but not on the `--model` CLI flag.)
+Use the exact catalog id and only levels that model offers (`omp models ls
+<provider>`): an unsupported level is silently clamped to the nearest valid
+one, which collapses the ladder without an error. Ids get renamed across
+catalog refreshes; when a seat's speed or quality shifts overnight, read
+`session_init.resolvedModel` in its transcript before blaming the plan.
+(Discovery-only ids accept `:level` in config and overrides but not on the
+`--model` CLI flag.)
 
 **What "no shell" enforces (measured, omp 18.1.15).** A `tools:` list is
 honoured: the reviewers get no `bash`/`edit`, and their `write` is only the
