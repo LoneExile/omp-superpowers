@@ -321,18 +321,23 @@ and fix-round diffs need it.
   fix-loop rounds 1-2 resume this agent.
 - **Waves, only with isolation.** Disjoint files are not enough on omp:
   subagents share the controller's checkout — one index, one HEAD, one
-  working tree — unless `task.isolation.mode` is set (its default is
-  `none`). Two concurrent implementers in one tree sweep each other's
-  half-written files into their commits and test against each other's
-  in-flight code. So: check `task.isolation.mode` once at setup and ledger
-  it. If it is `none`, every implementer runs alone, in plan order, and the
-  rest of this bullet does not apply. If isolation is on, group tasks into
-  waves from your pre-flight table (it already names every pair sharing a
-  file or interface — it IS the dependency graph): a wave holds tasks with
-  no shared row between them and no unfinished producer. Dispatch a wave as
-  ONE `task` call, one `sdd-implementer` per task with `isolated: true`,
-  each with its own brief and report path; record the same BASE for every
-  task in the wave. Tasks that share a row run in later waves, in
+  working tree — unless subagent isolation is on (`task.isolation.enabled`,
+  default `false`; the backend is `isolation.backend`, default `auto`).
+  Two concurrent implementers in one tree sweep each other's half-written
+  files into their commits and test against each other's in-flight code.
+  So: at setup, run `omp config get task.isolation.enabled` and ledger the
+  answer — read it from the live CLI, not from memory or a source tree, the
+  key has been renamed across omp versions (older builds spelled it
+  `task.isolation.mode`). If it is `false`, every implementer runs alone,
+  in plan order, and the rest of this bullet does not apply. If it is
+  `true`, group tasks into waves from your pre-flight table (it already
+  names every pair sharing a file or interface — it IS the dependency
+  graph): a wave holds tasks with no shared row between them and no
+  unfinished producer. Dispatch a wave as ONE `task` call, one
+  `sdd-implementer` per task, each with its own brief and report path and
+  the per-item `isolated: true` flag the `task` tool exposes once isolation
+  is on (check the tool's own schema); record the same BASE for every task
+  in the wave. Tasks that share a row run in later waves, in
   producer→consumer order. A task whose brief you had to amend with a
   ruling runs alone. When in doubt about a shared file, serialize — a
   conflict costs more than the parallelism buys.
