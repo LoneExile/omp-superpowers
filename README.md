@@ -142,6 +142,7 @@ Rules that are easy to get wrong:
 - `skills/using-superpowers/references/pi-tools.md` — same, as the reference doc
 - `agents/sdd-*.md` — new
 - `skills/subagent-driven-development/` — *Model Selection* → *Agent Selection*; fix-loop cap 5 → 3 with a round-3 escalation seat; a proven-trivial-fix route that replaces a re-review with a one-command proof; waves keyed to the plan's pre-flight file/interface table and gated on isolation; templates show omp's real `{ context, tasks: [{ agent, task }] }` wire shape and the reviewers' structured fields
+- `skills/using-git-worktrees/` — additive omp section: `/wt` is the user's one-line answer to the consent question (moves the session, carries WIP); when the agent creates the worktree itself it uses `omp worktree add` under `~/.omp/wt/` (the only place `omp worktree list`/`clear` manage), knows that command leaves uncommitted changes behind, and asks for `/move <path>` because `cd` never moves the tools' cwd
 
 Everything else is upstream, unmodified.
 
@@ -155,7 +156,7 @@ omp plugin install github:LoneExile/omp-superpowers#$(git rev-parse --short HEAD
 (cd ~/.omp/plugins && npm install --package-lock-only --ignore-scripts)   # keep package-lock in step with bun.lock
 ```
 
-Expect conflicts in `skills/subagent-driven-development/` and `pi-tools.md` whenever upstream touches them — this fork rewrites those files rather than appending to them. `agents/` and the extension's mapping paragraph are additive.
+Expect conflicts in `skills/subagent-driven-development/` and `pi-tools.md` whenever upstream touches them — this fork rewrites those files rather than appending to them. `agents/`, the extension's mapping paragraph, and the omp blocks in `using-git-worktrees` are additive.
 
 Before trusting a new omp release, re-check the harness facts this fork depends on — against the **running binary**, not the npm source tree. `~/.bun/install/global/node_modules/@oh-my-pi/pi-coding-agent/src` routinely lags `omp --version` (a 17.4.2 tree sat beside an 18.1.17 binary while this README was written, and the isolation setting had been renamed in between). The live oracles are `omp config list --json` (every setting and its default), the `task` tool's own description in a session (agent roster, item fields), a `session_init.resolvedModel` line in a subagent transcript (what actually resolved), and `grep -a` on the binary for an exact string when you need to know whether a code path exists.
 
