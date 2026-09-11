@@ -130,7 +130,7 @@ Rules that are easy to get wrong:
 
 | setting | why |
 |---|---|
-| `task.isolation.mode` | off by default; SDD only runs implementers in **parallel waves** when it is on — otherwise they share one checkout and stay serial |
+| `task.isolation.enabled` (+ `isolation.backend`, default `auto`) | off by default; SDD only runs implementers in **parallel waves** when it is on — otherwise they share one checkout and stay serial. Older omp builds spelled this `task.isolation.mode`; check `omp config get task.isolation.enabled` on your build |
 | `task.enableEffort` | exposes per-dispatch `effort` for the round-3 escalation |
 | `autolearn.autoContinue` | omp's auto-learn mints managed skills every session; the whole catalog is injected into every subagent's prompt. Keep it pruned or off — a 2,500-skill catalog was ~220k tokens per subagent turn |
 
@@ -155,7 +155,7 @@ omp plugin install github:LoneExile/omp-superpowers#$(git rev-parse --short HEAD
 
 Expect conflicts in `skills/subagent-driven-development/` and `pi-tools.md` whenever upstream touches them — this fork rewrites those files rather than appending to them. `agents/` and the extension's mapping paragraph are additive.
 
-Before trusting a new omp release, re-check the three harness facts this fork depends on, in the installed package (`~/.bun/install/global/node_modules/@oh-my-pi/pi-coding-agent/src`): agent frontmatter fields (`discovery/helpers.ts` `parseAgentFields`), the `task` item schema (`task/types.ts`), and the `task.agentModelOverrides` precedence (`config/model-resolver.ts` `resolveAgentModelSelection`).
+Before trusting a new omp release, re-check the harness facts this fork depends on — against the **running binary**, not the npm source tree. `~/.bun/install/global/node_modules/@oh-my-pi/pi-coding-agent/src` routinely lags `omp --version` (a 17.4.2 tree sat beside an 18.1.17 binary while this README was written, and the isolation setting had been renamed in between). The live oracles are `omp config list --json` (every setting and its default), the `task` tool's own description in a session (agent roster, item fields), a `session_init.resolvedModel` line in a subagent transcript (what actually resolved), and `grep -a` on the binary for an exact string when you need to know whether a code path exists.
 
 ## License
 
