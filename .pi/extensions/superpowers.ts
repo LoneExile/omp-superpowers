@@ -104,7 +104,9 @@ To resume an idle subagent with new input, message it with \`write agent://<id>\
 
 The \`task\` tool has NO \`model:\` field — a template's \`model:\` line is inert; the agent TYPE carries the model, thinking level, and tools. For subagent-driven-development use this plugin's own agents: \`sdd-implementer\` (implementation, fix rounds 1-2), \`sdd-escalation-implementer\` (fix round 3, and tasks ruled to need the strongest tier), \`sdd-reviewer\` (task review), \`sdd-rereviewer\` (scoped re-review), \`sdd-final-reviewer\` (whole-branch review). Each agent file sets a default model and thinking level; a host re-points any seat with \`task.agentModelOverrides\`. Never use the bundled \`task\` agent for an SDD seat: it lacks the seat's tools, output contract and no-subagent rule.
 
-omp ships a built-in task-list tool: \`todo\` (\`init\`, \`start\`, \`done\`, \`rm\`, \`drop\`, \`block\`, \`unblock\`, \`append\`, \`view\`). Use it for all task tracking. Do not track work in plan files or a repo-local \`TODO.md\`. Treat older \`TodoWrite\` references as the \`todo\` tool.`;
+omp ships a built-in task-list tool: \`todo\` (\`init\`, \`start\`, \`done\`, \`rm\`, \`drop\`, \`block\`, \`unblock\`, \`append\`, \`view\`). Use it for all task tracking. Do not track work in plan files or a repo-local \`TODO.md\`. Treat older \`TodoWrite\` references as the \`todo\` tool.
+
+If your tools include \`vibe_spawn\` but not \`task\`, omp's vibe mode is on and you are its director: you have none of the \`task\`, \`bash\`, \`edit\` or \`write\` tools named above. Read the "Vibe mode" section of \`skill://using-superpowers/references/pi-tools.md\` before acting on them.`;
 }
 
 function messageContainsBootstrap(message: unknown): boolean {
