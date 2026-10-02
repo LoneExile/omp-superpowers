@@ -45,3 +45,23 @@ An agent's `tools:` list limits built-in tools only. Extension tools and MCP too
 ## Task lists
 
 omp ships a built-in `todo` tool (`init`, `start`, `done`, `rm`, `drop`, `block`, `unblock`, `append`, `view`). Use it for all task tracking. Do not use Superpowers plan files, Markdown checklists, or a repo-local `TODO.md` for this. Older Superpowers docs may refer to `TodoWrite`; treat that as the `todo` tool.
+
+## Vibe mode
+
+`/vibe` makes the session a director of worker sessions. You are the director when your tools include `vibe_spawn` but not `task` (a hidden `<vibe-mode>` block before each prompt also says "Vibe mode ON. You are DIRECTOR"). The director keeps `read`, `todo`, the `vibe_*` tools (`vibe_spawn`, `vibe_send`, `vibe_wait`, `vibe_kill`, `vibe_list`) and any MCP tools. It has no `task`, `bash`, `edit`, `write`, `grep`, `glob` or `ask`. Every instruction that needs a missing tool goes to a worker.
+
+| Action skills request | Vibe director's equivalent |
+| --- | --- |
+| Dispatch a subagent | `vibe_spawn` a worker. `vibe_spawn` takes only `cli`, a name and a prompt. `cli: "fast"` is omp's bundled `sonic` agent on the `modelRoles.smol` model; `cli: "good"` is the bundled `task` agent on the `modelRoles.task` model. It cannot start any other agent type |
+| Message or resume it | `vibe_send` to the same worker session |
+| Read a long result | The worker writes it to a file; you `read` the file |
+| Run a command, edit, commit | A worker does it |
+| Verify a claim | A worker runs the command and saves the full output and exit code to a file; you `read` that file |
+| Task tracking ("create a todo", "mark complete") | `todo`, which only the director has |
+
+A worker is an ordinary omp subagent. It has the normal coding tools, including `task`, `wait` and `write agent://`, but no `todo`, `ask` or `vibe_*`, and it starts in the session's cwd. It never gets this plugin's bootstrap (the extension skips subagent sessions), so a brief names the skill to `read` (`read skill://<name>`). A worker is never an SDD seat: `fast` and `good` are the bundled `sonic` and `task` agents, and overrides for their models are `task.agentModelOverrides.sonic` and `task.agentModelOverrides.task`. A long worker result reaches you as a cut-off `<vibe-turn>` response, and its full text at `agent://<id>` comes back as a single line that `read` cuts at 768 characters. Have workers write long reports to a file, and `read` the file.
+
+- **subagent-driven-development and executing-plans:** hand the whole run to ONE `good` worker. Its brief names the skill to read, the plan path and the worktree path, and gives one rule: when the skill says to stop and ask your human partner, end the turn with the question. That worker is the controller. It runs the scripts, keeps the ledger, and dispatches the SDD seats through its own `task` tool, so each seat keeps its model, tools and output contract (measured on omp 18.4.10: a `good` worker ran `read skill://subagent-driven-development`, dispatched `sdd-rereviewer` through its own `task` tool, and the seat ran on its `task.agentModelOverrides` model, returned its structured output to the worker, and was resumed with `write agent://<id>`). The worker has no `todo`; the ledger (`<workspace>/progress.md`) is its record. You keep `todo` from the ledger, take its questions to your human partner, and `vibe_send` the answers.
+- **Worktrees:** while vibe is on, `/move`, `/wt`, `/new` and fork are refused ("Exit vibe mode first."), and leaving vibe mode kills every worker. Create the worktree and `/move` into it before `/vibe`. Otherwise every brief carries the worktree's absolute path, and you `read` files there by absolute path.
+- **Long runs:** a worker's first turn runs under omp's soft request budget, `task.softRequestBudget`: 200 by default, and the `fast` worker's `sonic` agent caps at 100. At the budget the worker gets a wrap-up notice; at 1.5x it is stopped and must yield. A long plan's controller can cross the budget: set `task.softRequestBudget: 0` (it disables the budget for every subagent), or `vibe_send` the stopped worker "continue from the ledger".
+- **The rest:** brainstorming's questions, the plan handoff and finishing a branch's options are conversation, and stay with the director. A worker writes the files and runs git and the tests.

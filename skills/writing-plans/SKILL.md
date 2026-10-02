@@ -193,6 +193,8 @@ them to review the plan and choose an execution method before implementation.
 
 **For this plan I recommend <one of the two>, because <one sentence from the plan: how much the tasks depend on each other's interfaces, how many there are, what a shipped mistake would cost>. Does the plan capture what you want, and which approach should we use?"**
 
+**On omp in vibe mode** (your tools include `vibe_spawn` but not `task`), both approaches run in one `good` worker you brief, not in your own session; the chosen skill's vibe note says how. Say so when you offer them.
+
 **When an execution method has already been supplied:**
 
 **"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Please review the plan. Does it capture what you want?"**
