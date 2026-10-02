@@ -41,7 +41,7 @@ The skills drive themselves once loaded. The usual path:
 
 1. `read skill://brainstorming` — turn an idea into a design
 2. `read skill://writing-plans` — produce `docs/superpowers/plans/<date>-<name>.md`
-3. `read skill://subagent-driven-development` — execute the plan task by task via subagents
+3. `read skill://subagent-driven-development` — execute the plan task by task via subagents. If you choose Native at the plan handoff, `executing-plans` runs instead: the session does every task itself, and only the final review is a subagent (`sdd-final-reviewer`)
 4. `read skill://finishing-a-development-branch` — merge / PR / discard
 
 On omp the agent invokes a skill by reading it (`read skill://<name>`); you can also invoke one explicitly with `/skill:<name>`.
@@ -80,7 +80,7 @@ Blue nodes are the five omp agents this fork ships. A reviewer that cannot read 
 | task reviewer | `sdd-reviewer` | sonnet-5 · high | read, grep, glob |
 | scoped re-review | `sdd-rereviewer` | sonnet-5 · low | read, grep |
 | fix round 3 / ruled strongest-tier task | `sdd-escalation-implementer` | opus-5 · xhigh | same as implementer |
-| final whole-branch review | `sdd-final-reviewer` | opus-5 · xhigh | read, grep, glob, bash, lsp, ast_grep |
+| final whole-branch review (subagent-driven or Native) | `sdd-final-reviewer` | opus-5 · xhigh | read, grep, glob, bash, lsp, ast_grep |
 
 The shipped defaults are Anthropic: sonnet for the seats that run on every task, opus for the two that run once per plan or once per stuck task. The tiers are a **thinking ladder** as much as a model ladder — re-reviews reason at `low`, escalation and the final review at `xhigh`.
 
@@ -143,8 +143,9 @@ Rules that are easy to get wrong:
 
 - `.pi/extensions/superpowers.ts` — the injected mapping names `task`, `todo`, the `sdd-*` roster, and the no-`model:`-field rule
 - `skills/using-superpowers/references/pi-tools.md` — same, as the reference doc
-- `agents/sdd-*.md` — new. `sdd-final-reviewer` also carries the review rules upstream keeps in `requesting-code-review/code-reviewer.md` (the spec is a vision document; a "Declined to judge" list), because it replaces that template in SDD's final review
+- `agents/sdd-*.md` — new. `sdd-final-reviewer` reviews the whole branch for both ways of running a plan, and carries the review rules upstream keeps in `requesting-code-review/code-reviewer.md` (the spec is a vision document; a "Declined to judge" list), because it replaces that template there
 - `skills/subagent-driven-development/` — *Model Selection* → *Agent Selection*; fix-loop cap 5 → 3 with a round-3 escalation seat; a proven-trivial-fix route that replaces a re-review with a one-command proof; waves keyed to the plan's pre-flight file/interface table and gated on isolation; templates show omp's real `{ context, tasks: [{ agent, task }] }` wire shape and the reviewers' structured fields
+- `skills/executing-plans/` — one additive omp paragraph in *Final Review*: the `task` tool has no `model:` field, so the final review goes to `sdd-final-reviewer` (its model is what the host maps that agent to), told that no task was reviewed
 - `skills/using-git-worktrees/` — additive omp section: `/wt` is the user's one-line answer to the consent question (moves the session, carries WIP); when the agent creates the worktree itself it uses `omp worktree add` under `~/.omp/wt/` (the only place `omp worktree list`/`clear` manage), knows that command leaves uncommitted changes behind, and asks for `/move <path>` because `cd` never moves the tools' cwd
 - `README.md` — this file: rewritten for omp (install, seats, overrides, maintenance); upstream's multi-harness README is gone
 - `tests/pi/test-pi-extension.mjs` — one assertion follows the renamed mapping heading; the package-name assertion is gone (`scripts/check-npm-package.sh` checks the published name)
