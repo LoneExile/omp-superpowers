@@ -19,7 +19,7 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 - **The escalation seat handles a first implementation** when a task is ruled to need the strongest tier, not only a third fix round.
 - **Templates carry the required `solutionSpace`.** omp's task schema requires it on every spawn, not only in the batch shape.
 - **The tool mapping is complete.** It adds resume via `write agent://<id>`, full results at `agent://<id>`, `task.batch`, `solutionSpace`, and the `superpowers:` skill-name prefix, and drops tier claims that hosts override.
-- **Marketplace and `--plugin-dir` installs keep model pins.** Without `.omp-plugin/plugin.json`, omp treated the repo root as Claude dialect and dropped every agent's `model:` line. The repo now carries that manifest.
+- **Marketplace and `--plugin-dir` installs keep model pins.** Without `.omp-plugin/plugin.json`, omp treated the repo root as Claude dialect and dropped every agent's `model:` line. The repo now carries that manifest. The discovery check was read from omp's source; a marketplace install has not been exercised.
 
 ### Changed
 
