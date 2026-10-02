@@ -41,9 +41,18 @@ expected=$(
     printf '%s\n' CHANGELOG.md LICENSE README.md package.json
   } | LC_ALL=C sort
 )
+# npm 11 prints `pack --json` as an array of results, npm 12 as an object keyed
+# by package name.
 actual=$(
   npm pack --dry-run --json 2>/dev/null |
-    node -e 'let s = ""; process.stdin.on("data", (d) => { s += d; }).on("end", () => { for (const f of JSON.parse(s)[0].files) console.log(f.path); });' |
+    node -e '
+      let s = "";
+      process.stdin.on("data", (d) => { s += d; }).on("end", () => {
+        const out = JSON.parse(s);
+        const pkg = Array.isArray(out) ? out[0] : Object.values(out)[0];
+        for (const f of pkg.files) console.log(f.path);
+      });
+    ' |
     LC_ALL=C sort
 )
 if [ "$expected" != "$actual" ]; then
