@@ -11,8 +11,11 @@ more, nothing less) and is well-built (clean, tested, maintainable)
 { context: "<one line: plan name, branch, read-only task review>",
   tasks: [ {
   name: "ReviewTaskN",
-  agent: "sdd-reviewer",     # REQUIRED — read/grep/glob only, no shell: the
-                             # review package IS its view of the change.
+  agent: "sdd-reviewer",     # REQUIRED — read/grep/glob only, no edit, bash, or
+                             # file-write tool: the review package IS its view of
+                             # the change.
+  solutionSpace: "review only: the brief and the diff are given; nothing to design",
+                             # REQUIRED by omp's task schema: one line on how open the problem is.
   task: |
     You are reviewing one task's implementation: first whether it matches its
     requirements, then whether it is well-built. This is a task-scoped gate,
@@ -21,14 +24,14 @@ more, nothing less) and is well-built (clean, tested, maintainable)
 
     ## What Was Requested
 
-    Read the task brief: [BRIEF_FILE]
+    Read the task brief (explicit range: `[BRIEF_FILE]:1-3000`): [BRIEF_FILE]
 
     Global constraints from the spec/design that bind this task:
     [GLOBAL_CONSTRAINTS]
 
     ## What the Implementer Claims They Built
 
-    Read the implementer's report: [REPORT_FILE]
+    Read the implementer's report (explicit range: `[REPORT_FILE]:1-3000`): [REPORT_FILE]
 
     ## Diff Under Review
 
@@ -36,13 +39,16 @@ more, nothing less) and is well-built (clean, tested, maintainable)
     **Head:** [HEAD_SHA]
     **Diff file:** [DIFF_FILE]
 
-    Read the diff file once — it contains the commit list, a stat summary,
-    and the full diff with surrounding context, and it is your view of the
-    change. The diff's context lines ARE the changed files: do not Read a
-    changed file separately unless a hunk you must judge is cut off
-    mid-function — and say so in your report. You have no shell; if the
-    diff file is missing, report that as a gap and stop — do not
-    reconstruct the diff from files.
+    Read the diff file in full, with an explicit range: `[DIFF_FILE]:1-3000`
+    (a bare read returns only the first 300 lines; while the footer says
+    `[Showing lines … of N. Use :M to continue]`, continue with the next
+    range). It contains the commit list, a stat summary, and the full diff
+    with surrounding context, and it is your view of the change. The diff's
+    context lines ARE the changed files: do not Read a changed file
+    separately unless a hunk you must judge is cut off mid-function — and
+    say so in your report. You have no bash tool; if the diff file is
+    missing, report that as a gap and stop — do not reconstruct the diff
+    from files.
     Do not crawl the broader codebase. Inspect code outside the diff only
     to evaluate a concrete risk you can name — one focused check per named
     risk, and name both the risk and what you checked in your report.
@@ -51,7 +57,10 @@ more, nothing less) and is well-built (clean, tested, maintainable)
     checking the call sites is the right method.
 
     Your review is read-only on this checkout. Do not mutate the working
-    tree, the index, HEAD, or branch state in any way.
+    tree, the index, HEAD, or branch state in any way, and never call an
+    `xd://` device or an extension, MCP, or memory tool that executes code,
+    writes files, or changes external state — your `tools:` list does not
+    stop those, this instruction does.
 
     ## You Do Not Dispatch Subagents
 
@@ -74,7 +83,7 @@ more, nothing less) and is well-built (clean, tested, maintainable)
     ## Tests
 
     The implementer already ran the tests and reported results with TDD
-    evidence for exactly this code. You have no shell and cannot re-run
+    evidence for exactly this code. You have no bash tool and cannot re-run
     anything: verify their claims against the diff. If reading the code
     raises a specific doubt that no existing run answers, name the focused
     test you would run in that finding's body and verdict on what the diff

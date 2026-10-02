@@ -9,6 +9,12 @@ Use this template when dispatching an implementer subagent.
   agent: "sdd-implementer",  # REQUIRED — carries model, thinking level, tools.
                              # Fix round 3 / a ruled strongest-tier exception:
                              # "sdd-escalation-implementer". Never plain "task".
+  solutionSpace: "one task: requirements and exact values are in the brief",
+                             # REQUIRED by omp's task schema: one line on how open the
+                             # problem is. A first implementation on the escalation
+                             # seat: "design open across files: interfaces given,
+                             # approach to choose" (and say it is a first
+                             # implementation: no report file, no findings).
   task: |
     You are implementing Task N: [task name]
 
