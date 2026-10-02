@@ -1,0 +1,62 @@
+name: Release
+
+# Publishes to npm when a GitHub Release is published. The release tag is "v"
+# plus package.json's version, e.g. v6.4.2-omp.1. To re-fire a publish that
+# flaked, run this workflow by hand on the release tag.
+#
+# Tokenless: npm Trusted Publishing (OIDC) authenticates the publish and
+# attaches provenance. The trusted publisher configured on npmjs.com names this
+# repository and the workflow file "release.yml"; renaming this file breaks
+# publishing.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # npm Trusted Publishing (OIDC) + provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Upgrade npm (Trusted Publishing needs npm >= 11.5.1)
+        run: npm install -g npm@latest
+
+      - name: Tag matches package.json version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "$GITHUB_REF_TYPE" != tag ] || [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::package.json is $version; run this on tag v$version, not $GITHUB_REF_TYPE '$GITHUB_REF_NAME'"
+            exit 1
+          fi
+
+      - name: Check package
+        run: bash scripts/check-npm-package.sh
+
+      - name: Publish
+        run: |
+          # Trusted Publishing cannot create a package, so the first version
+          # was published by hand and its release finds it already on npm; so
+          # does a re-run after a publish that succeeded. Skip those instead of
+          # failing on "cannot publish over".
+          status=$(node -e '
+            const { name, version } = require("./package.json");
+            fetch("https://registry.npmjs.org/" + name.replace("/", "%2f") + "/" + version)
+              .then((r) => console.log(r.status), () => console.log("unreachable"));
+          ')
+          case "$status" in
+            200) echo "::notice::$(node -p "require('./package.json').version") is already on npm; nothing to publish" ;;
+            404) npm publish ;;
+            *) echo "::error::npm registry lookup returned '$status'"; exit 1 ;;
+          esac

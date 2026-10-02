@@ -13,14 +13,17 @@ This fork keeps the skills and fixes the omp side:
 ## Install
 
 ```bash
-omp plugin install github:LoneExile/omp-superpowers
+omp plugin install npm:@loneexile/omp-superpowers
 ```
 
-Pin to a commit when you want reproducibility (the pin is recorded in `~/.omp/plugins/bun.lock`):
+Releases are versioned `<upstream version>-omp.<n>`: `6.4.2-omp.1` is upstream v6.4.2 plus this fork's first iteration on it. [CHANGELOG.md](CHANGELOG.md) lists each release. To move to another one, uninstall and install it pinned:
 
 ```bash
-omp plugin install github:LoneExile/omp-superpowers#<sha>
+omp plugin uninstall @loneexile/omp-superpowers
+omp plugin install npm:@loneexile/omp-superpowers@<version>
 ```
+
+Unreleased `main` installs from GitHub under the same plugin name, pinned to a commit: `omp plugin install github:LoneExile/omp-superpowers#<sha>`. Installs made before 6.4.2-omp.1 used the plugin name `superpowers`; run `omp plugin uninstall superpowers` before installing this package.
 
 Verify it loaded — the roster of your `task` tool should now include the five `sdd-*` agents:
 
@@ -140,25 +143,42 @@ Rules that are easy to get wrong:
 
 - `.pi/extensions/superpowers.ts` — the injected mapping names `task`, `todo`, the `sdd-*` roster, and the no-`model:`-field rule
 - `skills/using-superpowers/references/pi-tools.md` — same, as the reference doc
-- `agents/sdd-*.md` — new
+- `agents/sdd-*.md` — new. `sdd-final-reviewer` also carries the review rules upstream keeps in `requesting-code-review/code-reviewer.md` (the spec is a vision document; a "Declined to judge" list), because it replaces that template in SDD's final review
 - `skills/subagent-driven-development/` — *Model Selection* → *Agent Selection*; fix-loop cap 5 → 3 with a round-3 escalation seat; a proven-trivial-fix route that replaces a re-review with a one-command proof; waves keyed to the plan's pre-flight file/interface table and gated on isolation; templates show omp's real `{ context, tasks: [{ agent, task }] }` wire shape and the reviewers' structured fields
 - `skills/using-git-worktrees/` — additive omp section: `/wt` is the user's one-line answer to the consent question (moves the session, carries WIP); when the agent creates the worktree itself it uses `omp worktree add` under `~/.omp/wt/` (the only place `omp worktree list`/`clear` manage), knows that command leaves uncommitted changes behind, and asks for `/move <path>` because `cd` never moves the tools' cwd
 - `README.md` — this file: rewritten for omp (install, seats, overrides, maintenance); upstream's multi-harness README is gone
-- `tests/pi/test-pi-extension.mjs` — one assertion follows the renamed mapping heading
+- `tests/pi/test-pi-extension.mjs` — one assertion follows the renamed mapping heading; the package-name assertion is gone (`scripts/check-npm-package.sh` checks the published name)
+- `package.json` — the npm identity: `@loneexile/omp-superpowers`, `<upstream version>-omp.<n>` versions, a `files` allowlist (the extension, `skills/`, `agents/`), `publishConfig`, `omp`/`oh-my-pi` keywords; `main` is dropped, since it pointed at the OpenCode plugin this package does not ship
+- `CHANGELOG.md`, `.github/workflows/` (CI, npm release), `scripts/check-npm-package.sh` — new
 
 Everything else is upstream, unmodified.
 
 ## Maintenance
 
+### Syncing with upstream
+
 ```bash
-git fetch upstream
+git fetch upstream --tags
 git rebase upstream/main
 git push --force-with-lease origin main
-omp plugin install github:LoneExile/omp-superpowers#$(git rev-parse --short HEAD)
-(cd ~/.omp/plugins && npm install --package-lock-only --ignore-scripts)   # keep package-lock in step with bun.lock
 ```
 
-Expect conflicts in `skills/subagent-driven-development/`, `pi-tools.md`, and `README.md` whenever upstream touches them — this fork rewrites those files rather than appending to them (README.md is never a partial conflict). `agents/`, the extension's mapping paragraph, and the omp blocks in `using-git-worktrees` are additive.
+Expect conflicts in `skills/subagent-driven-development/`, `pi-tools.md`, `README.md`, and `package.json` whenever upstream touches them — this fork rewrites those files rather than appending to them (README.md is never a partial conflict). In `package.json` keep the fork's identity and set `version` to `<new upstream version>-omp.1`: CI's package check fails until the version's base matches the upstream version in `.claude-plugin/plugin.json`. `agents/`, the extension's mapping paragraph, and the omp blocks in `using-git-worktrees` are additive.
+
+A clean rebase is not the whole sync. Upstream's edits to text this fork replaced never reach the replacement, so read upstream's diff for those files and port what still applies. The v6.4.x sync needed two: `bash scripts/...` invocations in the SDD text, and `code-reviewer.md`'s new review rules, which here live in `agents/sdd-final-reviewer.md`.
+
+### Releasing
+
+1. Set `version` in `package.json`, move CHANGELOG.md's *Unreleased* entries under that version, commit, push, and wait for CI.
+2. Publish a GitHub release for the tag `v<version>`; the [release workflow](.github/workflows/release.yml) publishes it to npm through Trusted Publishing, with provenance:
+
+```bash
+v=$(node -p "require('./package.json').version")
+awk -v h="## [$v]" 'index($0, h) == 1 {f = 1; next} f && /^(## )?\[/ {exit} f' CHANGELOG.md > /tmp/notes.md
+gh release create "v$v" --target main --title "v$v" --notes-file /tmp/notes.md
+```
+
+### New omp versions
 
 Before trusting a new omp release, re-check the harness facts this fork depends on — against the **running binary**, not the npm source tree. `~/.bun/install/global/node_modules/@oh-my-pi/pi-coding-agent/src` routinely lags `omp --version` (a 17.4.2 tree sat beside an 18.1.17 binary while this README was written, and the isolation setting had been renamed in between). The live oracles are `omp config list --json` (every setting and its default), the `task` tool's own description in a session (agent roster, item fields), a `session_init.resolvedModel` line in a subagent transcript (what actually resolved), and `grep -a` on the binary for an exact string when you need to know whether a code path exists.
 
