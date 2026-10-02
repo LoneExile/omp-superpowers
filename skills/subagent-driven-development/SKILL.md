@@ -349,7 +349,7 @@ and fix-round diffs need it.
   conflict costs more than the parallelism buys.
 - **A wave shares the dispatch call, never the diff.** Each task keeps its
   own review package: after the wave's results integrate, run
-  `review-package PLAN_FILE <task BASE> <task HEAD>` per task — the range
+  `bash scripts/review-package PLAN_FILE <task BASE> <task HEAD>` per task — the range
   the harness reports as that task's integrated commits — and dispatch one
   `sdd-reviewer` per task in one `task` call, each pointed at its own brief,
   report, and package. A reviewer that sees sibling hunks cannot decide
@@ -365,7 +365,7 @@ Template: [implementer-prompt.md](implementer-prompt.md)
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Generate the review package (`scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch `sdd-reviewer` with the printed path.
+**DONE:** Generate the review package (`bash scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch `sdd-reviewer` with the printed path.
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
 
@@ -560,8 +560,12 @@ verbatim. Do not wrap it in requesting-code-review's `code-reviewer.md` —
 that template asks a prose "Ready to merge?" and has no slot for the
 package or the ledger. The agent file's `<output>` governs: findings with
 file:line, a `### Ledger triage` section (each line → fix-before-merge |
-accept, with reason), and a closing **Mergeable:** yes | no — the two
-things you read next.
+accept, with reason), a `### Declined to judge` section, and a closing
+**Mergeable:** yes | no. Every "Declined to judge" line is a ruling you
+make and ledger, exactly like a plan conflict — `Final: Ruling: <behavior
+the reviewer set aside> — <what a reasonable person using this software
+gets, and why that stands or why it is now a finding> — <cost if wrong>`;
+one that becomes a finding joins the findings below.
 
 If the final whole-branch review returns findings, dispatch ONE fix subagent
 with the complete findings list — not one fixer per finding.

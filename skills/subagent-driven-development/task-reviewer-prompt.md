@@ -184,7 +184,7 @@ more, nothing less) and is well-built (clean, tested, maintainable)
 
 **Placeholders:**
 - `agent: sdd-reviewer` — REQUIRED (see SKILL.md Agent Selection)
-- `[BRIEF_FILE]` — REQUIRED: the task brief file (`scripts/task-brief PLAN N`
+- `[BRIEF_FILE]` — REQUIRED: the task brief file (`bash scripts/task-brief PLAN N`
   prints the path; same file the implementer worked from)
 - `[GLOBAL_CONSTRAINTS]` — the binding requirements copied verbatim from
   the plan's Global Constraints section or the spec: exact values, formats,
