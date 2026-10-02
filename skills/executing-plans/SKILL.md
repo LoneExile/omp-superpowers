@@ -48,12 +48,15 @@ no `bash`, `edit` or `write`. Hand the whole run to ONE `good` worker. It
 executes the plan, including the final review it dispatches to
 `sdd-final-reviewer` through its own `task` tool. Its brief tells it to
 `read skill://executing-plans` and execute `<plan>` in `<worktree>`, and
-gives one rule: when the skill says to stop and ask your human partner,
-end the turn with the question. The worker has no `todo`, so the ledger is
-its record. You keep the todo list from its ledger
-(`<workspace>/progress.md`), take its questions to your human partner, and
-`vibe_send` the answers. The worktree and budget limits are in "Vibe mode"
-in `skill://using-superpowers/references/pi-tools.md`.
+gives two rules. First, run every test, build and script the skill calls
+for: the brief must say so explicitly, because an omp 18.4.12 worker skips
+checks unless its assignment explicitly instructs them. Second, when the
+skill says to stop and ask your human partner, end the turn with the
+question. The worker has no `todo`, so the ledger is its record. You keep
+the todo list from its ledger (`<workspace>/progress.md`), take its
+questions to your human partner, and `vibe_send` the answers. The
+worktree and budget limits are in "Vibe mode" in
+`skill://using-superpowers/references/pi-tools.md`.
 
 ## When to Use
 
