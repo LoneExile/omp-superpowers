@@ -6,6 +6,8 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+## [6.4.2-omp.3] - 2026-10-02
+
 ### Fixed
 
 - **The reviewer read-only boundary was overstated.** The text said reviewers could not run a shell, leaning on `hub`, which omp 18.3.0 removed. A `tools:` list limits built-in tools only: extension tools and MCP tools (`xd://` devices through the device-only `write`) still attach, and memory tools attach only when the list names them. A live probe on 18.4.10 had a read/grep/glob reviewer run a shell command through an MCP device. The docs now say read-only is by instruction, and the reviewers forbid such calls.
@@ -58,6 +60,7 @@ First release, synced to upstream [v6.4.2](https://github.com/obra/superpowers/b
 - The fork's rewritten subagent-driven-development text invokes its helper scripts through `bash` as well, so a package extractor that drops exec bits cannot break them.
 - `sdd-final-reviewer` carries upstream's new review rules from `code-reviewer.md`, the template it replaces in SDD's final review: the spec is a vision document (behavior it is silent on is graded by what a reasonable person expects), and a "Declined to judge" section that the controller rules on and ledgers like a plan conflict.
 
-[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v6.4.2-omp.2...HEAD
+[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v6.4.2-omp.3...HEAD
+[6.4.2-omp.3]: https://github.com/LoneExile/omp-superpowers/releases/tag/v6.4.2-omp.3
 [6.4.2-omp.2]: https://github.com/LoneExile/omp-superpowers/releases/tag/v6.4.2-omp.2
 [6.4.2-omp.1]: https://github.com/LoneExile/omp-superpowers/releases/tag/v6.4.2-omp.1
