@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: omp extension
+        run: node --test tests/pi/test-pi-extension.mjs
+
+      - name: Shipped skill scripts
+        run: |
+          bash tests/claude-code/test-sdd-workspace.sh
+          bash tests/claude-code/test-executing-plans-scripts.sh
+          bash tests/diagnosing-superpowers/test-skill-structure.sh
+
+      - name: npm package
+        run: bash scripts/check-npm-package.sh
