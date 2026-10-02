@@ -106,6 +106,8 @@ The \`task\` tool has NO \`model:\` field — a template's \`model:\` line is in
 
 omp ships a built-in task-list tool: \`todo\` (\`init\`, \`start\`, \`done\`, \`rm\`, \`drop\`, \`block\`, \`unblock\`, \`append\`, \`view\`). Use it for all task tracking. Do not track work in plan files or a repo-local \`TODO.md\`. Treat older \`TodoWrite\` references as the \`todo\` tool.
 
+From omp 18.4.12 every subagent is told to leave builds, tests and smoke runs to the main agent unless its assignment explicitly instructs them: name the checks a subagent must run in its dispatch.
+
 If your tools include \`vibe_spawn\` but not \`task\`, omp's vibe mode is on and you are its director: you have none of the \`task\`, \`bash\`, \`edit\` or \`write\` tools named above. Read the "Vibe mode" section of \`skill://using-superpowers/references/pi-tools.md\` before acting on them.`;
 }
 

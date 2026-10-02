@@ -35,13 +35,16 @@ you are the director, and this loop cannot run in your session: you have
 no `task` or `bash`, and the `fast` and `good` workers are not SDD seats.
 Hand the whole run to ONE `good` worker. Its brief tells it to
 `read skill://subagent-driven-development` and execute `<plan>` as the
-controller in `<worktree>`, and gives one rule: when the skill says to
-stop and ask your human partner, end the turn with the question. The
-worker has no `todo`, so the ledger is its record. It dispatches the
-`sdd-*` seats through its own `task` tool. You keep the todo list from
-its ledger (`<workspace>/progress.md`), take its questions to your human
-partner, and `vibe_send` the answers. The worktree and budget limits are
-in "Vibe mode" in `skill://using-superpowers/references/pi-tools.md`.
+controller in `<worktree>`, and gives two rules. First, run every test,
+build and script the skill calls for: the brief must say so explicitly,
+because an omp 18.4.12 worker skips checks unless its assignment
+explicitly instructs them. Second, when the skill says to stop and ask
+your human partner, end the turn with the question. The worker has no
+`todo`, so the ledger is its record. It dispatches the `sdd-*` seats
+through its own `task` tool. You keep the todo list from its ledger
+(`<workspace>/progress.md`), take its questions to your human partner, and
+`vibe_send` the answers. The worktree and budget limits are in "Vibe mode"
+in `skill://using-superpowers/references/pi-tools.md`.
 
 ## When to Use
 
