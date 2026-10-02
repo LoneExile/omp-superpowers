@@ -28,11 +28,17 @@ export default function superpowersPiExtension(pi: ExtensionAPI) {
 		injectBootstrap = true;
 	});
 
-	pi.on("agent_end", async () => {
+	pi.on("session_switch", async () => {
+		injectBootstrap = true;
+	});
+
+	pi.on("agent_end", async (event) => {
+		if (event?.willContinue) return;
 		injectBootstrap = false;
 	});
 
-	pi.on("context", async (event) => {
+	pi.on("context", async (event, ctx) => {
+		if (ctx?.agent?.kind === "sub") return;
 		if (!injectBootstrap) return;
 		if (event.messages.some(messageContainsBootstrap)) return;
 
@@ -88,13 +94,15 @@ function stripFrontmatter(content: string): string {
 function piToolMapping(): string {
 	return `## omp tool mapping
 
-This harness is omp (Oh My Pi). It has native skills but does not expose Claude Code's \`Skill\` tool. When a Superpowers instruction says to invoke a skill, read it with \`read skill://<name>\` when the skill applies, or let a human invoke \`/skill:name\` explicitly.
+This harness is omp (Oh My Pi). It has native skills but does not expose Claude Code's \`Skill\` tool. When a Superpowers instruction says to invoke a skill, read it with \`read skill://<name>\` when the skill applies, or let a human invoke \`/skill:name\` explicitly. Superpowers text names skills \`superpowers:<name>\`; read them as \`skill://<name>\`, without the prefix. \`read skill://superpowers:brainstorming\` returns "Unknown skill".
 
 omp's built-in coding tools are lowercase: \`read\`, \`write\`, \`edit\`, \`bash\`, \`grep\`, \`glob\`. Use \`read\` for a file OR a directory listing, \`grep\` for file contents, and \`glob\` for finding paths by name. omp's own system prompt directs you to prefer these over shell \`ls\`, \`find\`, \`grep\`, and \`rg\`; follow that preference.
 
-omp ships a built-in subagent tool: \`task\`. Use it for all Superpowers subagent workflows. Batch shape: ONE call carries \`{ context, tasks[] }\` — one subagent per item, run concurrently. Dispatch N parallel subagents as N entries in a single \`task\` call, never N sequential calls. Pick the most specific agent type per item from the roster in the \`task\` tool's own description (typically \`scout\` for read-only research, \`reviewer\`, \`security-reviewer\`, \`sonic\` for strictly mechanical work, and \`task\` for general-purpose). The tool is lowercase \`task\`; \`Task\` does not exist here. Never conclude that subagent capability is missing.
+omp ships a built-in subagent tool: \`task\`. Use it for all Superpowers subagent workflows. Batch shape (the \`task.batch\` setting, on by default): ONE call carries \`{ context, tasks[] }\` — one subagent per item, run concurrently. Every item also needs \`solutionSpace\`, one line on how open the problem is. Dispatch N parallel subagents as N entries in a single \`task\` call, never N sequential calls. Pick the most specific agent type per item from the roster in the \`task\` tool's own description (typically \`scout\` for read-only research, \`reviewer\`, \`security-reviewer\`, \`sonic\` for strictly mechanical work, and \`task\` for general-purpose). The tool is lowercase \`task\`; \`Task\` does not exist here. Never conclude that subagent capability is missing.
 
-The \`task\` tool has NO \`model:\` field — a template's \`model:\` line is inert; the agent TYPE carries the model, thinking level, and tools. For subagent-driven-development use this plugin's own agents: \`sdd-implementer\` (implementation, fix rounds 1-2), \`sdd-escalation-implementer\` (fix round 3, xhigh reasoning), \`sdd-reviewer\` (task review, no file writes, no shell), \`sdd-rereviewer\` (scoped re-review, low reasoning), \`sdd-final-reviewer\` (whole-branch review, xhigh reasoning). The bundled \`task\` agent resolves to \`modelRoles.task\`, whatever that is — never use it for an SDD seat.
+To resume an idle subagent with new input, message it with \`write agent://<id>\`, using the id its result reports. A result longer than 5,000 characters arrives as a preview; read the rest at \`agent://<id>\`.
+
+The \`task\` tool has NO \`model:\` field — a template's \`model:\` line is inert; the agent TYPE carries the model, thinking level, and tools. For subagent-driven-development use this plugin's own agents: \`sdd-implementer\` (implementation, fix rounds 1-2), \`sdd-escalation-implementer\` (fix round 3, and tasks ruled to need the strongest tier), \`sdd-reviewer\` (task review), \`sdd-rereviewer\` (scoped re-review), \`sdd-final-reviewer\` (whole-branch review). Each agent file sets a default model and thinking level; a host re-points any seat with \`task.agentModelOverrides\`. Never use the bundled \`task\` agent for an SDD seat: it lacks the seat's tools, output contract and no-subagent rule.
 
 omp ships a built-in task-list tool: \`todo\` (\`init\`, \`start\`, \`done\`, \`rm\`, \`drop\`, \`block\`, \`unblock\`, \`append\`, \`view\`). Use it for all task tracking. Do not track work in plan files or a repo-local \`TODO.md\`. Treat older \`TodoWrite\` references as the \`todo\` tool.`;
 }
