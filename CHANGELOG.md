@@ -6,6 +6,8 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+## [6.4.2-omp.4] - 2026-10-03
+
 ### Added
 
 - **omp vibe mode support.** In `/vibe` the session is a director with `read`, `todo`, the `vibe_*` tools and any MCP tools, but no `task`, `bash`, `edit` or `write`, and its `fast` and `good` workers are the bundled `sonic` and `task` agents, not SDD seats. subagent-driven-development and executing-plans now tell a director (tools include `vibe_spawn` but not `task`) to hand the whole run to one `good` worker, which keeps the ledger and dispatches the `sdd-*` seats through its own `task` tool. Each controller brief explicitly instructs the worker to run the tests, builds and scripts the skill calls for. using-git-worktrees says vibe refuses `/move` and `/wt` and leaving vibe kills every worker, so the worktree and `/move` come first. writing-plans' handoff says both approaches run in a worker. `pi-tools.md` gains a *Vibe mode* section: the action-to-`vibe_*` table, what workers have, and the request-budget note. Checked end to end on omp 18.4.12, with the director and worker on sonnet-5-5:low and the seats on haiku-4-5:low: a single `/vibe` prompt to execute a one-task plan led the director to read executing-plans' vibe note and brief one `good` worker with both rules; the worker resolved the scripts with `realpath`, created the workspace and ledger, ran `task-start`, ran `npm test` RED then GREEN, committed, ran `task-done` and `review-package`, and dispatched `sdd-final-reviewer` through its own `task` tool; the reviewer found nothing to fix, and the director reported the branch mergeable.
@@ -69,7 +71,8 @@ First release, synced to upstream [v6.4.2](https://github.com/obra/superpowers/b
 - The fork's rewritten subagent-driven-development text invokes its helper scripts through `bash` as well, so a package extractor that drops exec bits cannot break them.
 - `sdd-final-reviewer` carries upstream's new review rules from `code-reviewer.md`, the template it replaces in SDD's final review: the spec is a vision document (behavior it is silent on is graded by what a reasonable person expects), and a "Declined to judge" section that the controller rules on and ledgers like a plan conflict.
 
-[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v6.4.2-omp.3...HEAD
+[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v6.4.2-omp.4...HEAD
+[6.4.2-omp.4]: https://github.com/LoneExile/omp-superpowers/releases/tag/v6.4.2-omp.4
 [6.4.2-omp.3]: https://github.com/LoneExile/omp-superpowers/releases/tag/v6.4.2-omp.3
 [6.4.2-omp.2]: https://github.com/LoneExile/omp-superpowers/releases/tag/v6.4.2-omp.2
 [6.4.2-omp.1]: https://github.com/LoneExile/omp-superpowers/releases/tag/v6.4.2-omp.1
