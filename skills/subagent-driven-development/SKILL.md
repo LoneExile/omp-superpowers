@@ -128,6 +128,14 @@ superpowers:using-git-worktrees to create one or verify the existing one.
 Never start implementation on a main/master branch without your human
 partner's explicit consent.
 
+**On omp, the session must be in the worktree before you dispatch.** A
+subagent starts in the session's cwd (the `task` tool has no `cwd`
+argument), so after `omp worktree add` every SDD subagent still works in the
+ORIGINAL checkout until your human partner runs `/move <path>`. Get `/move`
+first. If you cannot, put the worktree's absolute path in every dispatch and
+tell the subagent to use absolute paths and the `bash` tool's `cwd`
+parameter throughout.
+
 Conversation memory does not survive compaction. In real sessions,
 controllers that lost their place have re-dispatched entire completed task
 sequences — the single most expensive failure observed. Track progress in
@@ -138,9 +146,24 @@ a ledger file, not only in todos.
   directory (under `<repo-root>/.superpowers/sdd/`), home to
   every artifact for THIS plan: ledger, briefs, reports, review packages.
   Another plan's directory is never yours to read or write.
+- **On omp, resolve the scripts directory first.** `bash scripts/<name>`
+  fails from the repo root ("No such file or directory"), and `omp read
+  skill://…` lists the files but gives no filesystem path. Once, before the
+  first script, run `realpath skill://subagent-driven-development/scripts` in
+  the `bash` tool (omp's bash resolves `skill://` URLs) and add the printed
+  path to the ledger, after the identity line, as `SDD scripts: <dir>`.
+  Ledger lines are found by their prefix, never by position: another
+  executor sharing this ledger (executing-plans) adds its own `… scripts:`
+  line, and each executor adds the one it lacks. Then run every
+  `bash scripts/<name>` in this skill as `bash <dir>/<name>`, with the
+  working directory at the repo root — the scripts call `git rev-parse`.
+  The invocation lines in this skill stay as upstream wrote them.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
   line names your plan file, tasks with a `Task <N>: complete` line are DONE
   — do not re-dispatch them; resume at the first task without one. A task
+  whose last line is `dispatched` or `re-dispatched` is mid-implementation:
+  check `git log` from its BASE and read `agent://<id>` before you dispatch
+  anything. A task
   whose last line is a fix round is mid-loop: resume the loop at the next
   round. A ledger whose first line names a different plan file — or a stray
   ledger at the old flat path `.superpowers/sdd/progress.md` — is another
@@ -186,27 +209,59 @@ implementation.
 On omp the `task` tool has no `model:` field — the agent TYPE carries the
 model, the thinking level, and the tool set. This fork ships five SDD
 agents (`agents/sdd-*.md`); they appear in the `task` tool's own roster.
-**Always dispatch SDD work with one of them.** The bundled `task` agent
-resolves to whatever `modelRoles.task` is configured to (else the session
-model) and the bundled `reviewer` to `@slow` — in a real 157-subagent
-session both were the slowest tier over the widest tool set, which is where
-most of the wall-clock went.
+**Always dispatch SDD work with one of them.** The bundled `task` and
+`reviewer` agents are the wrong seats, and not because of their model — the
+SDD seats fall back to `@task` / `@slow` themselves. The SDD agents carry
+what the loop depends on: a `tools:` list sized to the seat (no `task` tool,
+so they cannot dispatch subagents at all), an `output:` schema the
+controller reads field by field, and the report-file and status contract in
+the agent's own definition. The bundled `task` agent has no tool limit,
+may spawn subagents (`spawns: "*"`), has no output schema, and knows
+nothing of the report file or the status line. The bundled `reviewer` has
+`bash`, may spawn `scout`, and yields its own schema (`overall_correctness`,
+P0-P3 `findings`) that the fix loop cannot read. (History: in a real
+157-subagent session both ran on the slowest tier over the widest tool set,
+which is where most of the wall-clock went.)
 
-| Role | `agent:` | Shipped default · thinking | Tools |
-|---|---|---|---|
-| Implementer (every task, fix rounds 1-2) | `sdd-implementer` | sonnet-5 · medium | edit/test set, no subagents |
-| Fix round 3 | `sdd-escalation-implementer` | opus-5 · **xhigh** | same as implementer |
-| Task reviewer | `sdd-reviewer` | sonnet-5 · high | `read`, `grep`, `glob` — no file writes, no shell (see note) |
-| Scoped re-review | `sdd-rereviewer` | sonnet-5 · low | `read`, `grep`; ≤4 tool calls (a justified fifth is allowed) |
-| Final whole-branch review | `sdd-final-reviewer` | opus-5 · **xhigh** | read-only + focused bash |
+| Role | `agent:` | Shipped default · thinking | Falls back to | Tools |
+|---|---|---|---|---|
+| Implementer (every task, fix rounds 1-2) | `sdd-implementer` | sonnet-5-5 · medium | `@task` | edit/test set, no subagents |
+| Fix round 3, a BLOCKED takeover, or a ruled strongest-seat first implementation | `sdd-escalation-implementer` | opus-5-5 · **max** | `@slow` | same as implementer |
+| Task reviewer | `sdd-reviewer` | sonnet-5-5 · high | `@task` | `read`, `grep`, `glob` — no edit, bash, or file-write tool (see note) |
+| Scoped re-review | `sdd-rereviewer` | sonnet-5-5 · low | `@task` | `read`, `grep`; ≤4 working calls plus `yield` (a justified fifth working call is allowed) |
+| Final whole-branch review | `sdd-final-reviewer` | opus-5-5 · **max** | `@slow` | read-only + focused bash |
 
 The shipped defaults are Anthropic (sonnet for the per-task seats, opus for
 the two seats that run once per plan or once per stuck task). The tiers are
 a **thinking ladder** as much as a model ladder: escalation and the final
-review raise reasoning to `xhigh`, re-reviews drop to `low`.
+review run at `max`, re-reviews drop to `low`. This table is the one place
+the shipped defaults are written down — an agent's `description:` says what
+the seat does and never names a model or level, because hosts override them
+and such a claim goes stale.
+
+Every `task` item also carries a one-line `solutionSpace`: omp's wire schema
+requires it (a missing one is tolerated, but the item is malformed). It says
+how open the seat's problem is; each template shows one for its seat — adjust
+it to the task instead of copying it blindly.
+
+**The fallback entry.** Each agent's `model:` is an ordered list — the pin,
+then a role alias — and omp takes the first entry whose provider has
+credentials. Measured on omp 18.4.10 with a seat pinned to a provider that
+has none: a single-entry list silently ran the seat on the *controller's*
+model, while the two-entry list ran it on the host's `modelRoles.task` model
+at that role's own level. So the pin wins wherever you have its credentials,
+and `@task` / `@slow` (your `modelRoles.task` / `modelRoles.slow`) catch a host
+that lacks them. An unset `@task` drops out of the list and the seat behaves
+as a single pin; an unset `@slow` expands to omp's built-in strong-model
+ranking. The list is also the seat's runtime retry chain: on a retryable
+error (a rate or usage limit) omp moves to the next entry, gated by
+`retry.modelFallback` (default on); it does not switch on a context overflow.
+To see which model a seat actually ran on, read `resolvedModel` in its
+transcript (`session_init`) or turn on `task.showResolvedModelBadge` (off by
+default).
 
 **Per-host override, no file edits:** `task.agentModelOverrides` in
-`~/.omp/agent/config.yml` (or the `/agents` hub) beats the agent file's
+`~/.omp/agent/config.yml` (or the `/agents` dashboard) beats the agent file's
 `model:` line and applies on the next dispatch. A bare model keeps the
 agent's `thinkingLevel:`; an explicit `:level` on the override replaces it.
 Example — every seat on a flat-rate model, mapped onto that model's own
@@ -222,6 +277,10 @@ task:
     sdd-final-reviewer: opencode-go/deepseek-v4.1-flash:max
 ```
 
+An override replaces the agent's whole `model:` list, fallback included. To
+keep a fallback, append it to the override (comma-separated):
+`opencode-go/deepseek-v4.1-flash:high,@task`.
+
 Use the exact catalog id and only levels that model offers (`omp models ls
 <provider>`): an unsupported level is silently clamped to the nearest valid
 one, which collapses the ladder without an error. Ids get renamed across
@@ -230,39 +289,65 @@ catalog refreshes; when a seat's speed or quality shifts overnight, read
 (Discovery-only ids accept `:level` in config and overrides but not on the
 `--model` CLI flag.)
 
-**What "no shell" enforces (measured, omp 18.1.15).** A `tools:` list is
-honoured: the reviewers get no `bash`/`edit`, and their `write` is only the
-`xd://` device transport — a filesystem write is refused ("Filesystem
-writes are not available elsewhere"). Two things the frontmatter cannot
-remove: `hub` (always-on for every non-restricted subagent) and, with it,
-`hub start`, which launches an executable directly — a probe from
-`sdd-reviewer` ran `echo` that way. The executor's `restrictToolNames`
-option would strip it, but only omp's own compression and security
-sessions set it; no agent frontmatter field maps to it. So the guarantee
-is "cannot edit the tree and cannot run a shell", not "cannot spawn a
-process". The prompts forbid mutation; the harness enforces the file and
-shell parts.
+**What the reviewers' `tools:` list enforces (measured, omp 18.4.10).** A
+`tools:` list restricts built-in tools only. `sdd-reviewer` (`read`, `grep`,
+`glob`) gets no `bash`, `edit`, or file-writing tool, and the device-only
+`write` that omp adds to carry `xd://` devices refuses filesystem paths.
+Everything else still attaches: every subagent that omp itself has not
+restricted (only its internal commit-message, compression, and security
+sessions are) also gets the host's extension tools and MCP tools, mounted as
+`xd://` devices reached through that same `write`. A memory host's `recall`,
+`retain`, and `reflect` (`memory_edit` on mnemopi) are a different case: omp
+creates them for such a subagent, but activates only the tools the agent's
+`tools:` list names. Measured on a hindsight host: a `read, grep, glob` seat
+had no top-level `recall` and no `xd://recall` device, while a seat that
+listed `recall` had it top-level (`memory_edit` takes the same path; not run).
+A live probe on 18.4.10 had `sdd-reviewer`
+run a shell command through `write xd://mcp__context_mode_ctx_execute`. So
+"read-only" is enforced by the prompt, not by the harness: the three reviewer
+agents are told never to call an `xd://` device, or an extension or MCP tool,
+that executes code, writes files, or changes external state, nor a memory
+tool that writes (`retain`, `memory_edit`) should one ever be present. If a
+reviewer's transcript ever shows one, say so in the ledger and re-dispatch
+that review.
 
-**Turn count beats token price.** Wall-clock scales with how many turns a
-subagent takes, and the cheap model here takes 2-3× the turns of a
-sonnet-class model on multi-step work — that is the trade this
-configuration makes deliberately (flat-rate cost, ~17 s/turn). Watch the
-ledger: a task whose implementer needs 100+ turns, or a re-review that
-wanders, is the signal to rule that task onto the escalation seat.
-Re-reviews are verdict-only work over a small diff — `low` reasoning is
-correct for them, not a compromise.
+**Turn count beats token price.** Wall-clock and context cost scale with how
+many turns a subagent takes, and the cheapest models routinely take 2-3× the
+turns on multi-step work — costing more overall. Keep a mid-tier model as the
+floor for the reviewers and for implementers working from prose descriptions.
+When a task's plan text contains the complete code to write, the
+implementation is transcription plus testing, and a cheaper tier does it; so
+does a single-file mechanical fix. Express any of that through
+`task.agentModelOverrides`, per seat, onto the model's own ladder (above) —
+never by editing an agent file. Watch the ledger: a task whose implementer
+needs 100+ turns, or a re-review that wanders, is the signal to rule that
+task onto the escalation seat. Re-reviews are verdict-only work over a small
+diff — `low` reasoning is correct for them, not a compromise.
+
+**Scale the task review to the diff's risk.** The reviewer seat is fixed, but
+a small mechanical diff does not need the deepest reasoning and a subtle one
+(concurrency, security, a data migration) does. When `task.enableEffort` is
+on (it is off by default — `omp config get task.enableEffort`), dispatch the
+reviewer for such a diff with `effort: "hi"`: that selects the resolved
+model's top thinking level, capped by `task.maxEffort`. When it is off, ledger
+the risk — `Task <N>: high-risk diff — <class>` — and name that class in the
+final review dispatch.
 
 **Escalation (fix round 3):** the implementer that got stuck cannot see its
 own problem. Dispatch a FRESH `sdd-escalation-implementer` with the
-framing below. If `task.enableEffort` is on you may add `effort: "hi"`
-(the only accepted values are `"lo"`, `"med"`, `"hi"`) to raise thinking
-further; it is optional — the agent's own tier is the escalation.
+framing below. The shipped seat already runs at its model's top level, so
+`effort` adds nothing to it; if a host override lowers the seat,
+`effort: "hi"` (only when `task.enableEffort` is on; the accepted values are
+`"lo"`, `"med"`, `"hi"`) raises it again.
 
 **Override, never omit.** If a task genuinely needs the strongest tier for
 its first implementation (design judgment across many files), say so in
-the ledger as a ruling and dispatch `sdd-escalation-implementer` for it;
-the default remains `sdd-implementer`. Never reach for the bundled `task`
-agent for an SDD seat — its tier is whatever the session configured.
+the ledger as a ruling and dispatch `sdd-escalation-implementer` for it,
+telling it in the dispatch that this is a first implementation: there is no
+report file yet and there are no findings, so it starts from the brief. The
+default remains `sdd-implementer`. Never reach for the bundled `task`
+agent for an SDD seat — it has none of the seat's tool limits, output
+contract, or no-subagent rule.
 
 ## The Task Loop
 
@@ -288,6 +373,14 @@ line of status and reconcile your live children: list them, and chase
 any that finished without reporting. A bounded stretch keeps nearly
 all of a long wait's efficiency while guaranteeing a stuck or lost
 child is noticed within minutes, not at the end of the session.
+
+**Reading results:** omp previews a subagent result longer than 5,000
+characters head-only and marks the cut with a pointer
+(`<preview full-output="agent://<id>">`). Before you act on any result that
+carries that pointer, read `agent://<id>` in full — or one structured field,
+`agent://<id>/<field>` (nested: `agent://<id>/findings/0/body`). The
+omitted tail is where it hurts: a final review's Ledger triage, Declined to
+judge, and **Mergeable:** come last.
 
 ### 1. Dispatch the implementer
 
@@ -325,39 +418,35 @@ and fix-round diffs need it.
   a pointer to that ledger entry in the dispatch.
 - Record the implementer's agent identity from the dispatch result —
   fix-loop rounds 1-2 resume this agent.
-- **Waves, only with isolation.** Disjoint files are not enough on omp:
-  subagents share the controller's checkout — one index, one HEAD, one
-  working tree — unless subagent isolation is on (`task.isolation.enabled`,
-  default `false`; the backend is `isolation.backend`, default `auto`).
-  Two concurrent implementers in one tree sweep each other's half-written
-  files into their commits and test against each other's in-flight code.
-  So: at setup, run `omp config get task.isolation.enabled` and ledger the
-  answer — read it from the live CLI, not from memory or a source tree, the
-  key has been renamed across omp versions (older builds spelled it
-  `task.isolation.mode`). If it is `false`, every implementer runs alone,
-  in plan order, and the rest of this bullet does not apply. If it is
-  `true`, group tasks into waves from your pre-flight table (it already
-  names every pair sharing a file or interface — it IS the dependency
-  graph): a wave holds tasks with no shared row between them and no
-  unfinished producer. Dispatch a wave as ONE `task` call, one
-  `sdd-implementer` per task, each with its own brief and report path and
-  the per-item `isolated: true` flag the `task` tool exposes once isolation
-  is on (check the tool's own schema); record the same BASE for every task
-  in the wave. Tasks that share a row run in later waves, in
-  producer→consumer order. A task whose brief you had to amend with a
-  ruling runs alone. When in doubt about a shared file, serialize — a
-  conflict costs more than the parallelism buys.
-- **A wave shares the dispatch call, never the diff.** Each task keeps its
-  own review package: after the wave's results integrate, run
-  `bash scripts/review-package PLAN_FILE <task BASE> <task HEAD>` per task — the range
-  the harness reports as that task's integrated commits — and dispatch one
-  `sdd-reviewer` per task in one `task` call, each pointed at its own brief,
-  report, and package. A reviewer that sees sibling hunks cannot decide
-  "nothing extra" for its own brief. Fix rounds stay per task and per
-  package: FIX_BASE for a task is that task's own previous review head, and
-  two tasks' fix rounds may share a dispatch call only if they are isolated
-  too. Findings the final whole-branch review raises across wave seams are
-  the normal cross-task case — that review exists for them.
+- Never dispatch multiple implementation subagents in parallel (conflicts).
+- **On omp, the agent id is the handle and resume is a message.** The
+  `<task-result id="X" …>` envelope (inline, or delivered as a notice)
+  reports the agent id and says the agent is now idle. Use that id exactly
+  as reported: omp qualifies a nested agent (`Parent.Child`), suffixes a name
+  that was already taken (`Name-2`), and calls a follow-up turn's job
+  `<id>-2` — the job id is not the agent id. Ledger the dispatch the moment
+  you have the id, together with BASE, so both survive compaction:
+  `Task <N>: dispatched (BASE <base7>, implementer <id>)`. Fix rounds 1-2
+  and the answer to a NEEDS_CONTEXT then go to that agent with
+  `write agent://<id>`.
+- **The write has two success answers; only an error means "dispatch
+  fresh".** An idle agent is parked after `task.agentIdleTtlMs` (default
+  420000 ms, 7 minutes), and a long review outlasts that. A write to a live
+  agent answers `Delivered to <id>.`; a write to a parked one answers
+  `Queued for <id> (was parked; revived).` Both are success: the parked agent
+  is rebuilt from its saved transcript (its live session was disposed), so its
+  context is back, nothing held only in the live session carries over, and its
+  next result arrives as a notice either way. Only an error answer (`Failed:
+  …`, or a write error) means dispatch a fresh `sdd-implementer`. That
+  dispatch gets a new id, which omp may suffix (`Name-2`) because the old id is
+  taken: ledger it — `Task <N>: re-dispatched (implementer <new id>)` — and use
+  it from then on.
+- **One implementer at a time, no isolation.** On omp, SDD dispatches
+  implementers one at a time, in plan order, in the shared checkout, and does
+  not use `task.isolation.enabled`: under the default
+  `task.isolation.merge: patch` an isolated run's work lands as an applied but
+  uncommitted diff, so a review package has no commit range to cut, and an
+  isolated agent cannot be resumed or messaged, which fix rounds 1-2 need.
 
 Template: [implementer-prompt.md](implementer-prompt.md)
 
@@ -369,13 +458,22 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
 
-**NEEDS_CONTEXT:** The implementer needs information that wasn't provided. Provide the missing context and re-dispatch.
+**NEEDS_CONTEXT:** The implementer needs information that wasn't provided. Provide the missing context and re-dispatch. On omp, message the idle agent instead (`write agent://<id>`, the id from the ledger's `dispatched` line): it keeps its context and yields again. Only a write error means re-dispatch, with the context carried in the brief.
 
 **BLOCKED:** The implementer cannot complete the task. Assess the blocker:
 1. If it's a context problem, provide more context and re-dispatch with the same model
 2. If the task requires more reasoning, re-dispatch with a more capable model
 3. If the task is too large, break it into smaller pieces
 4. If the plan itself is wrong, rule on the correction, ledger it, and re-dispatch with the ruling carried in the dispatch
+
+On omp there is no model parameter, so map items 1 and 2 onto seats. "The
+same model" is the same seat: `sdd-implementer`, messaged as under
+NEEDS_CONTEXT, or dispatched fresh if that write errors. "A more capable
+model" is `sdd-escalation-implementer`, dispatched fresh with the brief path
+and the blocker. If the blocked implementer wrote a report, the report file
+records what it tried, so this is a takeover: pass its path. If it wrote
+none, this is a first implementation: say so in the dispatch (no report file,
+no findings, start from the brief).
 
 **Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
 
@@ -396,8 +494,13 @@ needed.
   it prints (or, without bash: `git log --oneline`, `git diff --stat`,
   and `git diff -U10` for the range, redirected to one uniquely named
   file). The output never enters your own context, and the reviewer sees
-  the commit list, stat summary, and full diff with context in one Read
-  call. Use the BASE you recorded before dispatching the implementer —
+  the commit list, stat summary, and full diff with context in one file.
+  On omp a bare `read` returns only the first 300 lines, so the reviewer
+  must read it with an explicit range: `<path>:1-3000` returns up to 3,000
+  lines in one call, and a longer package continues with `:3001-6000`
+  (the open-ended `:1-` still stops at 300). The templates carry that
+  instruction; keep it in any dispatch you write by hand. Use the BASE you
+  recorded before dispatching the implementer —
   never `HEAD~1`, which silently truncates multi-commit tasks. Never
   dispatch a task reviewer without a diff file.
 - **Reviewer inputs:** the task reviewer gets three paths — the same brief
@@ -429,6 +532,23 @@ review, but you must resolve each one yourself before marking the task
 complete: you hold the plan and cross-task context the reviewer
 lacks. If you confirm an item is a real gap, treat it as a failed spec
 review — it enters the fix loop with the other findings.
+
+**Check the result before you act on it.** omp 18.4.10 does not enforce
+the rules between fields in a reviewer's schema — the `metadata.description`
+text in an `output:` schema never reaches the model, and permissive mode
+accepts an invalid result after its retries — so you do, for a task review
+and a re-review alike:
+
+- `finding_verdicts` (re-review) holds one entry per finding you
+  dispatched, in order.
+- `all_addressed` holds no NOT_ADDRESSED entry and no new Critical/Important
+  entry in `new_breakage`.
+- A `package_gap` is never mixed with real verdicts. A task review's two
+  verdicts are both `package_gap` with nothing else filled; a re-review's
+  `finding_verdicts` is `[]`. A result that mixes them is a malformed gap:
+  regenerate the package and re-dispatch — never read half of it as a
+  verdict.
+- A result the harness reports as schema-invalid is re-dispatched, not read.
 
 Template: [task-reviewer-prompt.md](task-reviewer-prompt.md)
 
@@ -475,16 +595,26 @@ minutes, and converged on adjudication anyway.
 
 **Rounds 1-2 — resume the original implementer.** Send it the open findings
 verbatim. Its context is intact: it knows the task, the code, and its own
-choices. If your harness cannot send another message to a live subagent,
-dispatch a fresh `sdd-implementer` carrying the brief path, the report-file
-path, and the findings — the report file is the persistent memory either way.
+choices. On omp, that is a message to the idle agent — `write agent://<id>`
+with the findings, using the id from the ledger's `dispatched` line exactly as
+the task result reported it. `Delivered to <id>.` and `Queued for <id> (was
+parked; revived).` are both resumes (see Dispatch); the agent's next result
+arrives later, as a notice, like the first.
+If your harness cannot send another message to a live subagent —
+on omp, only if that write returns an error — dispatch a fresh
+`sdd-implementer` carrying the brief path, the report-file path, and the
+findings — the report file is the persistent memory either way.
 
 **Round 3 — escalate:** dispatch a fresh `sdd-escalation-implementer` with
 the brief path, the report-file path, the open findings, and this framing: "A
 prior implementer attempted this task [N] times; you own it now. Read the
 report file for what was tried." A loop that survives two resumes usually
 means the implementer cannot see its own problem — fresh eyes and a
-capability bump in one move.
+capability bump in one move. The bump is whatever this host maps the
+escalation seat to: with the shipped defaults, a stronger model at deeper
+reasoning (opus-5-5 at `max` over sonnet-5-5 at `medium`); a host that maps
+both seats to one model gets deeper reasoning only, and the fresh context
+does the rest.
 
 **Every round, either way:** the implementer fixes, re-runs the tests
 covering the amended code, appends its fix report to the same report file,
@@ -498,12 +628,19 @@ whole suite.
 where FIX_BASE is the head the previous review saw, and dispatch
 `sdd-rereviewer` with [re-review-prompt.md](re-review-prompt.md): the
 findings list, the brief, the report file, and the printed diff path. It
-has no shell and no file writes, and a four-call budget. It yields
+has no bash, edit, or file-write tool and a four-call working budget plus its
+`yield`. It yields
 `finding_verdicts[]` (ADDRESSED / NOT_ADDRESSED with file:line),
 `new_breakage[]` for the fix diff only, `out_of_scope[]`, and
 `round_verdict`. New Critical/Important entries in `new_breakage` join the
 open findings list. `out_of_scope` goes to the ledger as deferred minors —
-it never extends the loop.
+it never extends the loop. Check the result as described under Review the
+task before you act on it.
+
+The re-reviewer cannot run tests. Where its evidence names a focused test it
+would run, run that test yourself before you accept `all_addressed`; a
+failing run reopens that finding as NOT_ADDRESSED and counts as an open
+finding of this round.
 
 **After each round,** append to the ledger:
 `Task <N>: fix round <R>/3 (<X> addressed, <Y> open — <finding one-liners>; commits <a7>..<b7>)`
@@ -553,16 +690,22 @@ The final whole-branch review gets a package too: run
 branch started from, e.g. `git merge-base main HEAD`) and include the
 printed path in the final review dispatch, so the final reviewer reads
 one file instead of re-deriving the branch diff with git commands. Dispatch
-`sdd-final-reviewer` (xhigh reasoning, once per plan — see Agent
-Selection) with a `task` that says the plan ran subagent-driven (every
-task passed its task review) and names: the package path, the plan/spec
-paths, and the ledger's deferred-minor and parked-with-ruling lines
-verbatim. Do not wrap it in requesting-code-review's `code-reviewer.md` —
-that template asks a prose "Ready to merge?" and has no slot for the
-package or the ledger. The agent file's `<output>` governs: findings with
-file:line, a `### Ledger triage` section (each line → fix-before-merge |
-accept, with reason), a `### Declined to judge` section, and a closing
-**Mergeable:** yes | no. Every "Declined to judge" line is a ruling you
+`sdd-final-reviewer` (the deepest seat, once per plan — see Agent
+Selection) with a `task` that says the plan ran subagent-driven — every
+task went through its task review, except the fixes you applied yourself on
+the proven-trivial route, which skipped the re-review — and names: the
+package path, the plan/spec paths, and the ledger's deferred-minor and
+parked-with-ruling lines verbatim, plus every `Task <N>: applied … proof:`
+line (the reviewer checks those fixes as if unreviewed) and any
+`high-risk diff` line (so the last review spends its depth there). Do not
+paste requesting-code-review's `code-reviewer.md` into the dispatch — that
+template asks a prose "Ready to merge?" and has no slot for the package or
+the ledger; the agent reads that file's review rubric itself. The agent
+file's `<output>` governs: findings with file:line, a `### Ledger triage`
+section (each line → fix-before-merge | accept, with reason), a `### Declined
+to judge` section, and a closing **Mergeable:** yes | no. Those sections come
+last, so read the whole result at `agent://<id>` before you act (see Reading
+results). Every "Declined to judge" line is a ruling you
 make and ledger, exactly like a plan conflict — `Final: Ruling: <behavior
 the reviewer set aside> — <what a reasonable person using this software
 gets, and why that stands or why it is now a finding> — <cost if wrong>`;
@@ -618,18 +761,20 @@ Use superpowers:finishing-a-development-branch.
 ```
 You: I'm using Subagent-Driven Development to execute this plan.
 
-[Setup: worktree verified]
+[Setup: worktree verified; on omp, session moved into it with /move]
 [Read plan file once: docs/superpowers/plans/feature-plan.md]
 [Resolve workspace: bash scripts/sdd-workspace docs/superpowers/plans/feature-plan.md — no ledger inside, fresh start]
+[On omp: scripts dir resolved with realpath skill://subagent-driven-development/scripts and added to the ledger as "SDD scripts: <dir>"; each script runs as bash <dir>/<name>]
 [Create todos for all tasks]
 
 Task 1: Hook installation script
 
 [Run task-brief for Task 1; dispatch implementer with brief + report paths + context]
+[Ledger: Task 1: dispatched (BASE a1b2c3d, implementer Impl1)]
 
 Implementer: "Before I begin - should the hook be installed at user or system level?"
 
-You: "User level (~/.config/superpowers/hooks/)"
+You: [write agent://Impl1] "User level (~/.config/superpowers/hooks/)"
 
 Implementer: [Later]
   - Implemented install-hook command
@@ -646,6 +791,7 @@ sdd-reviewer: spec_compliance: compliant · task_quality: approved
 Task 2: Recovery modes
 
 [Run task-brief for Task 2; dispatch implementer with brief + report paths + context]
+[Ledger: Task 2: dispatched (BASE d4e5f6a, implementer Impl2)]
 
 Implementer: [No questions]
   - Added verify/repair modes
@@ -657,7 +803,7 @@ sdd-reviewer: spec_compliance: issues · task_quality: needs_fixes
   spec_issues: ["Missing: progress reporting (spec says 'report every 100 items')"]
   findings: [{severity: Important, location: src/recovery.js:7, body: "Magic number (100)"}]
 
-[Fix round 1: resume the implementer with both findings]
+[Fix round 1: write agent://Impl2 with both findings]
 Implementer: Added progress reporting, extracted PROGRESS_INTERVAL constant.
   Re-ran test/recovery.test.js — 10/10 passing. Fix report appended.
 
@@ -674,7 +820,8 @@ sdd-rereviewer: round_verdict: all_addressed
 
 [After all tasks]
 [Run review-package PLAN_FILE MERGE_BASE HEAD; dispatch sdd-final-reviewer]
-sdd-final-reviewer: Mergeable: yes. Ledger triage: deferred minors — none block merge.
+[Read the full result at agent://<id>]
+sdd-final-reviewer: Ledger triage: deferred minors — none block merge. **Mergeable:** yes
 
 [Delete this plan's workspace — the record now lives in git]
 
