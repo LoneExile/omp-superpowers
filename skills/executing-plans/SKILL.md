@@ -42,6 +42,19 @@ that norms say you ask about first (a merge, a push to a shared branch, a
 publish); and a plan so broken that every path forward is a guess. For
 those, stop and ask.
 
+**On omp in vibe mode** (your tools include `vibe_spawn` but not `task`)
+you are the director, and you cannot execute the plan "yourself": you have
+no `bash`, `edit` or `write`. Hand the whole run to ONE `good` worker. It
+executes the plan, including the final review it dispatches to
+`sdd-final-reviewer` through its own `task` tool. Its brief tells it to
+`read skill://executing-plans` and execute `<plan>` in `<worktree>`, and
+gives one rule: when the skill says to stop and ask your human partner,
+end the turn with the question. The worker has no `todo`, so the ledger is
+its record. You keep the todo list from its ledger
+(`<workspace>/progress.md`), take its questions to your human partner, and
+`vibe_send` the answers. The worktree and budget limits are in "Vibe mode"
+in `skill://using-superpowers/references/pi-tools.md`.
+
 ## When to Use
 
 - You have a plan from superpowers:writing-plans and your human partner
