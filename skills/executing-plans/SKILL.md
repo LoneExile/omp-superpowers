@@ -139,6 +139,22 @@ and the new one resumes from the same ledger.
   `# SDD ledger — plan: <plan file path>`.
 - `git clean -fdx` will destroy the workspace (it's git-ignored scratch);
   if that happens, recover from `git log`.
+- **On omp, resolve the scripts directories first.** The relative paths in
+  this skill (`scripts/task-start`, `../subagent-driven-development/scripts/…`)
+  do not resolve from the repo root, and `omp read skill://…` lists the files
+  but gives no filesystem path. Once, before the first script, run
+  `realpath skill://executing-plans/scripts` and
+  `realpath skill://subagent-driven-development/scripts` in the `bash` tool
+  (omp's bash resolves `skill://` URLs) and add the printed paths to the
+  ledger, after the identity line, as `Executing-plans scripts: <dir>` and
+  `SDD scripts: <dir>`. Ledger lines are found by their prefix, never by
+  position. This ledger is shared with subagent-driven-development, which
+  writes only `SDD scripts:`: add whichever of the two lines it lacks. Then run
+  each script as `bash <dir>/<name>` — `scripts/task-start` and
+  `scripts/task-done` from the executing-plans directory, `sdd-workspace` and
+  `review-package` from the SDD one — with the working directory at the repo
+  root; the scripts call `git rev-parse`. The invocation lines in this skill
+  stay as upstream wrote them.
 
 Read the plan once, note its context and Global Constraints, and create a
 todo per task. If the plan names a Spec, read that too: the spec is the
@@ -256,13 +272,23 @@ agent. Dispatch `sdd-final-reviewer`, the whole-branch reviewer this
 plugin ships, not the bundled `reviewer` or `task` agent. Give it the
 inputs above and say the plan ran inline, with no task reviewed, so it
 checks every change rather than only cross-task seams. Do not paste
-code-reviewer.md into the dispatch: the agent file carries the review
-method and the output format. Its model is whatever this host maps that
-agent to: opus-5 · xhigh by default, re-pointed with
-`task.agentModelOverrides`. Its result has findings with severities, a
-`### Ledger triage` over the `Ruling:` lines you passed (a line it marks
-fix-before-merge is a finding like any other), a `### Declined to judge`
-list, and **Mergeable:**.
+code-reviewer.md into the dispatch: the agent reads the review rubric from
+it itself, and its own `<output>` governs. Its model is whatever this host
+maps that agent to: opus-5-5 · max by default (`@slow` when that pin has no
+credentials), re-pointed with `task.agentModelOverrides`. Its result has
+findings with severities, a `### Ledger triage` over the `Ruling:` lines you
+passed (a line it marks fix-before-merge is a finding like any other), a
+`### Declined to judge` list, and **Mergeable:**, in that order. The task
+result previews only the first 5,000 characters and those sections come
+last, so read the whole result at `agent://<id>` — the id exactly as the
+result reports it — before you sort any finding.
+
+The reviewer starts in the session's cwd — the `task` tool has no `cwd`
+argument. If the plan runs in a worktree made with `omp worktree add` and
+your human partner has not run `/move <path>`, it would read and run `git`
+in the ORIGINAL checkout. Get `/move` first. If you cannot, put the
+worktree's absolute path in the dispatch and tell the reviewer to use
+absolute paths and the `bash` tool's `cwd` parameter throughout.
 
 **Without a subagent tool:** read code-reviewer.md and perform that review
 yourself against the package, as a separate pass after the last task's

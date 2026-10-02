@@ -11,8 +11,11 @@ that the fix itself broke nothing.
 { context: "<one line: plan name, branch, read-only re-review of one fix round>",
   tasks: [ {
   name: "ReReviewTaskNRoundR",
-  agent: "sdd-rereviewer",   # REQUIRED — the cheap seat: low thinking,
-                             # read/grep only (no file writes, no shell), four-call budget.
+  agent: "sdd-rereviewer",   # REQUIRED — the verdict-only seat: read/grep only (no
+                             # edit, bash, or file-write tool), four working calls
+                             # plus the final yield.
+  solutionSpace: "verdicts only: the findings and the fix diff are given; nothing to design",
+                             # REQUIRED by omp's task schema: one line on how open the problem is.
   task: |
     You are re-reviewing one task's fix round. A previous review produced
     findings; an implementer has attempted to fix them. Your job is to
@@ -20,7 +23,7 @@ that the fix itself broke nothing.
 
     ## The Task
 
-    Read the task brief: [BRIEF_FILE]
+    Read the task brief (explicit range: `[BRIEF_FILE]:1-3000`): [BRIEF_FILE]
 
     ## The Findings Under Verification
 
@@ -28,19 +31,26 @@ that the fix itself broke nothing.
 
     ## The Fix
 
-    Read the implementer's report (fix reports are appended at the end):
-    [REPORT_FILE]
+    Read the implementer's report to its last line — the fix reports are
+    appended at the end, past a bare read's 300 lines (explicit range:
+    `[REPORT_FILE]:1-3000`): [REPORT_FILE]
 
     **Fix base:** [FIX_BASE_SHA] (the head the previous review saw)
     **Head:** [HEAD_SHA]
     **Diff file:** [DIFF_FILE]
 
-    Read the diff file once — it contains the fix commits, a stat summary,
-    and the fix diff with surrounding context. You have no shell; if the
-    diff file is missing, report that as a gap and stop.
+    Read the diff file in full, with an explicit range: `[DIFF_FILE]:1-3000`
+    (a bare read returns only the first 300 lines; while the footer says
+    `[Showing lines … of N. Use :M to continue]`, continue with the next
+    range). It contains the fix commits, a stat summary, and the fix diff
+    with surrounding context. You have no bash tool; if the diff file is
+    missing, report that as a gap and stop.
 
     Your review is read-only on this checkout. Do not mutate the working
-    tree, the index, HEAD, or branch state in any way.
+    tree, the index, HEAD, or branch state in any way, and never call an
+    `xd://` device or an extension, MCP, or memory tool that executes code,
+    writes files, or changes external state — your `tools:` list does not
+    stop those, this instruction does.
 
     ## You Do Not Dispatch Subagents
 
@@ -65,10 +75,11 @@ that the fix itself broke nothing.
     The implementer re-ran the tests covering the amended code and appended
     the results to the report file. Treat the report as unverified claims:
     confirm the fix report names the covering tests and shows their output,
-    and verify the claims against the diff. You have no shell: if reading
+    and verify the claims against the diff. You have no bash tool: if reading
     the code raises a specific doubt that no existing run answers, name the
     focused test you would run in that finding's evidence and verdict on
-    what the diff shows.
+    what the diff shows — the controller runs that test before it accepts
+    `all_addressed`.
 
     ## Output
 
