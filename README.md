@@ -25,7 +25,7 @@ omp plugin install npm:@loneexile/omp-superpowers@<version>
 
 Unreleased `main` installs from GitHub under the same plugin name, pinned to a commit: `omp plugin install github:LoneExile/omp-superpowers#<sha>`. Installs made before 6.4.2-omp.1 used the plugin name `superpowers`; run `omp plugin uninstall superpowers` before installing this package.
 
-npm and `github:` installs keep each seat's model. A marketplace or `--plugin-dir` install of the repo root keeps them too, because the repo carries `.omp-plugin/plugin.json`; without it, omp treats a root with `.claude-plugin/plugin.json` as Claude dialect and drops every agent's `model:` line.
+npm and `github:` installs keep each seat's model. For a marketplace or `--plugin-dir` install of the repo root, the repo carries `.omp-plugin/plugin.json`: omp 18.4.10's agent discovery treats a root that has `.claude-plugin/plugin.json` as Claude dialect, and drops every agent's `model:` line, unless that file is present. This was read from omp's source; a marketplace install has not been exercised.
 
 Verify it loaded — the roster of your `task` tool should now include the five `sdd-*` agents:
 
