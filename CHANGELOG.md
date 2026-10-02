@@ -6,6 +6,11 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+### Added
+
+- **omp vibe mode support.** In `/vibe` the session is a director with `read`, `todo`, the `vibe_*` tools and any MCP tools, but no `task`, `bash`, `edit` or `write`, and its `fast` and `good` workers are the bundled `sonic` and `task` agents, not SDD seats. subagent-driven-development and executing-plans now tell a director (tools include `vibe_spawn` but not `task`) to hand the whole run to one `good` worker, which keeps the ledger and dispatches the `sdd-*` seats through its own `task` tool. using-git-worktrees says vibe refuses `/move` and `/wt` and leaving vibe kills every worker, so the worktree and `/move` come first. writing-plans' handoff says both approaches run in a worker. `pi-tools.md` gains a *Vibe mode* section: the action-to-`vibe_*` table, what workers have, and the request-budget note.
+- **The injected mapping points a vibe director at that section.** Its last paragraph tells a session whose tools include `vibe_spawn` but not `task` that it is a director without the `task`, `bash`, `edit` or `write` tools the mapping names, and to read the section before acting on them. Live check on omp 18.4.10: a `good` worker ran `read skill://subagent-driven-development`, dispatched `sdd-rereviewer` through its own `task` tool, and the seat ran on its `task.agentModelOverrides` model, returned its structured output to the worker, and was resumed with `write agent://<id>`.
+
 ## [6.4.2-omp.3] - 2026-10-02
 
 ### Fixed
