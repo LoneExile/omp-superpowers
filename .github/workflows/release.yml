@@ -30,8 +30,16 @@ jobs:
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
 
-      - name: Upgrade npm (Trusted Publishing needs npm >= 11.5.1)
-        run: npm install -g npm@latest
+      # Node 24 bundles npm 11 (11.19.0 in 24.21.0), the same npm CI runs the
+      # package check with; installing npm@latest would release with a toolchain
+      # CI never ran.
+      - name: npm supports Trusted Publishing (>= 11.5.1)
+        run: |
+          v=$(npm --version)
+          node -e '
+            const [a, b, c] = process.argv[1].split(".").map(Number);
+            process.exit(a > 11 || (a === 11 && (b > 5 || (b === 5 && c >= 1))) ? 0 : 1);
+          ' "$v" || { echo "::error::npm $v cannot use Trusted Publishing (needs >= 11.5.1)"; exit 1; }
 
       - name: Tag matches package.json version
         run: |
