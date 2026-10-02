@@ -6,9 +6,9 @@ Upstream superpowers is a set of workflow skills (brainstorm → plan → implem
 
 This fork keeps the skills and fixes the omp side:
 
-- the always-injected tool mapping tells the truth about `task`, `todo`, `read`/`grep`/`glob`
+- the injected tool mapping tells the truth about `task`, `todo`, `read`/`grep`/`glob`
 - **five omp agents** (`agents/sdd-*.md`) give every subagent-driven-development seat its own model, thinking level, and tool set
-- subagent-driven-development is rewritten around them: three-round fix loop, structured reviewer output, waves gated on isolation
+- subagent-driven-development is rewritten around them: three-round fix loop, structured reviewer output, implementers one at a time
 
 ## Install
 
@@ -25,6 +25,8 @@ omp plugin install npm:@loneexile/omp-superpowers@<version>
 
 Unreleased `main` installs from GitHub under the same plugin name, pinned to a commit: `omp plugin install github:LoneExile/omp-superpowers#<sha>`. Installs made before 6.4.2-omp.1 used the plugin name `superpowers`; run `omp plugin uninstall superpowers` before installing this package.
 
+npm and `github:` installs keep each seat's model. A marketplace or `--plugin-dir` install of the repo root keeps them too, because the repo carries `.omp-plugin/plugin.json`; without it, omp treats a root with `.claude-plugin/plugin.json` as Claude dialect and drops every agent's `model:` line.
+
 Verify it loaded — the roster of your `task` tool should now include the five `sdd-*` agents:
 
 ```bash
@@ -33,7 +35,7 @@ omp -p --no-session --no-skills --model anthropic/claude-haiku-4-5 \
 # scout, reviewer, security-reviewer, sonic, task, sdd-implementer, sdd-reviewer, sdd-rereviewer, sdd-escalation-implementer, sdd-final-reviewer
 ```
 
-Agent definitions are read **per dispatch**, so a reinstall takes effect on the next `task` call in a running session. The injected tool mapping and the skill catalog are read at process start — restart omp after upgrading to pick those up.
+Agent definitions are read **per dispatch**, so a reinstall takes effect on the next `task` call in a running session. The injected tool mapping and the skill catalog are read at process start — restart omp after upgrading to pick those up. The bootstrap is injected at the start of each session, including `/new`, `/resume` and `/fork`, until that session's first agent run ends, and again after compaction. Main session only; subagents never get it.
 
 ## Using it
 
@@ -57,7 +59,7 @@ flowchart TD
     R -->|"Critical or Important findings"| F
     F["fix round 1 or 2: resume sdd-implementer"] --> RR["sdd-rereviewer: verdict per finding"]
     RR -->|"all addressed"| D
-    RR -->|"still open, round 3"| E["sdd-escalation-implementer: xhigh reasoning"]
+    RR -->|"still open, round 3"| E["sdd-escalation-implementer: fresh context, strongest tier"]
     E --> RR
     RR -->|"still open after round 3"| A["controller adjudicates and parks with a ruling"]
     A --> D
@@ -74,17 +76,21 @@ Blue nodes are the five omp agents this fork ships. A reviewer that cannot read 
 
 ### The SDD seats
 
-| Seat | agent | shipped default · thinking | tools |
-|---|---|---|---|
-| implementer (every task, fix rounds 1–2) | `sdd-implementer` | sonnet-5 · medium | read, write, edit, bash, grep, glob, lsp, ast_grep |
-| task reviewer | `sdd-reviewer` | sonnet-5 · high | read, grep, glob |
-| scoped re-review | `sdd-rereviewer` | sonnet-5 · low | read, grep |
-| fix round 3 / ruled strongest-tier task | `sdd-escalation-implementer` | opus-5 · xhigh | same as implementer |
-| final whole-branch review (subagent-driven or Native) | `sdd-final-reviewer` | opus-5 · xhigh | read, grep, glob, bash, lsp, ast_grep |
+| Seat | agent | shipped default · thinking | falls back to | tools |
+|---|---|---|---|---|
+| implementer (every task, fix rounds 1–2) | `sdd-implementer` | claude-sonnet-5-5 · medium | `@task` | read, write, edit, bash, grep, glob, lsp, ast_grep |
+| task reviewer | `sdd-reviewer` | claude-sonnet-5-5 · high | `@task` | read, grep, glob |
+| scoped re-review | `sdd-rereviewer` | claude-sonnet-5-5 · low | `@task` | read, grep |
+| fix round 3 / ruled strongest-tier task | `sdd-escalation-implementer` | claude-opus-5-5 · max | `@slow` | same as implementer |
+| final whole-branch review (subagent-driven or Native) | `sdd-final-reviewer` | claude-opus-5-5 · max | `@slow` | read, grep, glob, bash, lsp, ast_grep |
 
-The shipped defaults are Anthropic: sonnet for the seats that run on every task, opus for the two that run once per plan or once per stuck task. The tiers are a **thinking ladder** as much as a model ladder — re-reviews reason at `low`, escalation and the final review at `xhigh`.
+`lsp` and `ast_grep` are listed for the seats that benefit, but omp only activates them in subagents when `task.enableLsp` / `astGrep.enabled` are on (both default off).
 
-The two reviewer seats have no `bash`, `edit`, or filesystem `write`: the review package (`git diff -U10` written to a file) is their whole view of the change, and they return a structured result (`spec_compliance`, `task_quality`, `findings[]`, `cannot_verify[]`; `finding_verdicts[]`, `new_breakage[]`, `round_verdict`) plus `package_gap` when they could not read the package. Note the honest boundary: omp always attaches `hub` to subagents, and `hub start` can launch a process, so "no shell" means *cannot edit the tree and cannot run a shell*, not a sandbox.
+omp takes the first list entry whose provider has credentials. If the pin has none, the seat runs on your `modelRoles.task` / `modelRoles.slow` model at that role's own level. An unset `@task` drops out, and the seat then silently runs on the controller's model; an unset `@slow` expands to omp's built-in strong-model ranking. The list is also the retry chain on rate-limit and usage-limit errors, gated by `retry.modelFallback` (default on); there is no switch on context overflow. Turn on `task.showResolvedModelBadge`, or read `session_init.resolvedModel` in a subagent transcript, to see what actually ran.
+
+The shipped defaults are Anthropic: sonnet for the seats that run on every task, opus for the two that run once per plan or once per stuck task. The tiers are a **thinking ladder** as much as a model ladder — re-reviews reason at `low`, escalation and the final review at `max`.
+
+The two reviewer seats have no `bash`, `edit`, or filesystem `write`: the review package (`git diff -U10` written to a file) is their whole view of the change, and they return a structured result (`spec_compliance`, `task_quality`, `findings[]`, `cannot_verify[]`; `finding_verdicts[]`, `new_breakage[]`, `round_verdict`) plus `package_gap` when they could not read the package. Note the honest boundary: an agent's `tools:` list limits built-in tools only. Extension tools and MCP tools (mounted as `xd://` devices and run through a device-only `write`) still attach to every subagent; memory tools attach only when the agent's `tools:` list names them. On omp 18.4.10 a read/grep/glob reviewer ran a shell command through an MCP device. Read-only is by instruction, not a sandbox.
 
 ### Changing models — no file edits
 
@@ -93,7 +99,7 @@ omp resolves each seat's model and thinking level in a fixed order. The override
 ```mermaid
 flowchart LR
     subgraph model["model"]
-        M1["task.agentModelOverrides"] -->|"unset"| M2["agent file model:"]
+        M1["task.agentModelOverrides"] -->|"unset"| M2["agent file model list: pin, then @task or @slow"]
     end
     subgraph level["thinking level"]
         L1["explicit :level on the winning model string"] -->|"none"| L2["agent file thinkingLevel:"]
@@ -107,7 +113,7 @@ flowchart LR
 
 Set the override in `~/.omp/agent/config.yml`, or interactively with `/agents` in any session (it edits the same map). It applies on the next dispatch; delete a line to fall back to the agent file.
 
-This is how the fork's own author runs it — every seat on a flat-rate model, mapped onto that model's own thinking ladder:
+Example — every seat on one flat-rate model, mapped onto that model's own thinking ladder:
 
 ```yaml
 task:
@@ -127,28 +133,32 @@ Rules that are easy to get wrong:
 
 - A **bare model** (`anthropic/claude-haiku-4-5`) keeps the agent file's own `thinkingLevel`. Add `:level` (`…:high`) to change reasoning too.
 - **Delete a line** to fall back to the agent file's default for that seat. Overrides apply on the next dispatch — no restart.
-- The `task` tool has **no `model:` field**. Never dispatch the bundled `task` or `reviewer` agent for an SDD seat — they resolve to `modelRoles.task` / `@slow`, which on many hosts is a cheap model.
-- `effort` on a dispatch (when `task.enableEffort` is on) accepts only `"lo"`, `"med"`, `"hi"`.
+- An override **replaces the whole model list**, fallback included. Append `,@task` (for example `provider/model:high,@task`) to keep one.
+- The `task` tool has **no `model:` field**. Never dispatch the bundled `task` or `reviewer` agent for an SDD seat — they lack the seat's tools, structured output and no-subagent rule, and run whatever `modelRoles.task` / `modelRoles.slow` names.
+- `effort` on a dispatch (when `task.enableEffort` is on) accepts only `"lo"`, `"med"`, `"hi"`. `"hi"` maps to the model's top supported level, capped by `task.maxEffort`; SDD uses `effort: "hi"` for high-risk task reviews, and for escalation only when a host override lowers that seat.
 - Discovery-only model ids (the OpenCode Go catalog, for example) accept `:level` in config and in overrides but not on the `--model` CLI flag.
 
 ### Optional settings that matter
 
 | setting | why |
 |---|---|
-| `task.isolation.enabled` (+ `isolation.backend`, default `auto`) | off by default; SDD only runs implementers in **parallel waves** when it is on — otherwise they share one checkout and stay serial. Older omp builds spelled this `task.isolation.mode`; check `omp config get task.isolation.enabled` on your build |
-| `task.enableEffort` | exposes per-dispatch `effort` for the round-3 escalation |
+| `task.isolation.enabled` (+ `isolation.backend`, default `auto`) | off by default. SDD does not use it: implementers run one at a time, because isolated work returns as an applied patch with no per-task commits, and an isolated subagent cannot be messaged for fix rounds. Older omp builds spelled this `task.isolation.mode`; check `omp config get task.isolation.enabled` on your build |
+| `task.enableEffort` | exposes per-dispatch `effort` (`"lo"`, `"med"`, `"hi"`); `"hi"` maps to the model's top supported level, capped by `task.maxEffort`. SDD uses `effort: "hi"` for high-risk task reviews, and for escalation only when a host override lowers that seat |
+| `task.showResolvedModelBadge` (default off) | shows the model each subagent actually ran. A seat whose pinned provider has no credentials silently runs on another model |
+| `task.enableLsp`, `astGrep.enabled` (both default off) | omp only activates `lsp` and `ast_grep` in subagents when these are on |
 | `autolearn.autoContinue` | omp's auto-learn mints managed skills every session; the whole catalog is injected into every subagent's prompt. Keep it pruned or off — a 2,500-skill catalog was ~220k tokens per subagent turn |
 
 ## What changed from upstream
 
-- `.pi/extensions/superpowers.ts` — the injected mapping names `task`, `todo`, the `sdd-*` roster, and the no-`model:`-field rule
+- `.pi/extensions/superpowers.ts` — the injected mapping names `task`, `todo`, the `sdd-*` roster, and the no-`model:`-field rule; it also re-arms on `session_switch`, skips subagent sessions, and ignores an `agent_end` that will auto-continue
+- `.omp-plugin/plugin.json` — new. Marks the repo root as an omp-native plugin so a marketplace or `--plugin-dir` install keeps each agent's `model:` line
 - `skills/using-superpowers/references/pi-tools.md` — same, as the reference doc
-- `agents/sdd-*.md` — new. `sdd-final-reviewer` reviews the whole branch for both ways of running a plan, and carries the review rules upstream keeps in `requesting-code-review/code-reviewer.md` (the spec is a vision document; a "Declined to judge" list), because it replaces that template there
-- `skills/subagent-driven-development/` — *Model Selection* → *Agent Selection*; fix-loop cap 5 → 3 with a round-3 escalation seat; a proven-trivial-fix route that replaces a re-review with a one-command proof; waves keyed to the plan's pre-flight file/interface table and gated on isolation; templates show omp's real `{ context, tasks: [{ agent, task }] }` wire shape and the reviewers' structured fields
-- `skills/executing-plans/` — one additive omp paragraph in *Final Review*: the `task` tool has no `model:` field, so the final review goes to `sdd-final-reviewer` (its model is what the host maps that agent to), told that no task was reviewed
-- `skills/using-git-worktrees/` — additive omp section: `/wt` is the user's one-line answer to the consent question (moves the session, carries WIP); when the agent creates the worktree itself it uses `omp worktree add` under `~/.omp/wt/` (the only place `omp worktree list`/`clear` manage), knows that command leaves uncommitted changes behind, and asks for `/move <path>` because `cd` never moves the tools' cwd
+- `agents/sdd-*.md` — new. Each seat's `model:` is a pin plus a role fallback (`@task` or `@slow`), and all set `readSummarize: false`. `sdd-final-reviewer` reviews the whole branch for both ways of running a plan. It reads `requesting-code-review/code-reviewer.md` at run time and applies its What to Check, Calibration, severity definitions and Critical Rules, while carrying upstream's vision-document and Declined-to-judge rules in its own body. Descriptions name roles, never models
+- `skills/subagent-driven-development/` — *Model Selection* → *Agent Selection*; fix-loop cap 5 → 3 with a round-3 escalation seat; a proven-trivial-fix route that replaces a re-review with a one-command proof; implementers run one at a time; the scripts directory resolves via `realpath skill://subagent-driven-development/scripts`; fix rounds resume the implementer with `write agent://<id>` (id ledgered) and full results are read at `agent://<id>`; task review scales with risk through `effort: "hi"`; the controller checks reviewer results; templates show omp's real `{ context, tasks: [{ agent, task, solutionSpace }] }` wire shape and the reviewers' structured fields
+- `skills/executing-plans/` — one additive omp paragraph in *Final Review*: the `task` tool has no `model:` field, so the final review goes to `sdd-final-reviewer` (its model is what the host maps that agent to), told that no task was reviewed; it also resolves the scripts directory with `realpath` and reads full results at `agent://<id>`
+- `skills/using-git-worktrees/` — additive omp section: `/wt` is the user's one-line answer to the consent question (moves the session, carries WIP); when the agent creates the worktree itself it uses `omp worktree add` under `~/.omp/wt/` (the only place `omp worktree list`/`clear` manage), knows that command leaves uncommitted changes behind, and asks for `/move <path>` because `cd` never moves the tools' cwd. Also: clone-first falls back to a plain checkout without `node_modules` (no copy-on-write, or in-repo targets); setup and tests use the bash tool's `cwd` parameter until `/move`; `omp worktree clear --all` is warned against, since it force-removes every worktree, uncommitted work included; omp's bash rewrites a literal `git worktree add` into `omp worktree add` only without shell expansion
 - `README.md` — this file: rewritten for omp (install, seats, overrides, maintenance); upstream's multi-harness README is gone
-- `tests/pi/test-pi-extension.mjs` — one assertion follows the renamed mapping heading; the package-name assertion is gone (`scripts/check-npm-package.sh` checks the published name)
+- `tests/pi/test-pi-extension.mjs` — covers the extension's lifecycle (bootstrap on start, `session_switch`, compaction; none for subagents or an auto-continuing `agent_end`), the action table in `pi-tools.md`, the seat table against the names in `agents/*.md`, and the `.omp-plugin/plugin.json` manifest; the package-name assertion is gone (`scripts/check-npm-package.sh` checks the published name)
 - `package.json` — the npm identity: `@loneexile/omp-superpowers`, `<upstream version>-omp.<n>` versions, a `files` allowlist (the extension, `skills/`, `agents/`), `publishConfig`, `omp`/`oh-my-pi` keywords; `main` is dropped, since it pointed at the OpenCode plugin this package does not ship
 - `CHANGELOG.md`, `.github/workflows/` (CI, npm release), `scripts/check-npm-package.sh` — new
 
@@ -166,7 +176,7 @@ git push --force-with-lease origin main
 
 Expect conflicts in `skills/subagent-driven-development/`, `pi-tools.md`, `README.md`, and `package.json` whenever upstream touches them — this fork rewrites those files rather than appending to them (README.md is never a partial conflict). In `package.json` keep the fork's identity and set `version` to `<new upstream version>-omp.1`: CI's package check fails until the version's base matches the upstream version in `.claude-plugin/plugin.json`. `agents/`, the extension's mapping paragraph, and the omp blocks in `using-git-worktrees` are additive.
 
-A clean rebase is not the whole sync. Upstream's edits to text this fork replaced never reach the replacement, so read upstream's diff for those files and port what still applies. The v6.4.x sync needed two: `bash scripts/...` invocations in the SDD text, and `code-reviewer.md`'s new review rules, which here live in `agents/sdd-final-reviewer.md`.
+A clean rebase is not the whole sync. Upstream's edits to text this fork replaced never reach the replacement, so read upstream's diff for those files and port what still applies. The v6.4.x sync needed two: `bash scripts/...` invocations in the SDD text, and `code-reviewer.md`'s new review rules. Upstream edits to `code-reviewer.md`'s What to Check, Calibration, severity definitions and Critical Rules now reach `sdd-final-reviewer` without porting, because it reads the file at run time. Edits to the vision-document or Declined-to-judge sections still need porting into the agent body, which carries them itself.
 
 ### Releasing
 
@@ -181,7 +191,7 @@ gh release create "v$v" --target main --title "v$v" --notes-file /tmp/notes.md
 
 ### New omp versions
 
-Before trusting a new omp release, re-check the harness facts this fork depends on — against the **running binary**, not the npm source tree. `~/.bun/install/global/node_modules/@oh-my-pi/pi-coding-agent/src` routinely lags `omp --version` (a 17.4.2 tree sat beside an 18.1.17 binary while this README was written, and the isolation setting had been renamed in between). The live oracles are `omp config list --json` (every setting and its default), the `task` tool's own description in a session (agent roster, item fields), a `session_init.resolvedModel` line in a subagent transcript (what actually resolved), and `grep -a` on the binary for an exact string when you need to know whether a code path exists.
+Before trusting a new omp release, re-check the harness facts this fork depends on — against the **running binary**, not an npm source tree that may lag it. `~/.bun/install/global/node_modules/@oh-my-pi/pi-coding-agent/src` routinely lags `omp --version` (a 17.4.2 tree sat beside an 18.1.17 binary while this README was written, and the isolation setting had been renamed in between). The fork was last verified against omp 18.4.10. To read the exact running version's source, pack it into a temp dir: `cd "$(mktemp -d)" && npm pack @oh-my-pi/pi-coding-agent@$(omp --version | cut -d/ -f2) && tar xzf *.tgz` (source under `package/src`). The live oracles are `omp config list --json` (every setting and its default), the `task` tool's own description in a session (agent roster, item fields), a `session_init.resolvedModel` line in a subagent transcript (what actually resolved), and `grep -a` on the binary for an exact string when you need to know whether a code path exists.
 
 ## License
 
