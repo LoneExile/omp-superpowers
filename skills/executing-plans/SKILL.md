@@ -250,6 +250,20 @@ explicitly; an omitted model inherits the session's, which may not be the
 most capable. This is the one fresh context the whole run buys. Do not
 skip it, and do not replace it with your own read of the diff.
 
+**On omp:** the `task` tool has no `model:` field — the agent type
+carries the model — so choosing the reviewer's model means choosing its
+agent. Dispatch `sdd-final-reviewer`, the whole-branch reviewer this
+plugin ships, not the bundled `reviewer` or `task` agent. Give it the
+inputs above and say the plan ran inline, with no task reviewed, so it
+checks every change rather than only cross-task seams. Do not paste
+code-reviewer.md into the dispatch: the agent file carries the review
+method and the output format. Its model is whatever this host maps that
+agent to: opus-5 · xhigh by default, re-pointed with
+`task.agentModelOverrides`. Its result has findings with severities, a
+`### Ledger triage` over the `Ruling:` lines you passed (a line it marks
+fix-before-merge is a finding like any other), a `### Declined to judge`
+list, and **Mergeable:**.
+
 **Without a subagent tool:** read code-reviewer.md and perform that review
 yourself against the package, as a separate pass after the last task's
 ledger line. Write `Final review: self-review (no subagent tool)` to the

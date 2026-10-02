@@ -30,7 +30,7 @@ This fork ships SDD-specific agents (they appear in the `task` roster once the p
 | Task reviewer | `sdd-reviewer` | sonnet-5 · high; `read`/`grep`/`glob` — no file writes, no shell (`hub start` can still launch a process; the harness cannot remove `hub`) |
 | Scoped re-review | `sdd-rereviewer` | sonnet-5 · low; `read`/`grep`; ≤4 calls |
 | Fix round 3 / ruled strongest-tier task | `sdd-escalation-implementer` | opus-5 · xhigh; same tools as the implementer |
-| Final whole-branch review | `sdd-final-reviewer` | opus-5 · xhigh; read-only + focused bash |
+| Final whole-branch review (subagent-driven-development or executing-plans) | `sdd-final-reviewer` | opus-5 · xhigh; read-only + focused bash |
 
 Shipped defaults are Anthropic; the tiers are a thinking ladder (low / medium / high / xhigh). Re-point any seat per host with `task.agentModelOverrides` in `~/.omp/agent/config.yml` (or `/agents`) — it beats the agent file's `model:`, applies on the next dispatch, and a bare model keeps the agent's `thinkingLevel:` while an explicit `:level` replaces it.
 

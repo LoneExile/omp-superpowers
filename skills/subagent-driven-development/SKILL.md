@@ -554,7 +554,8 @@ branch started from, e.g. `git merge-base main HEAD`) and include the
 printed path in the final review dispatch, so the final reviewer reads
 one file instead of re-deriving the branch diff with git commands. Dispatch
 `sdd-final-reviewer` (xhigh reasoning, once per plan — see Agent
-Selection) with a `task` that names: the package path, the plan/spec
+Selection) with a `task` that says the plan ran subagent-driven (every
+task passed its task review) and names: the package path, the plan/spec
 paths, and the ledger's deferred-minor and parked-with-ruling lines
 verbatim. Do not wrap it in requesting-code-review's `code-reviewer.md` —
 that template asks a prose "Ready to merge?" and has no slot for the
