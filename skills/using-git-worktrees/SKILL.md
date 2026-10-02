@@ -44,7 +44,7 @@ Has the user already indicated their worktree preference in your instructions? I
 
 Honor any existing declared preference without asking. If the user declines consent, work in place and skip to Step 2.
 
-**On omp, the user has a one-line answer:** `/wt <branch>` moves *this session* into a new worktree on a new branch off `HEAD`, carrying uncommitted changes with it (clone-first, so `node_modules`/`target` come along). Only the user can run it — it is a slash command, refused while you are streaming. If they do, re-run the detection above: `GIT_DIR != GIT_COMMON` now holds, so skip to Step 2. (`worktree.cleanSource: true` additionally runs `git reset --hard` + `git clean` on the *original* checkout afterwards; it is off by default.)
+**On omp, your human partner has a one-line answer:** `/wt <branch>` moves *this session* into a new worktree on a new branch off `HEAD`, carrying uncommitted changes with it (clone-first, so `node_modules`/`target` come along). Only your human partner can run it — it is a slash command, refused while you are streaming. If they do, re-run the detection above: `GIT_DIR != GIT_COMMON` now holds, so skip to Step 2. (`worktree.cleanSource: true` additionally runs `git reset --hard` + `git clean` on the *original* checkout afterwards; it is off by default.)
 
 ## Step 1: Create Isolated Workspace
 
@@ -60,7 +60,7 @@ Only proceed to Step 1b if you have no native worktree tool available.
 
 #### On omp: `omp worktree add`
 
-omp exposes no worktree *tool* to the agent — `/wt` and `/move` are slash commands only the user can type. The native mechanism you can run is the CLI, from `bash`:
+omp exposes no worktree *tool* to the agent — `/wt` and `/move` are slash commands only your human partner can type. The native mechanism you can run is the CLI, from `bash`:
 
 ```bash
 repo=$(basename "$(git rev-parse --show-toplevel)")
@@ -68,14 +68,16 @@ path=~/.omp/wt/"$BRANCH_NAME-$repo"
 omp worktree add -b "$BRANCH_NAME" "$path"      # optional trailing commit-ish, default HEAD
 ```
 
-Rules, each measured on omp 18.1:
+Rules, each measured on omp 18.4.10:
 
 - **Put it under `~/.omp/wt/`** (or the configured `worktree.base`). That is the registry `omp worktree list` / `omp worktree clear` manage; a worktree created elsewhere is a valid git worktree that omp cannot see — the phantom state this step exists to avoid. Do not use `.worktrees/` on omp.
-- **It does not carry uncommitted changes.** It is clone-first (ignored build artifacts like `node_modules` come along), but a dirty tree stays behind. If the user has work in flight, either commit/stash it first or ask them to use `/wt <branch>`, which does carry it.
-- **Your working directory does not follow.** `cd` in `bash` is per call, and `read`/`edit`/`glob` resolve relative paths against the *session* cwd. After creating the worktree, ask the user to run `/move <path>` so the session follows you — until then, use absolute paths for everything under the worktree.
-- **Cleanup.** A finished worktree is removed with `git worktree remove <path>` from the repo — that also deletes the directory. `omp worktree clear` only sweeps *orphaned* entries (its own words: "parent repo no longer tracks this worktree"); a live worktree survives it, and `--all` also takes the user's PR checkouts. Preview with `omp worktree clear --dry-run`. Never `rm -rf` a registered worktree.
+- **It does not carry uncommitted changes.** It is clone-first (ignored build artifacts like `node_modules` come along, unless the clone falls back — next rule), but a dirty tree stays behind. If your human partner has work in flight, either commit/stash it first or ask them to use `/wt <branch>`, which does carry it.
+- **Clone-first can fall back to a plain checkout.** Cloning needs a filesystem that supports copy-on-write clones (measured: APFS clones, HFS+ does not) and a target outside the source checkout (measured on APFS: an in-repo target such as Step 1b's `.worktrees/` fails to clone). When it cannot, omp prints `warning: worktree clone fell back to plain checkout: …` and still exits 0; the worktree then lacks `node_modules`, `target`, and other ignored artifacts, so run Step 2's install as for any fresh checkout. `worktree.clone: false` turns clone-first off.
+- **Your working directory does not follow.** `cd` in `bash` is per call, and `read`/`edit`/`glob` resolve relative paths against the *session* cwd. After creating the worktree, ask your human partner to run `/move <path>` so the session follows you. Until then, use absolute paths for everything under the worktree, and run commands there with the `bash` tool's `cwd` parameter set to the worktree path — or `cd <path> && <cmd>` in the same call (a leading `cd <path> &&` is lifted into `cwd`; the `cd` does not carry to the next call).
+- **Subagents start in the session cwd, not your `cd`.** The `task` tool has no `cwd` argument, so until `/move` a subagent works in the ORIGINAL checkout, not the worktree (measured: after `omp worktree add`, a dispatched subagent's `pwd` was the original checkout). Get `/move` done before dispatching any subagent — implementer, reviewer, or scout. If you cannot, put the worktree's absolute path in every dispatch and tell the subagent to use absolute paths and the `bash` tool's `cwd` parameter throughout.
+- **Cleanup.** A finished worktree is removed with `git worktree remove <path>` from the repo — that also deletes the directory. `omp worktree clear` only sweeps *orphaned* entries (its own words: "parent repo no longer tracks this worktree"); a live worktree survives it. **`omp worktree clear --all` removes every entry under the worktree directory** — live worktrees and `/wt` session worktrees included — and force-removes them even with uncommitted changes, without asking (the branches survive). Never run it unless your human partner asked for exactly that, and preview any `clear` with `--dry-run`. Never `rm -rf` a registered worktree.
 
-This is the whole-session layer. Per-*subagent* isolation for parallel SDD waves is a separate switch, `task.isolation.enabled` (default off) — see the subagent-driven-development skill.
+This is the whole-session layer. Per-*subagent* isolation is a separate switch, `task.isolation.enabled` (default off); subagent-driven-development dispatches its implementers one at a time and does not use it.
 
 Then skip to Step 2.
 
@@ -120,6 +122,8 @@ git worktree add "$path" -b "$BRANCH_NAME"
 cd "$path"
 ```
 
+**On omp,** the `bash` tool rewrites a literal `git worktree add` into `omp worktree add` (clone-first; `worktree.clone` is on by default), so a rewritten run prints `Cloned from … via …`, or the fallback warning from the clone rule above. Only a flat command of the shape `git [-C dir] worktree add [-b|-B branch] [--detach] [-q] [--] path [commit]` is rewritten, and only when it holds no shell-expansion characters: a `$variable`, backtick, `~`, or glob in the command, or any other flag (`--lock`, `--no-checkout`, `--force`), sends it to plain git untouched. The block above, with its `"$path"` and `"$BRANCH_NAME"`, therefore runs as plain git; write the path and branch out literally to get clone-first. A target inside the repo, such as the default `.worktrees/`, cannot be cloned and falls back to a plain checkout with that warning. An extension that rewrites the command before omp sees it also prevents the rewrite: neither a `Cloned from` line nor the warning means plain git ran.
+
 **Sandbox fallback:** If `git worktree add` fails with a permission error (sandbox denial), tell the user the sandbox blocked worktree creation and you're working in the current directory instead. Then run setup and baseline tests in place.
 
 ## Step 2: Project Setup
@@ -140,6 +144,8 @@ if [ -f pyproject.toml ]; then poetry install; fi
 # Go
 if [ -f go.mod ]; then go mod download; fi
 ```
+
+**On omp, until `/move`** the session cwd is still the original checkout. Run these commands, and Step 3's tests, in the worktree with the `bash` tool's `cwd` parameter set to its path, or `cd <path> && <cmd>` in one call.
 
 ## Step 3: Verify Clean Baseline
 
@@ -170,9 +176,11 @@ Ready to implement <feature-name>
 | In a submodule | Treat as normal repo (Step 0 guard) |
 | Native worktree tool available | Use it (Step 1a) |
 | No native tool | Git worktree fallback (Step 1b) |
-| omp, user typed `/wt <branch>` | Session already moved, WIP carried — re-run Step 0, skip to Step 2 |
+| omp, your human partner typed `/wt <branch>` | Session already moved, WIP carried — re-run Step 0, skip to Step 2 |
 | omp, you create it | `omp worktree add -b <branch> ~/.omp/wt/<branch>-<repo>`; then ask for `/move <path>` |
-| omp, dirty tree | Commit/stash first, or ask the user for `/wt` — `omp worktree add` leaves WIP behind |
+| omp, dirty tree | Commit/stash first, or ask your human partner for `/wt` — `omp worktree add` leaves WIP behind |
+| omp, setup or tests before `/move` | `bash` with `cwd=<worktree path>`, or `cd <path> && <cmd>` in one call |
+| omp, tidy up | `git worktree remove <path>`; `omp worktree clear --all` force-removes every worktree, live ones included — only on request |
 | `.worktrees/` exists | Use it (verify ignored) |
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
