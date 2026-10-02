@@ -6,6 +6,13 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+## [6.4.2-omp.2] - 2026-10-02
+
+### Fixed
+
+- **Native execution's final review goes to a known agent on omp.** `executing-plans` tells the controller to dispatch its final review "on the most capable available model" and to specify the model explicitly, but omp's `task` tool has no `model:` field, so the review ran on whichever agent the session picked. An omp paragraph in its Final Review now sends it to `sdd-final-reviewer`. Its model is whatever your host maps that agent to: opus-5 · xhigh by default, or your `task.agentModelOverrides` entry.
+- **`sdd-final-reviewer` knows how the plan ran.** It assumed every task had passed a task review and concentrated on cross-file seams. After an inline run no task was reviewed, so it now does the task reviews' work across the whole branch, then the seams. subagent-driven-development's dispatch says its tasks were reviewed; a dispatch that does not say gets the full review. It also checks each Review Focus item the dispatch carries.
+
 ## [6.4.2-omp.1] - 2026-10-02
 
 First release, synced to upstream [v6.4.2](https://github.com/obra/superpowers/blob/v6.4.2/RELEASE-NOTES.md).
@@ -24,5 +31,6 @@ First release, synced to upstream [v6.4.2](https://github.com/obra/superpowers/b
 - The fork's rewritten subagent-driven-development text invokes its helper scripts through `bash` as well, so a package extractor that drops exec bits cannot break them.
 - `sdd-final-reviewer` carries upstream's new review rules from `code-reviewer.md`, the template it replaces in SDD's final review: the spec is a vision document (behavior it is silent on is graded by what a reasonable person expects), and a "Declined to judge" section that the controller rules on and ledgers like a plan conflict.
 
-[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v6.4.2-omp.1...HEAD
+[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v6.4.2-omp.2...HEAD
+[6.4.2-omp.2]: https://github.com/LoneExile/omp-superpowers/releases/tag/v6.4.2-omp.2
 [6.4.2-omp.1]: https://github.com/LoneExile/omp-superpowers/releases/tag/v6.4.2-omp.1
