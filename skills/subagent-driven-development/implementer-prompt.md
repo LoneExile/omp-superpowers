@@ -94,8 +94,8 @@ Use this template when dispatching an implementer subagent.
 
     **How to escalate:** Report back with status BLOCKED or NEEDS_CONTEXT. Describe
     specifically what you're stuck on, what you've tried, and what kind of help you need.
-    The controller can provide more context, re-dispatch with a more capable model,
-    or break the task into smaller pieces.
+    The controller can provide more context, hand the task to a stronger seat
+    (`sdd-escalation-implementer`), or break the task into smaller pieces.
 
     ## Before Reporting Back: Self-Review
 
