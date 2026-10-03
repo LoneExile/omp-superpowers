@@ -6,6 +6,11 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+### Fixed
+
+- **`skill://` in `bash` is narrower than the setup text said.** omp's shell resolves `skill://` paths itself, in its builtins and in-process coreutils, but an external program gets the literal URL, and a host extension can turn a command into one. In a real omp 18.5.0 run with the RTK extension, the controller's `realpath skill://subagent-driven-development/scripts` printed the directory, and the `ls skill://…/scripts` it added next, rewritten to `rtk ls`, failed with "No such file or directory". The SDD and executing-plans setup now says so and says to use the printed path everywhere else. The instructed path, one `realpath` then the printed directory, was never affected.
+- **A vibe director's todo now follows the ledger at each read.** In the same run the director read three new `Task N: complete` lines, then waited another 10 minutes before marking them, so the todo lagged the ledger by 8 to 18 minutes. The vibe notes now say to mark them before waiting again.
+
 ## [6.4.2-omp.4] - 2026-10-03
 
 ### Added
