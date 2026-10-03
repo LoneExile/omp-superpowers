@@ -42,9 +42,11 @@ explicitly instructs them. Second, when the skill says to stop and ask
 your human partner, end the turn with the question. The worker has no
 `todo`, so the ledger is its record. It dispatches the `sdd-*` seats
 through its own `task` tool. You keep the todo list from its ledger
-(`<workspace>/progress.md`), take its questions to your human partner, and
-`vibe_send` the answers. The worktree and budget limits are in "Vibe mode"
-in `skill://using-superpowers/references/pi-tools.md`.
+(`<workspace>/progress.md`): each time you read it, mark every new
+`Task <N>: complete` line done before you wait again. Take its questions to
+your human partner and `vibe_send` the answers. The worktree and budget
+limits are in "Vibe mode" in
+`skill://using-superpowers/references/pi-tools.md`.
 
 ## When to Use
 
@@ -166,8 +168,12 @@ a ledger file, not only in todos.
   fails from the repo root ("No such file or directory"), and `omp read
   skill://…` lists the files but gives no filesystem path. Once, before the
   first script, run `realpath skill://subagent-driven-development/scripts` in
-  the `bash` tool (omp's bash resolves `skill://` URLs) and add the printed
-  path to the ledger, after the identity line, as `SDD scripts: <dir>`.
+  the `bash` tool and add the printed path to the ledger, after the identity
+  line, as `SDD scripts: <dir>`. omp's shell resolves `skill://` paths itself
+  (its builtins and in-process coreutils, `realpath` and `ls` among them),
+  but an external program gets the literal URL, and an extension can turn a
+  command into one: RTK rewrites `ls` into `rtk ls`. Use the printed path
+  everywhere else.
   Ledger lines are found by their prefix, never by position: another
   executor sharing this ledger (executing-plans) adds its own `… scripts:`
   line, and each executor adds the one it lacks. Then run every
