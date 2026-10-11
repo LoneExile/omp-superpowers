@@ -243,9 +243,8 @@ or two each and goes straight to your human partner, without the
 builder check.
 
 **Where it goes:** in a software repo,
-`docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`, committed.
-Otherwise, pick a sensible place and say where. Your human partner's
-preferences override both.
+`docs/specs/YYYY-MM-DD-<topic>-design.md`, committed.
+Otherwise, ask. Your human partner's preferences override both.
 
 **Builder check** (for a project): dispatch a fresh subagent with
 `builder-check-prompt.md` in this directory. When you tell your human
