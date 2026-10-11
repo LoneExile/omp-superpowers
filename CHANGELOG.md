@@ -6,9 +6,11 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+## [7.0.0-omp.2] - 2026-10-11
+
 ### Changed
 
-- **Specs and plans save to `docs/specs/` and `docs/plans/`.** Upstream saves them under `docs/superpowers/`. brainstorming's written design and writing-plans' plan file now go to the shorter paths, and the example plan paths in executing-plans, subagent-driven-development and requesting-code-review match. `.superpowers/` (the SDD workspace and the brainstorm companion's files) is unchanged. Existing plans under `docs/superpowers/plans/` still run: SDD and executing-plans take any plan path. `scripts/check-npm-package.sh` now fails if a shipped file names `docs/superpowers/`.
+- **Specs and plans save to `docs/specs/` and `docs/plans/`.** Upstream saves them under `docs/superpowers/`. brainstorming's written design and writing-plans' plan file now go to the shorter paths, and the example plan paths in executing-plans, subagent-driven-development and requesting-code-review match. `.superpowers/` (the SDD workspace and the brainstorm companion's files) is unchanged. Existing plans under `docs/superpowers/plans/` still run: SDD and executing-plans take any plan path. `scripts/check-npm-package.sh` now fails if a shipped file names `docs/superpowers`, and fails rather than passes if that search errors.
 
 ## [7.0.0-omp.1] - 2026-10-11
 
@@ -88,7 +90,8 @@ First release, synced to upstream [v6.4.2](https://github.com/obra/superpowers/b
 - The fork's rewritten subagent-driven-development text invokes its helper scripts through `bash` as well, so a package extractor that drops exec bits cannot break them.
 - `sdd-final-reviewer` carries upstream's new review rules from `code-reviewer.md`, the template it replaces in SDD's final review: the spec is a vision document (behavior it is silent on is graded by what a reasonable person expects), and a "Declined to judge" section that the controller rules on and ledgers like a plan conflict.
 
-[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.0-omp.1...HEAD
+[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.0-omp.2...HEAD
+[7.0.0-omp.2]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.0-omp.2
 [7.0.0-omp.1]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.0-omp.1
 [6.4.2-omp.4]: https://github.com/LoneExile/omp-superpowers/releases/tag/v6.4.2-omp.4
 [6.4.2-omp.3]: https://github.com/LoneExile/omp-superpowers/releases/tag/v6.4.2-omp.3
