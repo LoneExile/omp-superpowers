@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# Verify the npm package this fork publishes: its name, its version scheme, and
-# the exact file set of the tarball. CI runs it on every push; the release
-# workflow runs it again before publishing.
+# Verify the npm package this fork publishes: its name, its version scheme, the
+# exact file set of the tarball, and the fork's spec and plan paths. CI runs it
+# on every push; the release workflow runs it again before publishing.
 #
 # Usage: scripts/check-npm-package.sh
 set -euo pipefail
@@ -59,5 +59,20 @@ if [ "$expected" != "$actual" ]; then
   diff <(printf '%s\n' "$expected") <(printf '%s\n' "$actual") >&2 || true
   fail "tarball differs from the tracked runtime files ('<' missing, '>' unexpected)"
 fi
+
+# This fork saves specs to docs/specs/ and plans to docs/plans/; upstream uses
+# docs/superpowers/. An upstream sync can bring the old path back in new or
+# conflicting text, and agents follow whatever the shipped skills say.
+# git grep exits 1 for no match; anything above 1 is an error, not a pass.
+rc=0
+stale=$(git grep -n 'docs/superpowers' -- .pi/extensions agents skills) || rc=$?
+case $rc in
+  0)
+    printf '%s\n' "$stale" >&2
+    fail "shipped files name docs/superpowers; this fork saves to docs/specs/ and docs/plans/"
+    ;;
+  1) ;;
+  *) fail "git grep for docs/superpowers failed (exit $rc)" ;;
+esac
 
 echo "check-npm-package: $name@$version, $(printf '%s\n' "$actual" | wc -l | tr -d ' ') files"

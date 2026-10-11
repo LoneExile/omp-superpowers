@@ -6,6 +6,10 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+### Changed
+
+- **Specs and plans save to `docs/specs/` and `docs/plans/`.** Upstream saves them under `docs/superpowers/`. brainstorming's written design and writing-plans' plan file now go to the shorter paths, and the example plan paths in executing-plans, subagent-driven-development and requesting-code-review match. `.superpowers/` (the SDD workspace and the brainstorm companion's files) is unchanged. Existing plans under `docs/superpowers/plans/` still run: SDD and executing-plans take any plan path. `scripts/check-npm-package.sh` now fails if a shipped file names `docs/superpowers/`.
+
 ## [7.0.0-omp.1] - 2026-10-11
 
 Synced to upstream [v7.0.0](https://github.com/obra/superpowers/blob/v7.0.0/RELEASE-NOTES.md).
