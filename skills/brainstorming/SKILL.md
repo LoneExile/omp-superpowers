@@ -154,7 +154,7 @@ could plan from without going back to your human partner. Cover:
 - what's left to the builder
 
 **Where it goes:** in a software repo,
-`docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`, committed.
+`docs/specs/YYYY-MM-DD-<topic>-design.md`, committed.
 Otherwise, ask. Your human partner's preferences override both.
 
 **Builder check:** dispatch a fresh subagent with

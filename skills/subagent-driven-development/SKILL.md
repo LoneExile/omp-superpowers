@@ -784,8 +784,8 @@ Use superpowers:finishing-a-development-branch.
 You: I'm using Subagent-Driven Development to execute this plan.
 
 [Setup: worktree verified; on omp, session moved into it with /move]
-[Read plan file once: docs/superpowers/plans/feature-plan.md]
-[Resolve workspace: bash scripts/sdd-workspace docs/superpowers/plans/feature-plan.md — no ledger inside, fresh start]
+[Read plan file once: docs/plans/feature-plan.md]
+[Resolve workspace: bash scripts/sdd-workspace docs/plans/feature-plan.md — no ledger inside, fresh start]
 [On omp: scripts dir resolved with realpath skill://subagent-driven-development/scripts and added to the ledger as "SDD scripts: <dir>"; each script runs as bash <dir>/<name>]
 [Create todos for all tasks]
 

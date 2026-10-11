@@ -387,8 +387,8 @@ Use superpowers:finishing-a-development-branch.
 You: I'm using the executing-plans skill to implement this plan inline.
 
 [Setup: worktree verified]
-[Read plan once: docs/superpowers/plans/feature-plan.md; spec read]
-[Resolve workspace: sdd-workspace docs/superpowers/plans/feature-plan.md — no ledger inside, fresh start]
+[Read plan once: docs/plans/feature-plan.md; spec read]
+[Resolve workspace: sdd-workspace docs/plans/feature-plan.md — no ledger inside, fresh start]
 [Pre-flight scan: 2 shared-interface rows, 4 self-consistency rows, clean; written to ledger]
 [Create todos for all tasks]
 

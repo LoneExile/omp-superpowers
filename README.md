@@ -42,7 +42,7 @@ Agent definitions are read **per dispatch**, so a reinstall takes effect on the 
 The skills drive themselves once loaded. The usual path:
 
 1. `read skill://brainstorming` — turn an idea into a design
-2. `read skill://writing-plans` — produce `docs/superpowers/plans/<date>-<name>.md`
+2. `read skill://writing-plans` — produce `docs/plans/<date>-<name>.md`
 3. `read skill://subagent-driven-development` — execute the plan task by task via subagents. If you choose Native at the plan handoff, `executing-plans` runs instead: the session does every task itself, and only the final review is a subagent (`sdd-final-reviewer`)
 4. `read skill://finishing-a-development-branch` — merge / PR / discard
 
@@ -163,6 +163,7 @@ Rules that are easy to get wrong:
 - `README.md` — this file: rewritten for omp (install, seats, overrides, maintenance); upstream's multi-harness README is gone
 - `tests/pi/test-pi-extension.mjs` — covers the extension's lifecycle (bootstrap on start, `session_switch`, compaction; none for subagents or an auto-continuing `agent_end`), the action table in `pi-tools.md`, the seat table against the names in `agents/*.md`, and the `.omp-plugin/plugin.json` manifest; the package-name assertion is gone (`scripts/check-npm-package.sh` checks the published name)
 - `package.json` — the npm identity: `@loneexile/omp-superpowers`, `<upstream version>-omp.<n>` versions, a `files` allowlist (the extension, `skills/`, `agents/`), `publishConfig`, `omp`/`oh-my-pi` keywords; `main` is dropped, since it pointed at the OpenCode plugin this package does not ship
+- Spec and plan paths — `docs/specs/` and `docs/plans/` instead of upstream's `docs/superpowers/specs/` and `docs/superpowers/plans/`: brainstorming's *Where it goes*, writing-plans' save path and handoff lines, and the example plan paths in executing-plans, subagent-driven-development and requesting-code-review. `.superpowers/` (the SDD workspace, brainstorm companion files) is unchanged. `scripts/check-npm-package.sh` fails if a shipped file names `docs/superpowers/`
 - `CHANGELOG.md`, `.github/workflows/` (CI, npm release), `scripts/check-npm-package.sh` — new
 
 Everything else is upstream, unmodified.
@@ -180,6 +181,8 @@ git push --force-with-lease origin main
 Expect conflicts in `skills/subagent-driven-development/`, `pi-tools.md`, `README.md`, and `package.json` whenever upstream touches them — this fork rewrites those files rather than appending to them (README.md is never a partial conflict). In `package.json` keep the fork's identity and set `version` to `<new upstream version>-omp.1`: CI's package check fails until the version's base matches the upstream version in `.claude-plugin/plugin.json`. `agents/`, the extension's mapping paragraph, and the omp blocks in `using-git-worktrees` are additive.
 
 A clean rebase is not the whole sync. Upstream's edits to text this fork replaced never reach the replacement, so read upstream's diff for those files and port what still applies. The v6.4.x sync needed two: `bash scripts/...` invocations in the SDD text, and `code-reviewer.md`'s new review rules. Upstream edits to `code-reviewer.md`'s What to Check, Calibration, severity definitions and Critical Rules now reach `sdd-final-reviewer` without porting, because it reads the file at run time. Edits to the vision-document or Declined-to-judge sections still need porting into the agent body, which carries them itself.
+
+The fork changes upstream's `docs/superpowers/specs` and `docs/superpowers/plans` lines in brainstorming, writing-plans, executing-plans, subagent-driven-development and requesting-code-review. When upstream edits around one of them, `-X theirs` keeps the fork's whole conflicting hunk, so read upstream's diff of those lines and port the rest of the hunk. New upstream text naming `docs/superpowers/` fails `check-npm-package.sh` until it says `docs/specs/` or `docs/plans/`.
 
 ### Releasing
 
