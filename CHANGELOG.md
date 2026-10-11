@@ -6,10 +6,18 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+## [7.0.0-omp.1] - 2026-10-11
+
+Synced to upstream [v7.0.0](https://github.com/obra/superpowers/blob/v7.0.0/RELEASE-NOTES.md).
+
 ### Fixed
 
 - **`skill://` in `bash` is narrower than the setup text said.** omp's shell resolves `skill://` paths itself, in its builtins and in-process coreutils, but an external program gets the literal URL, and a host extension can turn a command into one. In a real omp 18.5.0 run with the RTK extension, the controller's `realpath skill://subagent-driven-development/scripts` printed the directory, and the `ls skill://…/scripts` it added next, rewritten to `rtk ls`, failed with "No such file or directory". The SDD and executing-plans setup now says so and says to use the printed path everywhere else. The instructed path, one `realpath` then the printed directory, was never affected.
 - **A vibe director's todo now follows the ledger at each read.** In the same run the director read three new `Task N: complete` lines, then waited another 10 minutes before marking them, so the todo lagged the ledger by 8 to 18 minutes. The vibe notes now say to mark them before waiting again.
+
+### Changed
+
+- **Synced with upstream v7.0.0** (from v6.4.2). What reaches omp: `brainstorming` is rebuilt around drawing out what you want before sizing the work, and a builder check (`builder-check-prompt.md`), which a subagent runs on the written design, replaces its spec reviewer. `task-done` now records a passing task whose tests print nothing; before, it exited without writing the ledger line. `sdd-workspace` leaves an existing `.superpowers/sdd/.gitignore` alone and keeps plan markers repo-relative on Git Bash. The systematic-debugging example no longer prints secret values. Upstream's Windows hook, Antigravity and Hermes changes are outside the npm package. No fork text needed porting: upstream touched none of the files this fork rewrites, and the builder check's general-purpose subagent goes to omp's `task` tool through the existing mapping.
 
 ## [6.4.2-omp.4] - 2026-10-03
 
@@ -76,7 +84,8 @@ First release, synced to upstream [v6.4.2](https://github.com/obra/superpowers/b
 - The fork's rewritten subagent-driven-development text invokes its helper scripts through `bash` as well, so a package extractor that drops exec bits cannot break them.
 - `sdd-final-reviewer` carries upstream's new review rules from `code-reviewer.md`, the template it replaces in SDD's final review: the spec is a vision document (behavior it is silent on is graded by what a reasonable person expects), and a "Declined to judge" section that the controller rules on and ledgers like a plan conflict.
 
-[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v6.4.2-omp.4...HEAD
+[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.0-omp.1...HEAD
+[7.0.0-omp.1]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.0-omp.1
 [6.4.2-omp.4]: https://github.com/LoneExile/omp-superpowers/releases/tag/v6.4.2-omp.4
 [6.4.2-omp.3]: https://github.com/LoneExile/omp-superpowers/releases/tag/v6.4.2-omp.3
 [6.4.2-omp.2]: https://github.com/LoneExile/omp-superpowers/releases/tag/v6.4.2-omp.2
