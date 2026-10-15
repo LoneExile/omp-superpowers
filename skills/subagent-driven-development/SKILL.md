@@ -54,17 +54,17 @@ limits are in "Vibe mode" in
 digraph when_to_use {
     "Have implementation plan?" [shape=diamond];
     "Tasks mostly independent?" [shape=diamond];
-    "Partner chose inline, or no subagent tool?" [shape=diamond];
+    "Inline approved at the handoff, or no subagent tool?" [shape=diamond];
     "subagent-driven-development" [shape=box];
     "executing-plans" [shape=box];
     "Manual execution or brainstorm first" [shape=box];
 
     "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
     "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
-    "Tasks mostly independent?" -> "Partner chose inline, or no subagent tool?" [label="yes"];
+    "Tasks mostly independent?" -> "Inline approved at the handoff, or no subagent tool?" [label="yes"];
     "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
-    "Partner chose inline, or no subagent tool?" -> "executing-plans" [label="yes"];
-    "Partner chose inline, or no subagent tool?" -> "subagent-driven-development" [label="no"];
+    "Inline approved at the handoff, or no subagent tool?" -> "executing-plans" [label="yes"];
+    "Inline approved at the handoff, or no subagent tool?" -> "subagent-driven-development" [label="no"];
 }
 ```
 
