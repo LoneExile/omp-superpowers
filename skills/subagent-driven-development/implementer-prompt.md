@@ -47,7 +47,12 @@ Use this template when dispatching an implementer subagent.
     5. Self-review (see below)
     6. Report back
 
-    Work from: [directory]
+    Work from: [directory — for a wave task, its worktree's absolute path]
+
+    Work only under that directory. Your session may have started in a
+    different checkout, so use absolute paths under it for `read` and
+    `edit`, set the `bash` tool's `cwd` to it for every command, and commit
+    on the branch checked out there.
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
@@ -126,12 +131,17 @@ Use this template when dispatching an implementer subagent.
 
     ## After Review Findings
 
-    If the task review finds issues, you will be resumed with the findings.
+    If the task review, or the controller's own run of your covering tests,
+    finds issues, you will be resumed with the findings.
     Fix them, re-run the tests that cover the amended code, and append a fix
     report to your report file: what you changed, the covering tests you
     ran, the command, and the output. Reviewers will not re-run tests for
     you — your report is the test evidence. Then reply with the same short
     status contract as your first report.
+
+    You may also be resumed to rebase your branch onto the plan branch,
+    after another task merged first. Rebase, re-run your covering tests,
+    and reply with the same short status contract.
 
     ## Report Format
 

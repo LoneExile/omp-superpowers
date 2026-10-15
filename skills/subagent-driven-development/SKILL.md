@@ -5,11 +5,11 @@ description: Use when executing implementation plans with independent tasks in t
 
 # Subagent-Driven Development
 
-Execute plan by dispatching a fresh implementer subagent per task, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end.
+Execute a plan by dispatching a fresh implementer subagent per task — independent tasks in parallel waves, each in its own worktree — with a task review (spec compliance + code quality) for each task on the review list, and one broad whole-branch review at the end that also does the task review's work for every other task.
 
 **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
-**Core principle:** Fresh subagent per task + task review (spec + quality) + broad final review = high quality, fast iteration
+**Core principle:** Fresh subagent per task + parallel waves for independent tasks + a task review where risk earns it + one broad final review = high quality, fast iteration
 
 **Narration:** between tool calls, narrate at most one short line — the
 ledger and the tool results carry the record.
@@ -70,8 +70,9 @@ digraph when_to_use {
 
 **vs. Executing Plans (inline):**
 - Fresh subagent per task (no context pollution) instead of one context doing every task
-- Review after each task (spec compliance + code quality) instead of only at the end
-- Costs a fresh context per task and per review; inline costs one context plus one final reviewer
+- Independent tasks run in parallel; inline runs every task in turn
+- A task review (spec compliance + code quality) for each high-risk task, plus the final review; inline has only the final review
+- Costs a fresh context per task and per task review; inline costs one context plus one final reviewer
 - Both run in this session, share the same plan workspace and ledger, and never pause between tasks
 
 ## The Process
@@ -81,11 +82,14 @@ digraph process {
     rankdir=TB;
 
     subgraph cluster_per_task {
-        label="Per Task";
+        label="Per Task (every task of a wave at once)";
         "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
         "Implementer asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
         "Implementer implements, tests, commits, self-reviews" [shape=box];
+        "On the review list?" [shape=diamond];
+        "Run the brief's covering tests yourself" [shape=box];
+        "Resume implementer with the failure" [shape=box];
         "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)" [shape=box];
         "Spec ✅ and quality approved?" [shape=diamond];
         "Finding conflicts with plan text?" [shape=diamond];
@@ -98,42 +102,49 @@ digraph process {
         "Any load-bearing finding?" [shape=diamond];
         "Rule and continue; stop only if every path forward is a guess" [shape=box];
         "Park findings in ledger with rulings" [shape=box];
-        "Append completion to ledger, mark todo complete" [shape=box];
+        "Merge the task branch (wave of 2+), append completion to ledger, mark todo complete" [shape=box];
     }
 
-    "Setup: worktree, ledger check, read plan, pre-flight review" [shape=box];
-    "More tasks remain?" [shape=diamond];
-    "Dispatch final reviewer: sdd-final-reviewer (package + ledger lines; its agent file governs the output)" [shape=box];
+    "Setup: worktree, ledger check, read plan, pre-flight scan: review list + waves" [shape=box];
+    "Start the next wave: a worktree per task when it has 2+" [shape=box];
+    "More waves remain?" [shape=diamond];
+    "Dispatch final reviewer: sdd-final-reviewer (package + ledger lines + the tasks left to it; its agent file governs the output)" [shape=box];
     "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" [shape=box];
     "Final review clean: delete this plan's workspace" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Setup: worktree, ledger check, read plan, pre-flight review" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Setup: worktree, ledger check, read plan, pre-flight scan: review list + waves" -> "Start the next wave: a worktree per task when it has 2+";
+    "Start the next wave: a worktree per task when it has 2+" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer asks questions?";
     "Implementer asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Implementer implements, tests, commits, self-reviews";
     "Implementer asks questions?" -> "Implementer implements, tests, commits, self-reviews" [label="no"];
-    "Implementer implements, tests, commits, self-reviews" -> "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)";
+    "Implementer implements, tests, commits, self-reviews" -> "On the review list?";
+    "On the review list?" -> "Run the brief's covering tests yourself" [label="no - review at final"];
+    "Run the brief's covering tests yourself" -> "Merge the task branch (wave of 2+), append completion to ledger, mark todo complete" [label="pass"];
+    "Run the brief's covering tests yourself" -> "Resume implementer with the failure" [label="fail"];
+    "Resume implementer with the failure" -> "Run the brief's covering tests yourself";
+    "On the review list?" -> "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)" [label="yes"];
     "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)" -> "Spec ✅ and quality approved?";
-    "Spec ✅ and quality approved?" -> "Append completion to ledger, mark todo complete" [label="yes"];
+    "Spec ✅ and quality approved?" -> "Merge the task branch (wave of 2+), append completion to ledger, mark todo complete" [label="yes"];
     "Spec ✅ and quality approved?" -> "Finding conflicts with plan text?" [label="no"];
     "Finding conflicts with plan text?" -> "Rule on the conflict, ledger the ruling" [label="yes"];
     "Rule on the conflict, ledger the ruling" -> "Fix round R of 3: R≤2 resume implementer; R=3 fresh sdd-escalation-implementer";
     "Finding conflicts with plan text?" -> "Fix round R of 3: R≤2 resume implementer; R=3 fresh sdd-escalation-implementer" [label="no"];
     "Fix round R of 3: R≤2 resume implementer; R=3 fresh sdd-escalation-implementer" -> "Dispatch scoped re-review (./re-review-prompt.md)";
     "Dispatch scoped re-review (./re-review-prompt.md)" -> "All findings addressed?";
-    "All findings addressed?" -> "Append completion to ledger, mark todo complete" [label="yes"];
+    "All findings addressed?" -> "Merge the task branch (wave of 2+), append completion to ledger, mark todo complete" [label="yes"];
     "All findings addressed?" -> "R = 3?" [label="no"];
     "R = 3?" -> "Fix round R of 3: R≤2 resume implementer; R=3 fresh sdd-escalation-implementer" [label="no - next round"];
     "R = 3?" -> "Adjudicate each open finding" [label="yes - breaker trips"];
     "Adjudicate each open finding" -> "Any load-bearing finding?";
     "Any load-bearing finding?" -> "Rule and continue; stop only if every path forward is a guess" [label="yes"];
     "Any load-bearing finding?" -> "Park findings in ledger with rulings" [label="no"];
-    "Park findings in ledger with rulings" -> "Append completion to ledger, mark todo complete";
-    "Append completion to ledger, mark todo complete" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
-    "More tasks remain?" -> "Dispatch final reviewer: sdd-final-reviewer (package + ledger lines; its agent file governs the output)" [label="no"];
-    "Dispatch final reviewer: sdd-final-reviewer (package + ledger lines; its agent file governs the output)" -> "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals";
+    "Park findings in ledger with rulings" -> "Merge the task branch (wave of 2+), append completion to ledger, mark todo complete";
+    "Merge the task branch (wave of 2+), append completion to ledger, mark todo complete" -> "More waves remain?" [label="after the wave's last task"];
+    "More waves remain?" -> "Start the next wave: a worktree per task when it has 2+" [label="yes"];
+    "More waves remain?" -> "Dispatch final reviewer: sdd-final-reviewer (package + ledger lines + the tasks left to it; its agent file governs the output)" [label="no"];
+    "Dispatch final reviewer: sdd-final-reviewer (package + ledger lines + the tasks left to it; its agent file governs the output)" -> "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals";
     "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" -> "Final review clean: delete this plan's workspace";
     "Final review clean: delete this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
 }
@@ -184,8 +195,9 @@ a ledger file, not only in todos.
   line names your plan file, tasks with a `Task <N>: complete` line are DONE
   — do not re-dispatch them; resume at the first task without one. A task
   whose last line is `dispatched` or `re-dispatched` is mid-implementation:
-  check `git log` from its BASE and read `agent://<id>` before you dispatch
-  anything. A task
+  check `git log` from its BASE (on its task branch, for a wave task whose
+  `dispatched` line names a worktree) and read `agent://<id>` before you
+  dispatch anything. A task
   whose last line is a fix round is mid-loop: resume the loop at the next
   round. A ledger whose first line names a different plan file — or a stray
   ledger at the old flat path `.superpowers/sdd/progress.md` — is another
@@ -222,9 +234,27 @@ Write the table to the ledger. Rule on everything you find before execution
 begins — each finding against the plan text that mandates it — and record
 each ruling in the ledger. If the scan is clean, proceed without comment.
 Rule on each conflict it surfaces — the spec is the binding authority, the
-plan is its argument — record the ruling beside its row, and dispatch
-Task 1. The review loop remains the net for conflicts that only emerge from
-implementation.
+plan is its argument — and record the ruling beside its row. Clean or not,
+the same table then gives you the two ledger blocks below; write both before
+the first dispatch. The review loop remains the net for conflicts that only
+emerge from implementation.
+
+**The review list.** A task gets its own task review when the plan marks it
+`**Review:** per-task`, or when you rule it high-risk: security or
+authentication, concurrency, a data migration or persisted format, money, a
+destructive operation. Ledger one line per task, `Task <N>: review per-task
+— <class>` or `Task <N>: review at final`. The final whole-branch review
+does the task review's work for every `review at final` task. A task joins
+the list mid-run, with a ledger line naming why, when its report is
+DONE_WITH_CONCERNS about correctness, it went BLOCKED, or its implementer
+needed 100+ turns.
+
+**The waves.** Tasks with no row between them in the scan table (no shared
+file, no shared interface), whose `Consumes` all come from earlier waves,
+form one wave: take them in plan order, at most three to a wave. A task that
+consumes another's interface waits for the wave that produces it. Ledger
+`Wave <K>: tasks <N>, <N>, <N>` for each wave, then start Wave 1. A plan that
+is one long chain gets one task per wave and runs in sequence.
 
 ## Agent Selection
 
@@ -346,13 +376,12 @@ needs 100+ turns, or a re-review that wanders, is the signal to rule that
 task onto the escalation seat. Re-reviews are verdict-only work over a small
 diff — `low` reasoning is correct for them, not a compromise.
 
-**Scale the task review to the diff's risk.** The reviewer seat is fixed, but
-a small mechanical diff does not need the deepest reasoning and a subtle one
-(concurrency, security, a data migration) does. When `task.enableEffort` is
-on (it is off by default — `omp config get task.enableEffort`), dispatch the
-reviewer for such a diff with `effort: "hi"`: that selects the resolved
-model's top thinking level, capped by `task.maxEffort`. When it is off, ledger
-the risk — `Task <N>: high-risk diff — <class>` — and name that class in the
+**Scale the task review to the diff's risk.** Every task on the review list
+is there for its risk class (Setup), so its reviewer needs the deepest
+reasoning the seat has. When `task.enableEffort` is on (it is off by
+default — `omp config get task.enableEffort`), dispatch that reviewer with
+`effort: "hi"`: that selects the resolved model's top thinking level,
+capped by `task.maxEffort`. Either way, name each listed task's class in the
 final review dispatch.
 
 **Escalation (fix round 3):** the implementer that got stuck cannot see its
@@ -406,8 +435,9 @@ judge, and **Mergeable:** come last.
 
 ### 1. Dispatch the implementer
 
-Record BASE (`git rev-parse HEAD`) before dispatching — the review package
-and fix-round diffs need it.
+Record BASE (`git rev-parse HEAD` in the plan checkout) before dispatching —
+the review package and fix-round diffs need it. Every task in a wave shares
+the wave's BASE.
 
 - **Task brief:** before dispatching an implementer, run this skill's
   `bash scripts/task-brief PLAN_FILE N` — it extracts the task's full text to a
@@ -440,7 +470,8 @@ and fix-round diffs need it.
   a pointer to that ledger entry in the dispatch.
 - Record the implementer's agent identity from the dispatch result —
   fix-loop rounds 1-2 resume this agent.
-- Never dispatch multiple implementation subagents in parallel (conflicts).
+- Dispatch a wave's implementers together: ONE `task` call with one item per
+  task. A task runs only in the wave the ledger gave it.
 - **On omp, the agent id is the handle and resume is a message.** The
   `<task-result id="X" …>` envelope (inline, or delivered as a notice)
   reports the agent id and says the agent is now idle. Use that id exactly
@@ -448,7 +479,8 @@ and fix-round diffs need it.
   that was already taken (`Name-2`), and calls a follow-up turn's job
   `<id>-2` — the job id is not the agent id. Ledger the dispatch the moment
   you have the id, together with BASE, so both survive compaction:
-  `Task <N>: dispatched (BASE <base7>, implementer <id>)`. Fix rounds 1-2
+  `Task <N>: dispatched (BASE <base7>, implementer <id>)`, plus
+  `, worktree <path>` for a wave task. Fix rounds 1-2
   and the answer to a NEEDS_CONTEXT then go to that agent with
   `write agent://<id>`.
 - **The write has two success answers; only an error means "dispatch
@@ -463,12 +495,31 @@ and fix-round diffs need it.
   dispatch gets a new id, which omp may suffix (`Name-2`) because the old id is
   taken: ledger it — `Task <N>: re-dispatched (implementer <new id>)` — and use
   it from then on.
-- **One implementer at a time, no isolation.** On omp, SDD dispatches
-  implementers one at a time, in plan order, in the shared checkout, and does
-  not use `task.isolation.enabled`: under the default
-  `task.isolation.merge: patch` an isolated run's work lands as an applied but
-  uncommitted diff, so a review package has no commit range to cut, and an
-  isolated agent cannot be resumed or messaged, which fix rounds 1-2 need.
+- **A wave of two or more: one git worktree per task, not omp isolation.**
+  Implementers sharing one checkout overwrite each other, and
+  `task.isolation.enabled` does not fit SDD: under the default
+  `task.isolation.merge: patch` an isolated run's work lands as an applied
+  but uncommitted diff, so a review package has no commit range to cut, and
+  an isolated agent cannot be resumed or messaged, which fix rounds 1-2
+  need. Before dispatching the wave, from the plan checkout, add one
+  worktree per task at the plan branch's head:
+
+  ```bash
+  repo=$(basename "$(git rev-parse --show-toplevel)")
+  omp worktree add -b "sdd/<plan>/task-<N>" ~/.omp/wt/"$repo-<plan>-task-<N>"
+  ```
+
+  `<plan>` is the plan file's name without `.md`;
+  superpowers:using-git-worktrees says why `omp worktree add` and
+  `~/.omp/wt/`. If the add warns that the clone fell back to a plain
+  checkout, the worktree lacks `node_modules` and other ignored build
+  output: run the plan's install step there before dispatching. The `task`
+  tool has no `cwd`, so every implementer starts in your checkout: put its
+  worktree's absolute path in the template's `Work from:` line, which tells
+  it to work only there. A wave of one runs in the plan checkout, with no
+  extra worktree. Until a wave task merges, its branch
+  `sdd/<plan>/task-<N>` stands in for HEAD in every review-package command
+  for that task.
 
 Template: [implementer-prompt.md](implementer-prompt.md)
 
@@ -476,9 +527,12 @@ Template: [implementer-prompt.md](implementer-prompt.md)
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Generate the review package (`bash scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch `sdd-reviewer` with the printed path.
+**DONE:** Check the task's line in the review list.
 
-**DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
+- **`review per-task`:** generate the review package (`bash scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task; for a wave task, its branch `sdd/<plan>/task-<N>` stands in for HEAD), then dispatch `sdd-reviewer` with the printed path.
+- **`review at final`:** run the covering test command from the brief yourself, once, in the task's checkout (the `bash` tool's `cwd` set to its worktree, for a wave task), and read the output. That run is the only check this task gets before the final review, so never take the implementer's report in its place. A pass completes the task (step 5). A failure goes back to the implementer as a fix round with the failing output as its finding; the round ends when your rerun passes, with no re-review, and three rounds trip the breaker as in the fix loop.
+
+**DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review, and put a `review at final` task on the review list (ledger why). If they're observations (e.g., "this file is getting large"), note them and proceed.
 
 **NEEDS_CONTEXT:** The implementer needs information that wasn't provided. Provide the missing context and re-dispatch. On omp, message the idle agent instead (`write agent://<id>`, the id from the ledger's `dispatched` line): it keeps its context and yields again. Only a write error means re-dispatch, with the context carried in the brief.
 
@@ -505,11 +559,13 @@ rush it into implementation.
 
 ### 3. Review the task
 
-Per-task reviews are task-scoped gates. The broad review happens once, at the
-final whole-branch review. Never skip the task review, and never accept a
-report missing either verdict — spec compliance AND task quality are both
-required. Implementer self-review never replaces the task review; both are
-needed.
+Task reviews run for the tasks on the review list (Setup); every other task
+gets its review from the final whole-branch review. Per-task reviews are
+task-scoped gates; the broad review happens once, at the end. For a task on
+the list, never skip the review, and never accept a report missing either
+verdict — spec compliance AND task quality are both required. Implementer
+self-review never replaces a review: for a listed task the task review is
+it, for any other the final review is.
 
 - Hand the reviewer its diff as a file: run this skill's
   `bash scripts/review-package PLAN_FILE BASE HEAD` and pass the reviewer the file path
@@ -693,17 +749,38 @@ a silent discard is forbidden.
 
 ### 5. Complete the task
 
-When the review comes back clean — or every open finding is parked with a
-ruling at the cap — append the completion line to the ledger in the same
-message as your other bookkeeping:
+A task is done when its review comes back clean, when every open finding is
+parked with a ruling at the cap, or, for a `review at final` task, when your
+own run of its covering tests passes.
+
+**A wave task merges first.** From the plan checkout, merge its branch as
+soon as it is done — wave tasks are independent, so their order does not
+matter — then run its covering tests on the merged result:
+
+```bash
+git merge --no-ff --no-edit "sdd/<plan>/task-<N>"
+```
+
+A conflict (`git merge --abort`) or a covering test that fails after the
+merge (`git reset --merge ORIG_HEAD`) sends the task back to its
+implementer with `write agent://<id>`: rebase its branch onto the plan
+branch in its worktree, re-run its covering tests, report again. Ledger
+`Task <N>: rebased (<conflict | failing test>)` and merge it again. Once it
+merges cleanly, remove its worktree and branch (`git worktree remove
+<path>`, then `git branch -d "sdd/<plan>/task-<N>"`).
+
+Then append the completion line to the ledger in the same message as your
+other bookkeeping:
 
 - `Task <N>: complete (commits <base7>..<head7>, review clean)`
 - `Task <N>: complete (commits <base7>..<head7>, <K> parked)` after a
   tripped breaker
+- `Task <N>: complete (commits <base7>..<head7>, review at final — tests: <command>, pass)`
 
-Then mark the todo complete and move on. Never move to the next task while
-the review has open Critical/Important issues that are neither fixed nor
-parked-with-ruling at the cap.
+Then mark the todo complete. Start the next wave only when every task of
+this one is complete and merged; never start it while a task has open
+Critical/Important issues that are neither fixed nor parked-with-ruling at
+the cap.
 
 ## Final Review
 
@@ -713,13 +790,14 @@ branch started from, e.g. `git merge-base main HEAD`) and include the
 printed path in the final review dispatch, so the final reviewer reads
 one file instead of re-deriving the branch diff with git commands. Dispatch
 `sdd-final-reviewer` (the deepest seat, once per plan — see Agent
-Selection) with a `task` that says the plan ran subagent-driven — every
-task went through its task review, except the fixes you applied yourself on
-the proven-trivial route, which skipped the re-review — and names: the
-package path, the plan/spec paths, and the ledger's deferred-minor and
-parked-with-ruling lines verbatim, plus every `Task <N>: applied … proof:`
-line (the reviewer checks those fixes as if unreviewed) and any
-`high-risk diff` line (so the last review spends its depth there). Do not
+Selection) with a `task` that says the plan ran subagent-driven and names:
+the package path; the plan/spec paths; every `review per-task` task with its
+class, which had its own task review (so the last review spends its depth
+on the seams around them); every `review at final` task, which had none, so
+the final reviewer does the task review's work on it first; the ledger's
+deferred-minor and parked-with-ruling lines verbatim; and every `Task <N>:
+applied … proof:` line, a fix you applied yourself on the proven-trivial
+route without a re-review (the reviewer checks those as if unreviewed). Do not
 paste requesting-code-review's `code-reviewer.md` into the dispatch — that
 template asks a prose "Ready to merge?" and has no slot for the package or
 the ledger; the agent reads that file's review rubric itself. The agent
@@ -774,7 +852,9 @@ Use superpowers:finishing-a-development-branch.
 | "The reviewer will just find something new anyway" | Scoped re-reviews verify fixes; they cannot wander. New findings on untouched code go to the ledger, not the loop. |
 | "This finding is obviously wrong, I'll drop it" | You adjudicate only at the cap, and every ruling is a ledger entry. Silent discards are forbidden. |
 | "The fix was small, skip the re-review" | Small is not the test — proven is. If you cannot run one command that proves the exact property (and ledger it), the round ends with a scoped re-review. |
-| "Reviews slow the loop down" | The loop without reviews is just unverified churn. Reviews are the loop's brakes and steering. |
+| "This auth change is one line — review it at final" | Risk class, not size, puts a task on the review list. One line of auth gets its own review. |
+| "The report says the tests pass, skip my run" | For a `review at final` task, your run is the only check before the merge. Run it. |
+| "These two tasks barely touch — same wave" | A shared file or a Consumes/Produces link means separate waves. A conflict costs a rebase round; a silent clash between them costs the final review. |
 | "Ledger bookkeeping is overhead" | The ledger is what survives compaction. Controllers without one have re-dispatched entire completed task sequences. |
 | "The implementer spawned its own reviewer — free extra assurance" | It's a duplicate seat reviewing the same diff; the task review is the gate. A worker-spawned reviewer is a defect to flag, not rigor. |
 
@@ -788,11 +868,13 @@ You: I'm using Subagent-Driven Development to execute this plan.
 [Resolve workspace: bash scripts/sdd-workspace docs/plans/feature-plan.md — no ledger inside, fresh start]
 [On omp: scripts dir resolved with realpath skill://subagent-driven-development/scripts and added to the ledger as "SDD scripts: <dir>"; each script runs as bash <dir>/<name>]
 [Create todos for all tasks]
+[Pre-flight scan → ledger: Tasks 1, 3, 4: review at final · Task 2: review per-task — persisted data (repair rewrites stored records) · Wave 1: tasks 1, 3 · Wave 2: tasks 2, 4]
 
-Task 1: Hook installation script
+Wave 1: Task 1 (hook installation script) and Task 3 (help text)
 
-[Run task-brief for Task 1; dispatch implementer with brief + report paths + context]
-[Ledger: Task 1: dispatched (BASE a1b2c3d, implementer Impl1)]
+[Two worktrees: omp worktree add -b sdd/feature-plan/task-1 …, and task-3]
+[Run task-brief for Tasks 1 and 3; ONE task call with two implementer items, each naming its worktree]
+[Ledger: Task 1: dispatched (BASE a1b2c3d, implementer Impl1, worktree ~/.omp/wt/app-feature-plan-task-1)]
 
 Implementer: "Before I begin - should the hook be installed at user or system level?"
 
@@ -804,23 +886,22 @@ Implementer: [Later]
   - Self-review: Found I missed --force flag, added it
   - Committed
 
-[Run review-package PLAN_FILE BASE HEAD; dispatch sdd-reviewer with the printed path]
-sdd-reviewer: spec_compliance: compliant · task_quality: approved
-  strengths: ["Good test coverage", "clean"] · findings: []
+[Task 1 is review at final: run the brief's covering test in its worktree — npm test test/install.test.js: 5/5 passing]
+[git merge --no-ff --no-edit sdd/feature-plan/task-1; covering test on the merged result passes; worktree and branch removed]
+[Ledger: Task 1: complete (commits a1b2c3d..d4e5f6a, review at final — tests: npm test test/install.test.js, pass)]
+[Task 3 likewise]
 
-[Ledger: Task 1: complete (commits a1b2c3d..d4e5f6a, review clean)]
-
-Task 2: Recovery modes
+Wave 2: Task 2 (recovery modes, review per-task) and Task 4
 
 [Run task-brief for Task 2; dispatch implementer with brief + report paths + context]
-[Ledger: Task 2: dispatched (BASE d4e5f6a, implementer Impl2)]
+[Ledger: Task 2: dispatched (BASE e5f6a7b, implementer Impl2, worktree ~/.omp/wt/app-feature-plan-task-2)]
 
 Implementer: [No questions]
   - Added verify/repair modes
   - 8/8 tests passing
   - Committed
 
-[Run review-package PLAN_FILE BASE HEAD; dispatch sdd-reviewer with the printed path]
+[Run review-package PLAN_FILE BASE sdd/feature-plan/task-2; dispatch sdd-reviewer with the printed path]
 sdd-reviewer: spec_compliance: issues · task_quality: needs_fixes
   spec_issues: ["Missing: progress reporting (spec says 'report every 100 items')"]
   findings: [{severity: Important, location: src/recovery.js:7, body: "Magic number (100)"}]
@@ -829,19 +910,20 @@ sdd-reviewer: spec_compliance: issues · task_quality: needs_fixes
 Implementer: Added progress reporting, extracted PROGRESS_INTERVAL constant.
   Re-ran test/recovery.test.js — 10/10 passing. Fix report appended.
 
-[Run review-package PLAN_FILE FIX_BASE HEAD; dispatch sdd-rereviewer]
+[Run review-package PLAN_FILE FIX_BASE sdd/feature-plan/task-2; dispatch sdd-rereviewer]
 sdd-rereviewer: round_verdict: all_addressed
   finding_verdicts: [{Missing progress reporting: ADDRESSED, src/recovery.js:41},
                      {Magic number: ADDRESSED, src/recovery.js:7}]
   new_breakage: [] · out_of_scope: []
 
-[Ledger: Task 2: fix round 1/3 (2 addressed, 0 open; commits d4e5f6a..b7c8d9e)]
-[Ledger: Task 2: complete (commits d4e5f6a..b7c8d9e, review clean)]
+[Ledger: Task 2: fix round 1/3 (2 addressed, 0 open; commits e5f6a7b..b7c8d9e)]
+[Merge sdd/feature-plan/task-2; covering tests pass on the merged result]
+[Ledger: Task 2: complete (commits e5f6a7b..b7c8d9e, review clean)]
 
 ...
 
-[After all tasks]
-[Run review-package PLAN_FILE MERGE_BASE HEAD; dispatch sdd-final-reviewer]
+[After the last wave]
+[Run review-package PLAN_FILE MERGE_BASE HEAD; dispatch sdd-final-reviewer naming Task 2's class, and Tasks 1, 3, 4 as review at final]
 [Read the full result at agent://<id>]
 sdd-final-reviewer: Ledger triage: deferred minors — none block merge. **Mergeable:** yes
 
