@@ -1,6 +1,6 @@
 ---
 name: executing-plans
-description: Use when executing an implementation plan in the current session as the implementer yourself — your human partner chose inline execution, or no subagent tool is available
+description: Use when executing an implementation plan in the current session as the implementer yourself — your human partner approved inline execution, or no subagent tool is available
 ---
 
 # Executing Plans
@@ -25,7 +25,7 @@ record that survives your own forgetting.
 ledger and the tool results carry the record.
 
 **Continuous execution:** Do not pause to check in with your human partner
-between tasks. They chose inline execution to spend less, not to answer
+between tasks. They approved inline execution to spend less, not to answer
 "should I continue?" after every task. Execute all tasks from the plan
 without stopping.
 
@@ -62,7 +62,7 @@ answers. The worktree and budget limits are in "Vibe mode" in
 ## When to Use
 
 - You have a plan from superpowers:writing-plans and your human partner
-  chose inline execution at the handoff.
+  approved inline (Native) execution at the handoff.
 - Your harness has no subagent tool (see the per-platform references in
   `../using-superpowers/references/`). Never fabricate a dispatch; run
   the plan here.

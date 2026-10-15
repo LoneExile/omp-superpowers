@@ -178,29 +178,29 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 ## Execution Handoff
 
-After saving and self-reviewing the plan, link it for your human partner
-to read. If they have already explicitly supplied an execution method, ask
-them to review the plan and confirm it captures what they want; wait for that
-review before implementation, then use the preserved method. Otherwise, ask
-them to review the plan and choose an execution method before implementation.
+After saving and self-reviewing the plan, choose the execution method
+yourself, unless your human partner already named one:
 
-**When no execution method has already been supplied:**
+- **Subagent-driven** (superpowers:subagent-driven-development) - A fresh subagent implements each task and a fresh reviewer checks it before the next one starts, then a whole-branch review at the end. Most thorough; costs a fresh context per task and per review.
+- **Native** (superpowers:executing-plans) - I implement every task myself in this session, the way this harness runs work, then one fresh reviewer on the most capable model checks the whole branch. Cheapest and fastest; no independent review until the end. Runs well with a mid-tier session model, since the plan carries the design.
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Please review the plan. Which execution approach would you prefer?**
+Then ask for ONE approval that covers everything they have not approved
+yet: the design document when this plan came straight from brainstorming,
+the plan, and the method. Do not ask them to pick the method; name the
+one you chose and why, and they can swap it in the same reply:
 
-- **Subagent-driven** - A fresh subagent implements each task and a fresh reviewer checks it before the next one starts, then a whole-branch review at the end. Most thorough; costs a fresh context per task and per review.
-- **Native** - I implement every task myself in this session, the way this harness runs work, then one fresh reviewer on the most capable model checks the whole branch. Cheapest and fastest; no independent review until the end. Runs well with a mid-tier session model, since the plan carries the design.
+**"Design: `docs/specs/<filename>.md`. Plan: `docs/plans/<filename>.md`, <N> tasks. I'll run it <method>, because <one sentence from the plan: how much the tasks depend on each other's interfaces, how many there are, what a shipped mistake would cost>. Calls I made for you: <the decisions marked as your call, one line each>. Approve both, or tell me what to change, the method included."**
 
-**For this plan I recommend <one of the two>, because <one sentence from the plan: how much the tasks depend on each other's interfaces, how many there are, what a shipped mistake would cost>. Does the plan capture what you want, and which approach should we use?"**
+Leave out the Design line when there is no new design document, and the
+calls line when you made none. When they already named the method, use
+theirs and say so instead of the because-sentence. Wait for that one
+answer. If they change the design, update both documents before you ask
+again; if they change only the method, start with theirs.
 
-**On omp in vibe mode** (your tools include `vibe_spawn` but not `task`), both approaches run in one `good` worker you brief, not in your own session; the chosen skill's vibe note says how. Say so when you offer them.
+**On omp in vibe mode** (your tools include `vibe_spawn` but not `task`), both approaches run in one `good` worker you brief, not in your own session; the chosen skill's vibe note says how. Say so in the approval message.
 
-**When an execution method has already been supplied:**
-
-**"Plan complete and saved to `docs/plans/<filename>.md`. Please review the plan. Does it capture what you want?"**
-
-**If Subagent-driven chosen:**
+**Once approved, Subagent-driven:**
 - **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
 
-**If Native chosen:**
+**Once approved, Native:**
 - **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
