@@ -6,6 +6,12 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+### Changed
+
+- **A small change no longer goes through the full process.** brainstorming's small-change row said "build it through the normal workflow", which left it to a plan and a subagent run. It now has its own path: after the in-chat approval the session builds it itself, test first, runs the covering tests and the suite once, and commits once, with no design document, plan or subagents. Security, auth, concurrency, money, migrations and changes one revert cannot undo are never small. In a measured herdr-tunnel feature (2026-09-21), the brainstorm, plan and finish phases took 1h41m of its 3h52m agent time.
+- **One approval for design, plan and method.** A playback no longer waits for its own answer; it rides along with the next question. For software, the plan is written right after the builder check, and writing-plans asks once for approval of the design, the plan and the execution method, which it now picks itself and names with its reason instead of asking the partner to choose. In the same feature, 16h55m of 20h48m wall clock was the session waiting for the partner's reply; the method question alone waited 1h42m.
+- **subagent-driven-development reviews per task only where risk earns it, and runs independent tasks in parallel.** writing-plans marks security, auth, concurrency, migration or persisted-format, money and destructive tasks `**Review:** per-task`. The controller's pre-flight scan turns that into a review list and into waves: tasks with no shared file or interface run in parallel, up to three, each in its own `omp worktree add` worktree, and merge back with `--no-ff`. A task reviewed at final gets the controller's own run of its covering tests instead of a task reviewer, and `sdd-final-reviewer` does the task review's work on it before the seams. Across six measured SDD runs, task reviews and re-reviews took 2h28m and final reviews 1h24m, against 7h06m of implementation, and every task ran in sequence.
+
 ## [7.0.0-omp.2] - 2026-10-11
 
 ### Changed
