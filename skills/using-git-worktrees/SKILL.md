@@ -78,7 +78,7 @@ Rules, each measured on omp 18.4.10:
 - **In vibe mode the session cannot follow a worktree.** Vibe refuses `/move` and `/wt` ("Exit vibe mode first."), and leaving vibe mode kills every worker. A vibe director (your tools include `vibe_spawn` but not `task`) has no `bash`; a worker can run `omp worktree add`, but the session cannot follow it while vibe is on. So ask your human partner to create the worktree and `/move` into it before `/vibe`; otherwise put the worktree's absolute path in every worker brief and `read` files there by absolute path.
 - **Cleanup.** A finished worktree is removed with `git worktree remove <path>` from the repo — that also deletes the directory. `omp worktree clear` only sweeps *orphaned* entries (its own words: "parent repo no longer tracks this worktree"); a live worktree survives it. **`omp worktree clear --all` removes every entry under the worktree directory** — live worktrees and `/wt` session worktrees included — and force-removes them even with uncommitted changes, without asking (the branches survive). Never run it unless your human partner asked for exactly that, and preview any `clear` with `--dry-run`. Never `rm -rf` a registered worktree.
 
-This is the whole-session layer. Per-*subagent* isolation is a separate switch, `task.isolation.enabled` (default off); subagent-driven-development dispatches its implementers one at a time and does not use it.
+This is the whole-session layer. Per-*subagent* isolation is a separate switch, `task.isolation.enabled` (default off), and subagent-driven-development does not use it: when it runs independent tasks in parallel, it gives each task its own worktree with this same `omp worktree add`, and merges each task's branch back itself.
 
 Then skip to Step 2.
 
