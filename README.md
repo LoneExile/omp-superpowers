@@ -8,7 +8,8 @@ This fork keeps the skills and fixes the omp side:
 
 - the injected tool mapping tells the truth about `task`, `todo`, `read`/`grep`/`glob`
 - **five omp agents** (`agents/sdd-*.md`) give every subagent-driven-development seat its own model, thinking level, and tool set
-- subagent-driven-development is rewritten around them: three-round fix loop, structured reviewer output, implementers one at a time
+- subagent-driven-development is rewritten around them: three-round fix loop, structured reviewer output, independent tasks in parallel worktrees, a task review only where a task's risk earns it
+- a small change skips the design document, plan and subagents, and a project asks for one approval of design, plan and execution method together
 
 ## Install
 
@@ -41,9 +42,9 @@ Agent definitions are read **per dispatch**, so a reinstall takes effect on the 
 
 The skills drive themselves once loaded. The usual path:
 
-1. `read skill://brainstorming` — turn an idea into a design
-2. `read skill://writing-plans` — produce `docs/plans/<date>-<name>.md`
-3. `read skill://subagent-driven-development` — execute the plan task by task via subagents. If you choose Native at the plan handoff, `executing-plans` runs instead: the session does every task itself, and only the final review is a subagent (`sdd-final-reviewer`)
+1. `read skill://brainstorming` — turn an idea into a design. A small change stops here: after you approve it in chat, the session builds it itself, test first, and commits once
+2. `read skill://writing-plans` — produce `docs/plans/<date>-<name>.md`, pick the execution method, and ask once for approval of the design, the plan and the method together
+3. `read skill://subagent-driven-development` — execute the plan via subagents, independent tasks in parallel. If you swap to Native in that approval, `executing-plans` runs instead: the session does every task itself, and only the final review is a subagent (`sdd-final-reviewer`)
 4. `read skill://finishing-a-development-branch` — merge / PR / discard
 
 On omp the agent invokes a skill by reading it (`read skill://<name>`); you can also invoke one explicitly with `/skill:<name>`.
@@ -54,10 +55,15 @@ On omp the agent invokes a skill by reading it (`read skill://<name>`); you can 
 
 ```mermaid
 flowchart TD
-    B["task-brief: one task's text from the plan"] --> I
-    I["sdd-implementer: TDD, commit, report file"] --> P["review-package: git diff -U10 to a file"]
+    S["pre-flight scan: review list + waves"] --> B
+    B["task-brief: one task's text from the plan; a wave of 2+ gets a worktree per task"] --> I
+    I["sdd-implementer: TDD, commit, report file"] --> L{"on the review list?"}
+    L -->|"no: review at final"| T["controller runs the covering tests"]
+    T -->|"pass"| D
+    T -->|"fail: fix round"| I
+    L -->|"yes: risk class"| P["review-package: git diff -U10 to a file"]
     P --> R["sdd-reviewer: spec + quality, structured result"]
-    R -->|"approved"| D["ledger: Task N complete"]
+    R -->|"approved"| D["merge the task branch; ledger: Task N complete"]
     R -->|"Critical or Important findings"| F
     F["fix round 1 or 2: resume sdd-implementer"] --> RR["sdd-rereviewer: verdict per finding"]
     RR -->|"all addressed"| D
@@ -65,9 +71,9 @@ flowchart TD
     E --> RR
     RR -->|"still open after round 3"| A["controller adjudicates and parks with a ruling"]
     A --> D
-    D --> N{"more tasks?"}
+    D --> N{"more waves?"}
     N -->|"yes"| B
-    N -->|"no"| W["sdd-final-reviewer: whole-branch, once per plan"]
+    N -->|"no"| W["sdd-final-reviewer: whole-branch, once per plan; does the task review's work for review-at-final tasks"]
     W --> X["finishing-a-development-branch"]
 
     classDef seat fill:#1e3a8a,stroke:#3b82f6,color:#dbeafe
@@ -144,7 +150,7 @@ Rules that are easy to get wrong:
 
 | setting | why |
 |---|---|
-| `task.isolation.enabled` (+ `isolation.backend`, default `auto`) | off by default. SDD does not use it: implementers run one at a time, because isolated work returns as an applied patch with no per-task commits, and an isolated subagent cannot be messaged for fix rounds. Older omp builds spelled this `task.isolation.mode`; check `omp config get task.isolation.enabled` on your build |
+| `task.isolation.enabled` (+ `isolation.backend`, default `auto`) | off by default. SDD does not use it: isolated work returns as an applied patch with no per-task commits, and an isolated subagent cannot be messaged for fix rounds. Parallel tasks get their own `omp worktree add` worktrees instead. Older omp builds spelled this `task.isolation.mode`; check `omp config get task.isolation.enabled` on your build |
 | `task.enableEffort` | exposes per-dispatch `effort` (`"lo"`, `"med"`, `"hi"`); `"hi"` maps to the model's top supported level, capped by `task.maxEffort`. SDD uses `effort: "hi"` for high-risk task reviews, and for escalation only when a host override lowers that seat |
 | `task.showResolvedModelBadge` (default off) | shows the model each subagent actually ran. A seat whose pinned provider has no credentials silently runs on another model |
 | `task.enableLsp`, `astGrep.enabled` (both default off) | omp only activates `lsp` and `ast_grep` in subagents when these are on |
@@ -155,11 +161,12 @@ Rules that are easy to get wrong:
 - `.pi/extensions/superpowers.ts` — the injected mapping names `task`, `todo`, the `sdd-*` roster, and the no-`model:`-field rule; it also re-arms on `session_switch`, skips subagent sessions, and ignores an `agent_end` that will auto-continue; it tells a dispatching session to name the checks each subagent must run, since omp 18.4.12 tells subagents to leave builds, tests and smoke runs to the main agent unless their assignment explicitly instructs them; its last paragraph points a vibe-mode director (tools include `vibe_spawn` but not `task`) at the *Vibe mode* section of `pi-tools.md`
 - `.omp-plugin/plugin.json` — new. Marks the repo root as an omp-native plugin so a marketplace or `--plugin-dir` install keeps each agent's `model:` line
 - `skills/using-superpowers/references/pi-tools.md` — same, as the reference doc; it also gains a *Checks* subsection (the 18.4.12 subagent hand-off rule, and why every dispatch names its checks) and a *Vibe mode* section: what a director keeps and lacks, how skill actions map onto `vibe_*` and workers, and the worktree and request-budget limits
-- `agents/sdd-*.md` — new. Each seat's `model:` is a pin plus a role fallback (`@task` or `@slow`), and all set `readSummarize: false`. `sdd-final-reviewer` reviews the whole branch for both ways of running a plan. It reads `requesting-code-review/code-reviewer.md` at run time and applies its What to Check, Calibration, severity definitions and Critical Rules, while carrying upstream's vision-document and Declined-to-judge rules in its own body. Descriptions name roles, never models
-- `skills/subagent-driven-development/` — *Model Selection* → *Agent Selection*; fix-loop cap 5 → 3 with a round-3 escalation seat; a proven-trivial-fix route that replaces a re-review with a one-command proof; implementers run one at a time; the scripts directory resolves via `realpath skill://subagent-driven-development/scripts`; fix rounds resume the implementer with `write agent://<id>` (id ledgered) and full results are read at `agent://<id>`; task review scales with risk through `effort: "hi"`; the controller checks reviewer results; templates show omp's real `{ context, tasks: [{ agent, task, solutionSpace }] }` wire shape and the reviewers' structured fields; one omp paragraph for vibe mode, where a director (no `task` or `bash`) hands the whole run to one `good` worker that dispatches the seats itself
+- `skills/brainstorming/` — a defined small-change path: after the in-chat approval the session builds it itself, test first, runs the covering tests and the suite once, and commits once, with no design document, plan or subagents (security, auth, concurrency, money, migrations and changes one revert cannot undo are never small); a playback rides along with the next question instead of waiting for its own answer; for software, the plan is written right after the builder check so the design and the plan get one approval
+- `agents/sdd-*.md` — new. Each seat's `model:` is a pin plus a role fallback (`@task` or `@slow`), and all set `readSummarize: false`. `sdd-final-reviewer` reviews the whole branch for both ways of running a plan; after subagent-driven-development it does the task review's work on every task left to it (`review at final`) before the seams. It reads `requesting-code-review/code-reviewer.md` at run time and applies its What to Check, Calibration, severity definitions and Critical Rules, while carrying upstream's vision-document and Declined-to-judge rules in its own body. Descriptions name roles, never models
+- `skills/subagent-driven-development/` — *Model Selection* → *Agent Selection*; fix-loop cap 5 → 3 with a round-3 escalation seat; a proven-trivial-fix route that replaces a re-review with a one-command proof; the pre-flight scan builds a review list (plan-marked or ruled high-risk tasks get a task review, the rest get the controller's own covering-test run and the final review) and waves (tasks with no shared file or interface run in parallel, up to three, each in its own `omp worktree add` worktree, merged back with `--no-ff`); the scripts directory resolves via `realpath skill://subagent-driven-development/scripts`; fix rounds resume the implementer with `write agent://<id>` (id ledgered) and full results are read at `agent://<id>`; task review scales with risk through `effort: "hi"`; the controller checks reviewer results; templates show omp's real `{ context, tasks: [{ agent, task, solutionSpace }] }` wire shape and the reviewers' structured fields; one omp paragraph for vibe mode, where a director (no `task` or `bash`) hands the whole run to one `good` worker that dispatches the seats itself
 - `skills/executing-plans/` — one additive omp paragraph in *Final Review*: the `task` tool has no `model:` field, so the final review goes to `sdd-final-reviewer` (its model is what the host maps that agent to), told that no task was reviewed; it also resolves the scripts directory with `realpath` and reads full results at `agent://<id>`; one more omp paragraph for vibe mode, where a director hands the whole run to one `good` worker
 - `skills/using-git-worktrees/` — additive omp section: `/wt` is the user's one-line answer to the consent question (moves the session, carries WIP); when the agent creates the worktree itself it uses `omp worktree add` under `~/.omp/wt/` (the only place `omp worktree list`/`clear` manage), knows that command leaves uncommitted changes behind, and asks for `/move <path>` because `cd` never moves the tools' cwd. Also: clone-first falls back to a plain checkout without `node_modules` (no copy-on-write, or in-repo targets); setup and tests use the bash tool's `cwd` parameter until `/move`; `omp worktree clear --all` is warned against, since it force-removes every worktree, uncommitted work included; omp's bash rewrites a literal `git worktree add` into `omp worktree add` only without shell expansion; vibe mode refuses `/move` and `/wt`, so the worktree and `/move` come before `/vibe`, or every worker brief carries the absolute path
-- `skills/writing-plans/` — one added line in *Execution Handoff*: in vibe mode both execution approaches run in one `good` worker the director briefs, not in its own session
+- `skills/writing-plans/` — *Execution Handoff* picks the method itself and asks for one approval of the design, the plan and the method; *Review Marks* (and a self-review check) mark security, auth, concurrency, migration, money and destructive tasks `**Review:** per-task`; tasks that share no file or interface can run in parallel; in vibe mode both execution approaches run in one `good` worker the director briefs, not in its own session
 - `README.md` — this file: rewritten for omp (install, seats, overrides, maintenance); upstream's multi-harness README is gone
 - `tests/pi/test-pi-extension.mjs` — covers the extension's lifecycle (bootstrap on start, `session_switch`, compaction; none for subagents or an auto-continuing `agent_end`), the action table in `pi-tools.md`, the seat table against the names in `agents/*.md`, and the `.omp-plugin/plugin.json` manifest; the package-name assertion is gone (`scripts/check-npm-package.sh` checks the published name)
 - `package.json` — the npm identity: `@loneexile/omp-superpowers`, `<upstream version>-omp.<n>` versions, a `files` allowlist (the extension, `skills/`, `agents/`), `publishConfig`, `omp`/`oh-my-pi` keywords; `main` is dropped, since it pointed at the OpenCode plugin this package does not ship
@@ -178,7 +185,7 @@ git rebase upstream/main
 git push --force-with-lease origin main
 ```
 
-Expect conflicts in `skills/subagent-driven-development/`, `pi-tools.md`, `README.md`, and `package.json` whenever upstream touches them — this fork rewrites those files rather than appending to them (README.md is never a partial conflict). In `package.json` keep the fork's identity and set `version` to `<new upstream version>-omp.1`: CI's package check fails until the version's base matches the upstream version in `.claude-plugin/plugin.json`. `agents/`, the extension's mapping paragraph, and the omp blocks in `using-git-worktrees` are additive.
+Expect conflicts in `skills/subagent-driven-development/`, `skills/brainstorming/`, `skills/writing-plans/`, `pi-tools.md`, `README.md`, and `package.json` whenever upstream touches them — this fork rewrites those files rather than appending to them (README.md is never a partial conflict). In `package.json` keep the fork's identity and set `version` to `<new upstream version>-omp.1`: CI's package check fails until the version's base matches the upstream version in `.claude-plugin/plugin.json`. `agents/`, the extension's mapping paragraph, and the omp blocks in `using-git-worktrees` are additive.
 
 A clean rebase is not the whole sync. Upstream's edits to text this fork replaced never reach the replacement, so read upstream's diff for those files and port what still applies. The v6.4.x sync needed two: `bash scripts/...` invocations in the SDD text, and `code-reviewer.md`'s new review rules. Upstream edits to `code-reviewer.md`'s What to Check, Calibration, severity definitions and Critical Rules now reach `sdd-final-reviewer` without porting, because it reads the file at run time. Edits to the vision-document or Declined-to-judge sections still need porting into the agent body, which carries them itself.
 
