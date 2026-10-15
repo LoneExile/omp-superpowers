@@ -28,7 +28,8 @@ Four things stop you, and only these: an irreversible or destructive
 operation; a security-sensitive action; a side effect outside this worktree
 that norms say you ask about first (a merge, a push to a shared branch, a
 publish); and a plan so broken that every path forward is a guess. For those,
-stop and ask.
+stop and ask. This skill's own wave merges into the plan branch, and the task
+worktrees it creates and removes, are not among them.
 
 **On omp in vibe mode** (your tools include `vibe_spawn` but not `task`)
 you are the director, and this loop cannot run in your session: you have
@@ -197,7 +198,12 @@ a ledger file, not only in todos.
   whose last line is `dispatched` or `re-dispatched` is mid-implementation:
   check `git log` from its BASE (on its task branch, for a wave task whose
   `dispatched` line names a worktree) and read `agent://<id>` before you
-  dispatch anything. A task
+  dispatch anything. A wave task whose last line is `merged` is merged: clean
+  up its worktree and branch (Complete the task) and write its `complete`
+  line. A wave task whose branch tip is already an ancestor of the plan
+  branch (`git merge-base --is-ancestor <branch> HEAD`) merged before the
+  ledger caught up: ledger `merged` and do the same. A worktree that exists
+  for a task with no `dispatched` line is reused, not added again. A task
   whose last line is a fix round is mid-loop: resume the loop at the next
   round. A ledger whose first line names a different plan file — or a stray
   ledger at the old flat path `.superpowers/sdd/progress.md` — is another
@@ -242,19 +248,25 @@ emerge from implementation.
 **The review list.** A task gets its own task review when the plan marks it
 `**Review:** per-task`, or when you rule it high-risk: security or
 authentication, concurrency, a data migration or persisted format, money, a
-destructive operation. Ledger one line per task, `Task <N>: review per-task
-— <class>` or `Task <N>: review at final`. The final whole-branch review
-does the task review's work for every `review at final` task. A task joins
-the list mid-run, with a ledger line naming why, when its report is
-DONE_WITH_CONCERNS about correctness, it went BLOCKED, or its implementer
-needed 100+ turns.
+destructive operation, or an interface two or more later tasks consume. A
+batch (below) counts as one task. Ledger one line per task, `Task <N>:
+review per-task — <class>` or `Task <N>: review at final`. The final
+whole-branch review does the task review's work for every `review at final`
+task. A task joins the list mid-run, ledgered as `Task <N>: review per-task
+— <reason>`, when its report is DONE_WITH_CONCERNS about correctness, it
+went BLOCKED, or its implementer needed 100+ turns.
 
 **The waves.** Tasks with no row between them in the scan table (no shared
 file, no shared interface), whose `Consumes` all come from earlier waves,
 form one wave: take them in plan order, at most three to a wave. A task that
-consumes another's interface waits for the wave that produces it. Ledger
+consumes another's interface waits for the wave that produces it. Files
+every task tends to touch (a lockfile, a manifest, a CHANGELOG, an index or
+barrel file) count as shared, and so does anything the tests hold at run
+time (a fixed port, a database, a cache directory). Ledger
 `Wave <K>: tasks <N>, <N>, <N>` for each wave, then start Wave 1. A plan that
-is one long chain gets one task per wave and runs in sequence.
+is one long chain gets one task per wave and runs in sequence, and so does
+every plan whose checkout has uncommitted changes (`git status --porcelain`
+not empty): a merge needs a clean checkout.
 
 ## Agent Selection
 
@@ -377,7 +389,7 @@ task onto the escalation seat. Re-reviews are verdict-only work over a small
 diff — `low` reasoning is correct for them, not a compromise.
 
 **Scale the task review to the diff's risk.** Every task on the review list
-is there for its risk class (Setup), so its reviewer needs the deepest
+is there for its risk class or a trouble signal (Setup), so its reviewer needs the deepest
 reasoning the seat has. When `task.enableEffort` is on (it is off by
 default — `omp config get task.enableEffort`), dispatch that reviewer with
 `effort: "hi"`: that selects the resolved model's top thinking level,
@@ -479,8 +491,8 @@ the wave's BASE.
   that was already taken (`Name-2`), and calls a follow-up turn's job
   `<id>-2` — the job id is not the agent id. Ledger the dispatch the moment
   you have the id, together with BASE, so both survive compaction:
-  `Task <N>: dispatched (BASE <base7>, implementer <id>)`, plus
-  `, worktree <path>` for a wave task. Fix rounds 1-2
+  `Task <N>: dispatched (BASE <base7>, implementer <id>[, worktree <absolute path>])`,
+  the worktree part for a wave task only. Fix rounds 1-2
   and the answer to a NEEDS_CONTEXT then go to that agent with
   `write agent://<id>`.
 - **The write has two success answers; only an error means "dispatch
@@ -493,7 +505,7 @@ the wave's BASE.
   next result arrives as a notice either way. Only an error answer (`Failed:
   …`, or a write error) means dispatch a fresh `sdd-implementer`. That
   dispatch gets a new id, which omp may suffix (`Name-2`) because the old id is
-  taken: ledger it — `Task <N>: re-dispatched (implementer <new id>)` — and use
+  taken: ledger it — `Task <N>: re-dispatched (implementer <new id>[, worktree <absolute path>])` — and use
   it from then on.
 - **A wave of two or more: one git worktree per task, not omp isolation.**
   Implementers sharing one checkout overwrite each other, and
@@ -513,13 +525,21 @@ the wave's BASE.
   superpowers:using-git-worktrees says why `omp worktree add` and
   `~/.omp/wt/`. If the add warns that the clone fell back to a plain
   checkout, the worktree lacks `node_modules` and other ignored build
-  output: run the plan's install step there before dispatching. The `task`
-  tool has no `cwd`, so every implementer starts in your checkout: put its
-  worktree's absolute path in the template's `Work from:` line, which tells
-  it to work only there. A wave of one runs in the plan checkout, with no
-  extra worktree. Until a wave task merges, its branch
-  `sdd/<plan>/task-<N>` stands in for HEAD in every review-package command
-  for that task.
+  output: run the plan's install step there before dispatching. A wave of
+  one runs in the plan checkout, with no extra worktree.
+
+  **Until it merges, a wave task lives in its worktree, not in yours.** The
+  `task` tool has no `cwd`, so every subagent starts in your checkout, which
+  does not have the task's commits yet. So every dispatch for the task —
+  implementer, re-dispatch, escalation, reviewer, re-reviewer — carries its
+  worktree's absolute path: the implementer template's `Work from:` line,
+  and for a reviewer a `Checkout: <path>` line saying to read the changed
+  files and their call sites there. Every command you run for the task
+  (its tests, a proven-trivial fix and its commit) runs with the `bash`
+  tool's `cwd` set to that path, and its branch `sdd/<plan>/task-<N>` stands
+  in for HEAD in every review-package command for it. If the session never
+  got `/move`d into the plan's worktree (Setup), run every git command that
+  touches the plan branch with `cwd` set to the plan checkout, too.
 
 Template: [implementer-prompt.md](implementer-prompt.md)
 
@@ -527,12 +547,18 @@ Template: [implementer-prompt.md](implementer-prompt.md)
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Check the task's line in the review list.
+**DONE:** For a wave task, first check it worked where it should: its
+worktree has commits past BASE (`git -C <worktree> rev-list --count
+BASE..HEAD` is 1 or more), its worktree is clean (`git -C <worktree> status
+--porcelain` empty; untracked leftovers go back to the implementer), and
+your own checkout gained no changes. A task that wrote into your checkout
+goes back to its implementer with the paths. Then check the task's line in
+the review list.
 
 - **`review per-task`:** generate the review package (`bash scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task; for a wave task, its branch `sdd/<plan>/task-<N>` stands in for HEAD), then dispatch `sdd-reviewer` with the printed path.
-- **`review at final`:** run the covering test command from the brief yourself, once, in the task's checkout (the `bash` tool's `cwd` set to its worktree, for a wave task), and read the output. That run is the only check this task gets before the final review, so never take the implementer's report in its place. A pass completes the task (step 5). A failure goes back to the implementer as a fix round with the failing output as its finding; the round ends when your rerun passes, with no re-review, and three rounds trip the breaker as in the fix loop.
+- **`review at final`:** run the covering test command from the brief yourself, once, in the task's checkout, with its output redirected to a file in the plan's workspace; read the tail. A brief that names no test (docs, configuration) gets the cheapest check that can fail instead (a build, a lint, a parse), or goes on the review list. That run is the only check this task gets before the final review, so never take the implementer's report in its place. A pass completes the task (step 5). A failure goes back to the implementer with the output file's path: rounds 1-2 resume it, round 3 is a fresh `sdd-escalation-implementer`, as in the fix loop, and each round ends when your rerun passes, with no re-review. A failure after round 3 is a plan the tests disagree with: stop and ask.
 
-**DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review, and put a `review at final` task on the review list (ledger why). If they're observations (e.g., "this file is getting large"), note them and proceed.
+**DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness, address them before review, and put a `review at final` task on the review list (`Task <N>: review per-task — <concern>`). If they're observations (e.g., "this file is getting large"), note them and proceed.
 
 **NEEDS_CONTEXT:** The implementer needs information that wasn't provided. Provide the missing context and re-dispatch. On omp, message the idle agent instead (`write agent://<id>`, the id from the ledger's `dispatched` line): it keeps its context and yields again. Only a write error means re-dispatch, with the context carried in the brief.
 
@@ -583,7 +609,8 @@ it, for any other the final review is.
   dispatch a task reviewer without a diff file.
 - **Reviewer inputs:** the task reviewer gets three paths — the same brief
   file, the report file, and the review package — plus the global
-  constraints that bind the task.
+  constraints that bind the task, and for a wave task a `Checkout:` line with
+  its worktree's absolute path (the re-reviewer gets the same line).
 - The global-constraints block you hand the reviewer is its attention
   lens. Copy the binding requirements verbatim from the plan's Global
   Constraints section or the spec: exact values, exact formats, and the
@@ -753,21 +780,41 @@ A task is done when its review comes back clean, when every open finding is
 parked with a ruling at the cap, or, for a `review at final` task, when your
 own run of its covering tests passes.
 
-**A wave task merges first.** From the plan checkout, merge its branch as
-soon as it is done — wave tasks are independent, so their order does not
-matter — then run its covering tests on the merged result:
+**A wave task merges first, and its tests run before the merge commits.**
+From the plan checkout, as soon as the task is done (wave tasks are
+independent, so their order does not matter):
 
 ```bash
-git merge --no-ff --no-edit "sdd/<plan>/task-<N>"
+git merge --no-ff --no-commit "sdd/<plan>/task-<N>"
+# run the task's covering tests on the merged tree, output to a workspace file
+git commit --no-edit
 ```
 
-A conflict (`git merge --abort`) or a covering test that fails after the
-merge (`git reset --merge ORIG_HEAD`) sends the task back to its
-implementer with `write agent://<id>`: rebase its branch onto the plan
-branch in its worktree, re-run its covering tests, report again. Ledger
-`Task <N>: rebased (<conflict | failing test>)` and merge it again. Once it
-merges cleanly, remove its worktree and branch (`git worktree remove
-<path>`, then `git branch -d "sdd/<plan>/task-<N>"`).
+If the merge stops on a conflict, or the covering tests fail on the merged
+tree, run `git merge --abort` and send the task back to its implementer
+(`write agent://<id>`) with the plan branch's name and, for a failure, the
+output file's path: rebase onto the plan branch, fix what the merge
+exposed, re-run its covering tests, report again. Each such round counts
+toward the task's three rounds (rounds and breaker as in the fix loop);
+ledger it as `Task <N>: rebased (<conflict | failing test>)`. A `review
+per-task` task whose rebase changed code gets a scoped re-review over its
+rebased commits: `review-package PLAN_FILE <plan-branch>
+sdd/<plan>/task-<N>`. A failure that belongs to a task already merged, not
+to this one, goes to ONE fix dispatch on the plan checkout as a fix round of
+that earlier task; then merge this one.
+
+Right after the merge commit, ledger `Task <N>: merged (<sha7>)`, then
+remove the task's worktree and branch: `git worktree remove <path>`, then
+`git branch -d "sdd/<plan>/task-<N>"`. If the removal refuses, read
+`git -C <path> status --short`: use `--force` only when nothing it lists is
+missing from the merge; otherwise ledger it and leave it for Finish.
+
+After the last task of a wave of two or more merges, run the full suite once
+in the plan checkout, output to a workspace file. Implementers ran it in
+worktrees without their siblings, so this is the first run on the combined
+tree. A failure no single task owns goes to ONE fix dispatch on the plan
+checkout, ledgered `Wave <K>: fix (<failing tests>)`, before the next wave
+starts.
 
 Then append the completion line to the ledger in the same message as your
 other bookkeeping:
@@ -795,7 +842,8 @@ the package path; the plan/spec paths; every `review per-task` task with its
 class, which had its own task review (so the last review spends its depth
 on the seams around them); every `review at final` task, which had none, so
 the final reviewer does the task review's work on it first; the ledger's
-deferred-minor and parked-with-ruling lines verbatim; and every `Task <N>:
+deferred-minor and parked-with-ruling lines verbatim; every `rebased` and
+`Wave <K>: fix` line (code no task review saw); and every `Task <N>:
 applied … proof:` line, a fix you applied yourself on the proven-trivial
 route without a re-review (the reviewer checks those as if unreviewed). Do not
 paste requesting-code-review's `code-reviewer.md` into the dispatch — that
@@ -834,6 +882,11 @@ ruling, the list holds it. That list is the only place the decisions you
 took on your human partner's behalf reach them — they read it and rework
 whatever you got wrong. A ruling that dies with the workspace was a decision
 made in secret.
+
+Check that no wave left anything behind: `git worktree list` shows none of
+this plan's task worktrees, and `git branch --list 'sdd/<plan>/*'` is empty.
+Remove a leftover as in Complete the task, or name it in your final message
+if it holds work the merge does not.
 
 When the final whole-branch review is clean and its fixes are merged,
 delete this plan's workspace (`rm -rf <workspace>`) — the git history is
@@ -874,7 +927,7 @@ Wave 1: Task 1 (hook installation script) and Task 3 (help text)
 
 [Two worktrees: omp worktree add -b sdd/feature-plan/task-1 …, and task-3]
 [Run task-brief for Tasks 1 and 3; ONE task call with two implementer items, each naming its worktree]
-[Ledger: Task 1: dispatched (BASE a1b2c3d, implementer Impl1, worktree ~/.omp/wt/app-feature-plan-task-1)]
+[Ledger: Task 1: dispatched (BASE a1b2c3d, implementer Impl1, worktree /home/me/.omp/wt/app-feature-plan-task-1)]
 
 Implementer: "Before I begin - should the hook be installed at user or system level?"
 
@@ -887,14 +940,15 @@ Implementer: [Later]
   - Committed
 
 [Task 1 is review at final: run the brief's covering test in its worktree — npm test test/install.test.js: 5/5 passing]
-[git merge --no-ff --no-edit sdd/feature-plan/task-1; covering test on the merged result passes; worktree and branch removed]
+[git merge --no-ff --no-commit sdd/feature-plan/task-1; covering test on the merged tree passes; git commit --no-edit]
+[Ledger: Task 1: merged (9a8b7c6); worktree and branch removed]
 [Ledger: Task 1: complete (commits a1b2c3d..d4e5f6a, review at final — tests: npm test test/install.test.js, pass)]
-[Task 3 likewise]
+[Task 3 likewise; its merge was the wave's last, so the full suite runs once in the plan checkout: pass]
 
 Wave 2: Task 2 (recovery modes, review per-task) and Task 4
 
 [Run task-brief for Task 2; dispatch implementer with brief + report paths + context]
-[Ledger: Task 2: dispatched (BASE e5f6a7b, implementer Impl2, worktree ~/.omp/wt/app-feature-plan-task-2)]
+[Ledger: Task 2: dispatched (BASE e5f6a7b, implementer Impl2, worktree /home/me/.omp/wt/app-feature-plan-task-2)]
 
 Implementer: [No questions]
   - Added verify/repair modes
@@ -917,7 +971,7 @@ sdd-rereviewer: round_verdict: all_addressed
   new_breakage: [] · out_of_scope: []
 
 [Ledger: Task 2: fix round 1/3 (2 addressed, 0 open; commits e5f6a7b..b7c8d9e)]
-[Merge sdd/feature-plan/task-2; covering tests pass on the merged result]
+[Merge sdd/feature-plan/task-2 the same way; Ledger: Task 2: merged (c3d4e5f)]
 [Ledger: Task 2: complete (commits e5f6a7b..b7c8d9e, review clean)]
 
 ...

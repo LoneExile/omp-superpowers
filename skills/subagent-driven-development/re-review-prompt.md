@@ -38,6 +38,7 @@ that the fix itself broke nothing.
     **Fix base:** [FIX_BASE_SHA] (the head the previous review saw)
     **Head:** [HEAD_SHA]
     **Diff file:** [DIFF_FILE]
+    [CHECKOUT_LINE]
 
     Read the diff file in full, with an explicit range: `[DIFF_FILE]:1-3000`
     (a bare read returns only the first 300 lines; while the footer says
@@ -115,6 +116,8 @@ that the fix itself broke nothing.
 - `[FIX_BASE_SHA]` — the head the previous review saw
 - `[HEAD_SHA]` — current commit
 - `[DIFF_FILE]` — the path `bash scripts/review-package PLAN_FILE FIX_BASE HEAD` printed
+- `[CHECKOUT_LINE]` — same as the task reviewer's: the worktree line for a wave
+  task that has not merged yet, omitted otherwise
 
 **Re-reviewer returns** (structured): `finding_verdicts[]` (ADDRESSED /
 NOT_ADDRESSED with file:line), `new_breakage[]` for the fix diff only,

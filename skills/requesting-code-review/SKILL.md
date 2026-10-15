@@ -12,7 +12,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 ## When to Request Review
 
 **Mandatory:**
-- After each task in subagent-driven development
+- After each task on subagent-driven development's review list, and once on the whole branch at the end
 - After completing major feature
 - Before merge to main
 
@@ -82,7 +82,7 @@ You: [Fix progress indicators]
 ## Red Flags
 
 **Never:**
-- Skip review because "it's simple"
+- Skip review because "it's simple" (a workflow that routes a task's review to a later gate, such as SDD's final review or your partner's review of a small change, has not skipped it)
 - Ignore Critical issues
 - Proceed with unfixed Important issues
 - Argue with valid technical feedback

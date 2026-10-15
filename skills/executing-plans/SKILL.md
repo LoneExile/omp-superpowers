@@ -10,7 +10,7 @@ subagent per task, no reviewer per task. One fresh-context review of the
 whole branch at the end.
 
 **Why inline:** Subagent-driven development pays for a fresh implementer
-and a fresh reviewer on every task, each re-reading the codebase from zero.
+on every task and a fresh reviewer on each high-risk one, each re-reading the codebase from zero.
 Inline execution pays for one context (yours) plus one reviewer at the end.
 What it gives up is a fresh context per task and a second pair of eyes per
 task. This skill keeps what those two things bought, by other means: the
@@ -74,8 +74,8 @@ it runs well on a mid-tier session model, and the one place the most
 capable model earns its cost is the final review, which this skill
 dispatches separately. Tell your human partner so when they choose inline.
 
-Prefer superpowers:subagent-driven-development when your human partner
-wants a review gate on every task, or when the plan is long enough that
+Prefer superpowers:subagent-driven-development when the plan marks tasks
+`**Review:** per-task`, when your human partner wants a review gate on every task, or when the plan is long enough that
 its later tasks would run on a compacted context. Inline execution over a
 long plan still works — the ledger is what makes it recoverable — but the
 last tasks get the least of you.
@@ -292,7 +292,9 @@ carries the model — so choosing the reviewer's model means choosing its
 agent. Dispatch `sdd-final-reviewer`, the whole-branch reviewer this
 plugin ships, not the bundled `reviewer` or `task` agent. Give it the
 inputs above and say the plan ran inline, with no task reviewed, so it
-checks every change rather than only cross-task seams. Do not paste
+checks every change rather than only cross-task seams. Name every task the
+plan marks `**Review:** per-task`, with its class, so it goes deepest
+there. Do not paste
 code-reviewer.md into the dispatch: the agent reads the review rubric from
 it itself, and its own `<output>` governs. Its model is whatever this host
 maps that agent to: opus-5-5 · max by default (`@slow` when that pin has no
