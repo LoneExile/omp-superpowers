@@ -38,6 +38,7 @@ more, nothing less) and is well-built (clean, tested, maintainable)
     **Base:** [BASE_SHA]
     **Head:** [HEAD_SHA]
     **Diff file:** [DIFF_FILE]
+    [CHECKOUT_LINE]
 
     Read the diff file in full, with an explicit range: `[DIFF_FILE]:1-3000`
     (a bare read returns only the first 300 lines; while the footer says
@@ -207,6 +208,10 @@ more, nothing less) and is well-built (clean, tested, maintainable)
   package to (`bash scripts/review-package PLAN_FILE BASE HEAD`, run by its
   absolute path, from the working tree you're executing in, prints the unique
   path it wrote; the package never enters the controller's context)
+- `[CHECKOUT_LINE]` — for a wave task that has not merged yet: `**Checkout:**
+  <worktree absolute path> — the task's code lives here, not in your
+  session's checkout; read changed files and their call sites under this
+  path.` Omit the line otherwise.
 
 **Reviewer returns** (structured): `spec_compliance`, `spec_issues[]`,
 `cannot_verify[]`, `strengths[]`, `findings[]` (Critical/Important/Minor with

@@ -50,9 +50,11 @@ Use this template when dispatching an implementer subagent.
     Work from: [directory — for a wave task, its worktree's absolute path]
 
     Work only under that directory. Your session may have started in a
-    different checkout, so use absolute paths under it for `read` and
-    `edit`, set the `bash` tool's `cwd` to it for every command, and commit
-    on the branch checked out there.
+    different checkout, so give every file tool (`read`, `write`, `edit`,
+    `grep`, `glob`, `lsp`) absolute paths under it, set the `bash` tool's
+    `cwd` to it for every command, and commit on the branch checked out
+    there. The brief and the report file are the exception: use the paths
+    given for them.
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
@@ -65,12 +67,12 @@ Use this template when dispatching an implementer subagent.
     Do all of this task's work yourself. Never spawn a subagent to
     implement part of the task, and above all never spawn a reviewer to
     check your work. Self-review (below) means reading your own diff.
-    Review is the controller's job: after you report, it dispatches a
-    fresh reviewer against your diff. A reviewer you spawn duplicates
-    that review at full cost, and its approval counts for nothing in
-    the process. If you catch yourself thinking "an independent review
-    would strengthen my report" — that review is already scheduled.
-    Report instead.
+    Review is the controller's job: after you report, it reviews or tests
+    your work, and a whole-branch review at the end covers every task. A
+    reviewer you spawn duplicates that review at full cost, and its
+    approval counts for nothing in the process. If you catch yourself
+    thinking "an independent review would strengthen my report" — that
+    review is already scheduled. Report instead.
 
     ## Code Organization
 
@@ -139,9 +141,12 @@ Use this template when dispatching an implementer subagent.
     you — your report is the test evidence. Then reply with the same short
     status contract as your first report.
 
-    You may also be resumed to rebase your branch onto the plan branch,
-    after another task merged first. Rebase, re-run your covering tests,
-    and reply with the same short status contract.
+    You may also be resumed because your branch would not merge into the
+    plan branch: the message names the plan branch and, when tests failed
+    on the merged tree, the file holding their output. Rebase onto the
+    plan branch, fix what the merge exposed, re-run your covering tests,
+    append what you did to your report file, and reply with the same short
+    status contract.
 
     ## Report Format
 
