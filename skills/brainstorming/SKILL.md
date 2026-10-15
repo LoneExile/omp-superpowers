@@ -31,7 +31,7 @@ Your first message is two things, in this order:
    have you just start, they can say so. If they take you up on it, this
    skill is done: state any significant how-it-gets-made choice
    (platform, language, medium) in one plain line, then do what they
-   asked through the normal workflow.
+   asked the way its size calls for (Size the Work, below).
 2. One open question that gets them describing. Ask about a real moment
    or a concrete picture: "What's the moment you find yourself wishing
    this existed?" or "Tell me about the people who'll be in the room."
@@ -134,8 +134,31 @@ words. They can override it.
 | Size | The full description | Then |
 |------|----------------------|------|
 | A quick, clear task | the request itself | do it |
-| A small change | in chat | build it through the normal workflow |
+| A small change | in chat | the small-change path, below |
 | A project with a written design | a written design document | a full plan (for software: superpowers:writing-plans) |
+
+**A small change** is one you can describe in a few lines of chat: it
+stays inside one area of the work, adds nothing that other parts will
+build on, and one revert undoes it. Security, authentication,
+concurrency, money, data migrations, and anything one revert cannot undo
+are never small; size those as projects.
+
+**The small-change path.** Once they approve the description, build it
+yourself, in this session: no design document, no plan, no subagents.
+For software:
+
+1. On a main or master branch, start a branch for it first
+   (`git switch -c <topic>`), unless they told you to work where you are.
+2. Test first (superpowers:test-driven-development): a failing test,
+   then the code that makes it pass.
+3. Run the tests that cover the change, then the full suite once.
+4. Commit once.
+5. Before you call it done, follow
+   superpowers:verification-before-completion: name the commit, the
+   command you ran, and what it printed.
+
+Your human partner reviews that commit; it is the only review a small
+change gets. Outside software, make the change and show it to them.
 
 If it grows mid-task, stop, say so, and step up a size.
 
