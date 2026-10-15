@@ -31,7 +31,8 @@ Your first message is two things, in this order:
    have you just start, they can say so. If they take you up on it, this
    skill is done: state any significant how-it-gets-made choice
    (platform, language, medium) in one plain line, then do what they
-   asked the way its size calls for (Size the Work, below).
+   asked the way its size calls for (Size the Work, below). Their opt-out
+   is the approval a small change needs.
 2. One open question that gets them describing. Ask about a real moment
    or a concrete picture: "What's the moment you find yourself wishing
    this existed?" or "Tell me about the people who'll be in the room."
@@ -117,7 +118,8 @@ behaves), describe that part back in about 200-300 words. A playback
 doesn't wait for its own answer: send it in the same message as your
 next question, with one line saying they can correct anything in it in
 their reply. The last chunk covers whatever is left and goes out with
-the size you pick.
+the size you pick; for a small change, it ends by asking whether to
+build it.
 
 Mark anything you're guessing as your guess; only what they said goes in
 as theirs.
@@ -149,15 +151,20 @@ are never small; size those as projects.
 yourself, in this session: no design document, no plan, no subagents.
 For software:
 
-1. On a main or master branch, start a branch for it first
+1. Run `git status --short` first and note anything that isn't yours. On
+   the default branch or a detached HEAD, start a branch for the change
    (`git switch -c <topic>`), unless they told you to work where you are.
 2. Test first (superpowers:test-driven-development): a failing test,
-   then the code that makes it pass.
+   then the code that makes it pass. A change no test can cover
+   (configuration, docs) gets the cheapest check that can fail instead:
+   a build, a lint, a parse. Their approval of the description covers
+   that exception.
 3. Run the tests that cover the change, then the full suite once.
-4. Commit once.
+4. Commit once, staging your own files by path, never with `-a` or `-A`.
 5. Before you call it done, follow
    superpowers:verification-before-completion: name the commit, the
-   command you ran, and what it printed.
+   command you ran, what it printed, and any changes in the tree that
+   aren't yours.
 
 Your human partner reviews that commit; it is the only review a small
 change gets. Outside software, make the change and show it to them.

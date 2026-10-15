@@ -204,18 +204,26 @@ yourself, unless your human partner already named one:
 - **Subagent-driven** (superpowers:subagent-driven-development) - A fresh subagent implements each task, independent tasks run in parallel in their own worktrees, the tasks marked `**Review:** per-task` get a fresh reviewer each, and one whole-branch review at the end covers every task. Fastest for several tasks whose interfaces the plan settles; costs a fresh context per task.
 - **Native** (superpowers:executing-plans) - I implement every task myself in this session, the way this harness runs work, then one fresh reviewer on the most capable model checks the whole branch. Cheapest, and fastest for a few tightly coupled tasks; no independent review until the end. Runs well with a mid-tier session model, since the plan carries the design.
 
+A plan with any `**Review:** per-task` mark runs Subagent-driven unless your
+human partner says otherwise: Native has no task reviews. If you still
+choose Native, name the marked tasks in the approval and say they get no
+review before the final one.
+
 Then ask for ONE approval that covers everything they have not approved
 yet: the design document when this plan came straight from brainstorming,
-the plan, and the method. Do not ask them to pick the method; name the
-one you chose and why, and they can swap it in the same reply:
+the plan, the method, and where the work runs. Do not ask them to pick the
+method; name the one you chose and why, and they can swap it in the same
+reply. Name the workspace too, a new worktree unless they already said
+otherwise, so this approval is the consent superpowers:using-git-worktrees
+would otherwise ask for:
 
-**"Design: `docs/specs/<filename>.md`. Plan: `docs/plans/<filename>.md`, <N> tasks. I'll run it <method>, because <one sentence from the plan: how much the tasks depend on each other's interfaces, how many there are, what a shipped mistake would cost>. Calls I made for you: <the decisions marked as your call, one line each>. Approve both, or tell me what to change, the method included."**
+**"Design: `docs/specs/<filename>.md`. Plan: `docs/plans/<filename>.md`, <N> tasks. I'll run it <method> in <a new worktree on branch X | this checkout>, because <one sentence from the plan: how much the tasks depend on each other's interfaces, how many there are, what a shipped mistake would cost>. Calls I made for you: <the decisions marked as your call, one line each>. Approve both, or tell me what to change, the method and the workspace included."**
 
 Leave out the Design line when there is no new design document, and the
 calls line when you made none. When they already named the method, use
 theirs and say so instead of the because-sentence. Wait for that one
 answer. If they change the design, update both documents before you ask
-again; if they change only the method, start with theirs.
+again; if they change only the method or the workspace, start with theirs.
 
 **On omp in vibe mode** (your tools include `vibe_spawn` but not `task`), both approaches run in one `good` worker you brief, not in your own session; the chosen skill's vibe note says how. Say so in the approval message.
 
