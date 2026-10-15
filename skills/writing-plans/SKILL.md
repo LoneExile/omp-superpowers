@@ -36,8 +36,8 @@ This structure informs the task decomposition. Each task should produce self-con
 A task is the smallest unit that carries its own test cycle and its own
 commit range. When drawing task boundaries: fold setup,
 configuration, scaffolding, and documentation steps into the task whose
-deliverable needs them; split only where a reviewer could meaningfully
-reject one task while approving its neighbor. Each task ends with an
+deliverable needs them; split only where one task could be rejected
+while its neighbor stands. Each task ends with an
 independently testable deliverable.
 
 Tasks that share no file and no interface can run in parallel under
@@ -213,11 +213,13 @@ Then ask for ONE approval that covers everything they have not approved
 yet: the design document when this plan came straight from brainstorming,
 the plan, the method, and where the work runs. Do not ask them to pick the
 method; name the one you chose and why, and they can swap it in the same
-reply. Name the workspace too, a new worktree unless they already said
-otherwise, so this approval is the consent superpowers:using-git-worktrees
-would otherwise ask for:
+reply. Name the workspace too: a new branch in this checkout unless they
+already said otherwise, so the run needs no `/move` from them, and this
+approval is the consent superpowers:using-git-worktrees would otherwise
+ask for. They can answer `/wt <branch>` instead to move the session into
+its own worktree:
 
-**"Design: `docs/specs/<filename>.md`. Plan: `docs/plans/<filename>.md`, <N> tasks. I'll run it <method> in <a new worktree on branch X | this checkout>, because <one sentence from the plan: how much the tasks depend on each other's interfaces, how many there are, what a shipped mistake would cost>. Calls I made for you: <the decisions marked as your call, one line each>. Approve both, or tell me what to change, the method and the workspace included."**
+**"Design: `docs/specs/<filename>.md`. Plan: `docs/plans/<filename>.md`, <N> tasks. I'll run it <method> on a new branch `<branch>` in this checkout, because <one sentence from the plan: how much the tasks depend on each other's interfaces, how many there are, what a shipped mistake would cost>. Calls I made for you: <the decisions marked as your call, one line each>. Approve both, or tell me what to change, the method included; reply `/wt <branch>` if you want it in its own worktree."**
 
 Leave out the Design line when there is no new design document, and the
 calls line when you made none. When they already named the method, use
