@@ -82,7 +82,7 @@ You: [Fix progress indicators]
 ## Red Flags
 
 **Never:**
-- Skip review because "it's simple" (a workflow that routes a task's review to a later gate, such as SDD's final review or your partner's review of a small change, has not skipped it)
+- Skip review because "it's simple"
 - Ignore Critical issues
 - Proceed with unfixed Important issues
 - Argue with valid technical feedback
