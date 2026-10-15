@@ -538,9 +538,12 @@ the wave's BASE.
   files and their call sites there. Every command you run for the task
   (its tests, a proven-trivial fix and its commit) runs with the `bash`
   tool's `cwd` set to that path, and its branch `sdd/<plan>/task-<N>` stands
-  in for HEAD in every review-package command for it. If the session never
-  got `/move`d into the plan's worktree (Setup), run every git command that
-  touches the plan branch with `cwd` set to the plan checkout, too.
+  in for HEAD in every review-package command for it. The skill's scripts
+  (`task-brief`, `review-package`) still run from the plan checkout, never
+  from a task worktree: they write into the workspace of the checkout they
+  run in, and a task worktree's copy is deleted with it. If the session
+  never got `/move`d into the plan's worktree (Setup), run every git command
+  that touches the plan branch with `cwd` set to the plan checkout, too.
 
 Template: [implementer-prompt.md](implementer-prompt.md)
 
