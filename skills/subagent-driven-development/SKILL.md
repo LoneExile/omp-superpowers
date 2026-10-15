@@ -265,8 +265,9 @@ barrel file) count as shared, and so does anything the tests hold at run
 time (a fixed port, a database, a cache directory). Ledger
 `Wave <K>: tasks <N>, <N>, <N>` for each wave, then start Wave 1. A plan that
 is one long chain gets one task per wave and runs in sequence, and so does
-every plan whose checkout has uncommitted changes (`git status --porcelain`
-not empty): a merge needs a clean checkout.
+every plan whose checkout has uncommitted changes to tracked files
+(`git status --porcelain --untracked-files=no` not empty): a merge needs
+them committed or stashed. Untracked files do not block a wave.
 
 ## Agent Selection
 
