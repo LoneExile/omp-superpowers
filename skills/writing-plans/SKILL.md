@@ -33,12 +33,28 @@ This structure informs the task decomposition. Each task should produce self-con
 
 ## Task Right-Sizing
 
-A task is the smallest unit that carries its own test cycle and is worth a
-fresh reviewer's gate. When drawing task boundaries: fold setup,
+A task is the smallest unit that carries its own test cycle and its own
+commit range. When drawing task boundaries: fold setup,
 configuration, scaffolding, and documentation steps into the task whose
 deliverable needs them; split only where a reviewer could meaningfully
 reject one task while approving its neighbor. Each task ends with an
 independently testable deliverable.
+
+Tasks that share no file and no interface can run in parallel under
+subagent-driven-development. Where a shared file is avoidable, keep it in
+one task.
+
+## Review Marks
+
+Every task is reviewed in the whole-branch review at the end of the plan.
+A task also gets its own fresh reviewer when a shipped mistake there is
+costly or hard to see in a whole-branch diff: security or authentication,
+concurrency, a data migration or persisted format, money, a destructive
+operation. Mark such a task under its heading, naming the class:
+
+`**Review:** per-task — concurrency`
+
+Leave every other task unmarked.
 
 ## Step Granularity
 
@@ -93,6 +109,8 @@ owns the code, in that task's own step style.]
 
 ````markdown
 ### Task N: [Component Name]
+
+**Review:** per-task — [class; this line only on a task Review Marks covers]
 
 **Files:**
 - Create: `exact/path/to/file.py`
@@ -174,6 +192,8 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 **5. Proportion:** Compare the plan's length to the spec's. A plan several times longer than the spec it implements is a transcript of the program, not a plan. If code blocks are most of the document, replace bodies with signatures, test names and assertions, and check that each step is still unambiguous.
 
+**6. Review marks:** Every task touching security, authentication, concurrency, a data migration or persisted format, money, or a destructive operation carries a `**Review:** per-task` mark; no other task does.
+
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
 ## Execution Handoff
@@ -181,8 +201,8 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 After saving and self-reviewing the plan, choose the execution method
 yourself, unless your human partner already named one:
 
-- **Subagent-driven** (superpowers:subagent-driven-development) - A fresh subagent implements each task and a fresh reviewer checks it before the next one starts, then a whole-branch review at the end. Most thorough; costs a fresh context per task and per review.
-- **Native** (superpowers:executing-plans) - I implement every task myself in this session, the way this harness runs work, then one fresh reviewer on the most capable model checks the whole branch. Cheapest and fastest; no independent review until the end. Runs well with a mid-tier session model, since the plan carries the design.
+- **Subagent-driven** (superpowers:subagent-driven-development) - A fresh subagent implements each task, independent tasks run in parallel in their own worktrees, the tasks marked `**Review:** per-task` get a fresh reviewer each, and one whole-branch review at the end covers every task. Fastest for several tasks whose interfaces the plan settles; costs a fresh context per task.
+- **Native** (superpowers:executing-plans) - I implement every task myself in this session, the way this harness runs work, then one fresh reviewer on the most capable model checks the whole branch. Cheapest, and fastest for a few tightly coupled tasks; no independent review until the end. Runs well with a mid-tier session model, since the plan carries the design.
 
 Then ask for ONE approval that covers everything they have not approved
 yet: the design document when this plan came straight from brainstorming,
