@@ -113,12 +113,14 @@ conversation.
 
 Play back as you go. As soon as you understand one part well enough to
 describe it (what it's for and who it serves, say, or how one piece
-behaves), describe that part back in about 200-300 words, then return to
-questions about the next part. Playback and questions alternate through
-the whole conversation; the last chunk covers whatever is left.
+behaves), describe that part back in about 200-300 words. A playback
+doesn't wait for its own answer: send it in the same message as your
+next question, with one line saying they can correct anything in it in
+their reply. The last chunk covers whatever is left and goes out with
+the size you pick.
 
 Mark anything you're guessing as your guess; only what they said goes in
-as theirs. End each chunk by asking what's wrong or missing.
+as theirs.
 
 Before you send a chunk, check it: does it describe something they'll
 look at, like a page, a screen, a schedule, or a printout? If so, and
@@ -182,9 +184,11 @@ Otherwise, ask. Your human partner's preferences override both.
 
 **Builder check:** dispatch a fresh subagent with
 `builder-check-prompt.md` in this directory. When you tell your human
-partner you're writing it up, say a reviewer will read it first and you
-may come back once with a few questions. Don't hand over the document
-until the check is back. Sort what the builder asks into three piles:
+partner you're writing it up, say a reviewer will read it first, that you
+may come back once with a few questions, and, for software, that the
+plan comes with it. Don't hand over the document until the check is
+back. Without a subagent tool, read the document as that builder
+yourself. Sort what the builder asks into three piles:
 
 - **Answered already** by the conversation or the project: put the answer
   in the document.
@@ -193,26 +197,31 @@ until the check is back. Sort what the builder asks into three piles:
 - **Theirs:** only your human partner can answer it, and the answer changes
   what gets built.
 
-Bring the "theirs" pile in one message, most important first. Update the
-document with their answers, then hand it over with a short list of the
-calls you made so they can check those while reading. That's the only
-round of questions the check produces. Without a subagent tool, read the
-document as that builder yourself.
+Bring the "theirs" pile in one message, most important first. That's the
+only round of questions the check produces. Update the document with
+their answers. Then, for software, don't hand the document over on its
+own: invoke superpowers:writing-plans and write the plan now, so your
+human partner approves the design and its plan in one reading. The plan's
+handoff asks for that approval and lists the calls you made. Outside
+software, hand the document over with a short list of the calls you made
+so they can check those while reading.
 
 <HARD-GATE>
 Nothing gets built until your human partner approves the full
-description: in chat for a small change, the document for a project.
-Building includes writing product code, scaffolding, installing
-dependencies, creating projects, and invoking an implementation skill.
-Reading and exploring are fine.
+description: in chat for a small change; for a software project, the
+design document and its plan together, in one approval; otherwise the
+document. Building includes writing product code, scaffolding,
+installing dependencies, creating projects, and invoking an
+implementation skill. Reading, exploring, and writing the plan are fine.
 
 Two exceptions. If they opted out of the questions, the skill is done
 and the gate goes with it. A spike they said yes to may be built; it
 stays labeled throwaway, and keeping what it produced is a new request
 that comes back through this gate.
 
-After a project's document is approved, the next step is the plan. For
-software, invoke superpowers:writing-plans and no other skill.
+The next step after the builder check is the plan. For software, write
+it before the approval: invoke superpowers:writing-plans and no other
+skill. Outside software, the plan follows the document's approval.
 </HARD-GATE>
 
 ## Red Flags
@@ -223,6 +232,7 @@ software, invoke superpowers:writing-plans and no other skill.
 | "I'll fill in sensible defaults" | Good. Say them out loud. A default they never heard is one they couldn't reject. |
 | "I should explain the process first" | Ask your question. The process shows itself. |
 | "They said 'sounds good' to the idea" | Approval covers what you showed them. A description you haven't written isn't approved. |
+| "I'll get the design approved, then write the plan" | For software, write the plan first, so they approve both in one reading. A change to the design updates the plan before you ask again. |
 | "The spike works, I'll keep building on it" | Keeping it is a new request. Back through the gate. |
 
 ## Visual Companion
