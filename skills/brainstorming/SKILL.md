@@ -143,9 +143,13 @@ words. They can override it.
 
 **A small change** is one you can describe in a few lines of chat: it
 stays inside one area of the work, adds nothing that other parts will
-build on, and one revert undoes it. Security, authentication,
-concurrency, money, data migrations, and anything one revert cannot undo
-are never small; size those as projects.
+build on, and one revert undoes it. Adding a behavior can be small (a new
+`--quiet` flag). These are never small; size them as projects: security,
+authentication, concurrency, money, data migrations, anything one revert
+cannot undo, and in software a new config file or stored format, a change
+to existing behavior (a default, an exit code, error handling, what
+happens with no input), a new interface other code builds on (plugins, a
+public API), or a new dependency.
 
 **The small-change path.** Once they approve the description, build it
 yourself, in this session: no design document, no plan, no subagents.
