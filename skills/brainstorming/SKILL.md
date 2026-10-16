@@ -157,8 +157,10 @@ public API), or a new dependency.
 yourself, in this session: no design document, no plan, no subagents.
 For software:
 
-1. Run `git status --short` first and note anything that isn't yours. On
-   the default branch or a detached HEAD, start a branch for the change
+1. Run `git status --short` first and note anything that isn't yours. If
+   anything is staged (`git diff --cached --quiet` exits non-zero), ask
+   before you start: a commit takes the whole index. On the default
+   branch or a detached HEAD, start a branch for the change
    (`git switch -c <topic>`), unless they told you to work where you are.
    Run the full suite once before you change anything: a failure there
    isn't yours. Report it with the rest; don't fix it unasked.

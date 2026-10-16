@@ -13,12 +13,13 @@ thinkingLevel: max
 readSummarize: false
 ---
 
-You own one task from a Superpowers plan. Your dispatch names the brief (requirements, exact values verbatim), the report file, and which of two cases this is:
+You own one task from a Superpowers plan. Your dispatch names the brief (requirements, exact values verbatim), the report file, and which of three cases this is:
 
 - **Takeover:** a prior implementer attempted the task and either could not clear the review findings across two fix rounds, or reported `BLOCKED`. The dispatch lists the open findings, or the blocker that implementer reported. Read the report file first — it records what was tried and, for findings, what the reviewer rejected.
 - **First implementation:** the controller ruled the task needs the strongest seat from the start. No report file exists, no review has happened, and there are no findings: start from the brief and implement it test-first, as `sdd-implementer` would.
+- **Merge round:** the task's branch would not merge into the plan branch, or its covering tests failed on the merged tree, and its earlier rounds did not clear that. The dispatch names the plan branch, the task's worktree, and the conflict or the failing output file. Work in that worktree: rebase the task's branch onto the plan branch, make its covering tests pass on the result, and append what you did to the report file.
 
-If the dispatch does not say which case it is, the report file settles it: it exists for a takeover and not for a first implementation.
+If the dispatch does not say which case it is, the report file settles takeover against first implementation: it exists for a takeover and not for a first implementation. A dispatch that names a plan branch to rebase onto is a merge round.
 
 <contract>
 - Takeover: understand why the previous attempt did not converge before touching code. A loop that survives two resumes usually means the implementer could not see its own problem — look for the framing error, not just the diff; for a blocker, find what actually stopped it. Then fix the open findings, or clear the blocker and finish the task (test-first, as for a first implementation); re-run the covering tests (name them) and append your fix report to the same report file.

@@ -127,14 +127,20 @@ digraph process {
 Ensure the work happens in an isolated workspace. If the plan's approval
 named a new branch in this checkout (writing-plans' default), that approval
 was your human partner's answer to superpowers:using-git-worktrees' consent
-question: run `git status --short` and note what is there, create the
-branch here (`git switch -c <branch>`; `git switch <branch>` if it exists),
-run using-git-worktrees' Step 2 (project setup) and Step 3 (baseline tests)
-in place, and create no worktree. Changes `git status` showed are your
-human partner's: commit your own files by path, never with `-a` or `-A`.
-Otherwise use superpowers:using-git-worktrees to create a worktree or
-verify the existing one. Never start implementation on a main/master branch
-without your human partner's explicit consent.
+question: work in place, with no worktree. With a ledger for this plan
+(below), `git switch` to the branch its `Setup:` line names and resume.
+On a first run, run `git status --porcelain`: a change to a tracked file,
+or anything staged, goes back to your human partner to commit or stash
+first, since your commits and tests would include it; untracked files may
+stay, and stay out of every commit. If a branch with the approved name
+already exists, ask, or name another. Then `git switch -c <branch>`, run
+using-git-worktrees' Step 2 (project setup) and Step 3 (baseline tests)
+here, and, once the ledger exists, ledger `Setup: branch <branch> in this
+checkout; untracked before start: <paths | none>`. Commit your own files
+by path, never with `-a` or `-A`. Otherwise use
+superpowers:using-git-worktrees to create a worktree or verify the
+existing one. Never start implementation on a main/master branch without
+your human partner's explicit consent.
 
 Conversation memory does not survive compaction. An inline executor that
 loses its place re-implements tasks whose commits already exist — the same
@@ -158,10 +164,11 @@ and the new one resumes from the same ledger.
   commits exist in git even when your context no longer remembers making
   them: after compaction, trust the ledger and `git log` over your own
   recollection. A ledger whose first line names a different plan file is
-  another plan's progress: leave it and start your own, fresh. A ledger
-  with `Wave <K>:` lines came from subagent-driven-development's parallel
-  waves: resume it with that skill, which merges each wave task from its
-  worktree, rather than redoing those tasks here.
+  another plan's progress: leave it and start your own, fresh. A wave task
+  (its `dispatched` line names a worktree) with no `merged` or `complete`
+  line after it is still open in its worktree: finish it under
+  subagent-driven-development's resume rules and Complete the task before
+  continuing here. Finished waves need nothing.
 - Create the ledger with its identity as the first line:
   `# SDD ledger — plan: <plan file path>`.
 - `git clean -fdx` will destroy the workspace (it's git-ignored scratch);
