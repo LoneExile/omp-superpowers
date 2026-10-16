@@ -6,6 +6,8 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+## [7.0.0-omp.3] - 2026-10-16
+
 ### Changed
 
 - **A small change no longer goes through the full process.** brainstorming's small-change row said "build it through the normal workflow", which left it to a plan and a subagent run. It now has its own path: after the in-chat approval the session builds it itself, test first, runs the covering tests and the suite once, and commits once, with no design document, plan or subagents. A new behavior such as a `--quiet` flag can be small. Security, auth, concurrency, money, migrations, changes one revert cannot undo, new config files or stored formats, changes to existing behavior (defaults, exit codes, error handling, what happens with no input), new interfaces other code builds on and new dependencies never are: in a live run before that list was written, a request for a `--format` flag and a `~/.wcrc` config file was sized small and committed with no design, and the commit also changed what the tool does with no input. In a measured herdr-tunnel feature (2026-09-21), the brainstorm, plan and finish phases took 1h41m of its 3h52m agent time.
@@ -101,7 +103,8 @@ First release, synced to upstream [v6.4.2](https://github.com/obra/superpowers/b
 - The fork's rewritten subagent-driven-development text invokes its helper scripts through `bash` as well, so a package extractor that drops exec bits cannot break them.
 - `sdd-final-reviewer` carries upstream's new review rules from `code-reviewer.md`, the template it replaces in SDD's final review: the spec is a vision document (behavior it is silent on is graded by what a reasonable person expects), and a "Declined to judge" section that the controller rules on and ledgers like a plan conflict.
 
-[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.0-omp.2...HEAD
+[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.0-omp.3...HEAD
+[7.0.0-omp.3]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.0-omp.3
 [7.0.0-omp.2]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.0-omp.2
 [7.0.0-omp.1]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.0-omp.1
 [6.4.2-omp.4]: https://github.com/LoneExile/omp-superpowers/releases/tag/v6.4.2-omp.4
