@@ -48,19 +48,26 @@ Use this template when dispatching an implementer subagent.
     6. Report back
 
     Work from: [directory — for a wave task, its worktree's absolute path]
+    [WAVE_LINE — only for a task in a wave of two or more: "Other tasks
+    run in parallel with this one: before committing, run only the
+    covering tests your brief names, not the full suite; the controller
+    runs the full suite once the wave merges."]
 
     Work only under that directory. Your session may have started in a
     different checkout, so give every file tool (`read`, `write`, `edit`,
     `grep`, `glob`, `lsp`) absolute paths under it, set the `bash` tool's
     `cwd` to it for every command, and commit on the branch checked out
-    there. The brief and the report file are the exception: use the paths
-    given for them.
+    there, staging your own files by path, never with `git add -A`,
+    `git add .` or `git commit -a`: the checkout may hold changes that
+    aren't yours. The brief and the report file are the exception: use the
+    paths given for them.
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
     While iterating, run the focused test for what you're changing; run the
-    full suite once before committing, not after every edit.
+    full suite once before committing (unless a wave line above says
+    otherwise), not after every edit.
 
     ## You Do Not Dispatch Subagents
 
@@ -171,7 +178,8 @@ Use this template when dispatching an implementer subagent.
     If BLOCKED or NEEDS_CONTEXT, put the specifics in the final message
     itself — the controller acts on it directly.
 
-    Use DONE_WITH_CONCERNS if you completed the work but have doubts about correctness.
+    Use DONE_WITH_CONCERNS if you completed the work but have doubts about correctness,
+    or had to change a file your brief's Files list does not name (say which).
     Use BLOCKED if you cannot complete the task. Use NEEDS_CONTEXT if you need
     information that wasn't provided. Never silently produce work you're unsure about.
   } ] }
