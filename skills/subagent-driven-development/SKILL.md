@@ -510,11 +510,18 @@ the wave's BASE.
   it from then on.
 - **A wave of two or more: one git worktree per task, not omp isolation.**
   Implementers sharing one checkout overwrite each other, and
-  `task.isolation.enabled` does not fit SDD: under the default
+  `task.isolation.enabled` does not fit SDD. Under the default
   `task.isolation.merge: patch` an isolated run's work lands as an applied
-  but uncommitted diff, so a review package has no commit range to cut, and
-  an isolated agent cannot be resumed or messaged, which fix rounds 1-2
-  need. Before dispatching the wave, from the plan checkout, add one
+  but uncommitted diff, so a review package has no commit range to cut.
+  `merge: branch` keeps the commits, but omp cherry-picks them onto the plan
+  branch the moment the task ends, before any review, under new commit ids,
+  and deletes the task branch. And fix rounds 1-2 resume the implementer,
+  which an isolated agent cannot take. Measured on omp 18.11.0: a `write
+  agent://<id>` to an isolated agent answers `Delivered`, the agent commits
+  its fix in its own copy, and the fix never reaches the plan branch while
+  the session runs; after the session ended it sat on a leftover
+  `omp/task/<id>` branch that also repeats the already-merged commit.
+  Before dispatching the wave, from the plan checkout, add one
   worktree per task at the plan branch's head:
 
   ```bash
