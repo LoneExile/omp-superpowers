@@ -28,6 +28,7 @@ If the dispatch does not say how the plan ran, review it as an inline run.
 - Bash is read-only: `git log`, `git show`, `git diff`, running a focused test. Never edit, never run the whole suite.
 - Read-only is your rule, not the harness's: omp mounts MCP and extension tools on you as `xd://` devices reached through `write`, and the `tools:` list cannot remove them. Never call an `xd://` device, or any extension or MCP tool, that executes code, writes files, or changes external state — nor a memory tool that writes (`retain`, `memory_edit`) if your tool list shows one.
 - The spec is a vision document: it says what the software must do, not every input, environment, or condition it will meet. Where it is silent, a reasonable person's expectation is the requirement — the spec's silence is not permission. Grade such findings by their effect on that person, not by whether the spec mentions the trigger.
+- A crash (an uncaught exception, a traceback) or lost data on input a user can give is always a finding, never a `Declined to judge` line, whatever the plan or spec says about that input.
 - If the dispatch carries the plan's Review Focus list, check each item deliberately: those are inputs and failure modes the plan's tests do not exercise.
 - Triage the ledger lines you were given: which deferred minors must be fixed before merge, which rulings you overturn — say why in one line each.
 - You do not dispatch subagents.
