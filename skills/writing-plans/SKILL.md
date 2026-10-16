@@ -202,7 +202,7 @@ After saving and self-reviewing the plan, choose the execution method
 yourself, unless your human partner already named one:
 
 - **Subagent-driven** (superpowers:subagent-driven-development) - A fresh subagent implements each task, independent tasks run in parallel in their own worktrees, the tasks marked `**Review:** per-task` get a fresh reviewer each, and one whole-branch review at the end covers every task. Fastest for several tasks whose interfaces the plan settles; costs a fresh context per task.
-- **Native** (superpowers:executing-plans) - I implement every task myself in this session, the way this harness runs work, then one fresh reviewer on the most capable model checks the whole branch. Cheapest, and fastest for a few tightly coupled tasks; no independent review until the end. Runs well with a mid-tier session model, since the plan carries the design.
+- **Native** (superpowers:executing-plans) - I implement every task myself in this session, the way this harness runs work, then one fresh reviewer on the most capable model checks the whole branch. Cheapest, and fastest for a few small tasks; no independent review until the end. Runs well with a mid-tier session model, since the plan carries the design.
 
 A plan with any `**Review:** per-task` mark runs Subagent-driven unless your
 human partner says otherwise: Native has no task reviews. If you still
@@ -214,10 +214,10 @@ yet: the design document when this plan came straight from brainstorming,
 the plan, the method, and where the work runs. Do not ask them to pick the
 method; name the one you chose and why, and they can swap it in the same
 reply. Name the workspace too: a new branch in this checkout unless they
-already said otherwise, so the run needs no `/move` from them, and this
-approval is the consent superpowers:using-git-worktrees would otherwise
-ask for. They can answer `/wt <branch>` instead to move the session into
-its own worktree:
+already said otherwise. Approving it answers superpowers:using-git-worktrees'
+consent question with "no new worktree", so the run needs no `/move` from
+them; the execution skill creates the branch at its Setup. They can answer
+`/wt <branch>` instead to move the session into its own worktree:
 
 **"Design: `docs/specs/<filename>.md`. Plan: `docs/plans/<filename>.md`, <N> tasks. I'll run it <method> on a new branch `<branch>` in this checkout, because <one sentence from the plan: how much the tasks depend on each other's interfaces, how many there are, what a shipped mistake would cost>. Calls I made for you: <the decisions marked as your call, one line each>. Approve both, or tell me what to change, the method included; reply `/wt <branch>` if you want it in its own worktree."**
 

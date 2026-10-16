@@ -20,7 +20,9 @@ Before you reply, ask yourself: what do I know about what they want, and
 why?
 
 - **Everything that matters is in the request** ("make the icon cornflower
-  blue"). This is a quick, clear task. Do it, and say what you did.
+  blue"). This is a quick, clear task. Do it, and say what you did. Nothing
+  on the never-small list (Size the Work) is a quick task, however complete
+  the request.
 - **Something non-trivial is missing.** Start the conversation.
 
 ## Your First Message
@@ -158,6 +160,8 @@ For software:
 1. Run `git status --short` first and note anything that isn't yours. On
    the default branch or a detached HEAD, start a branch for the change
    (`git switch -c <topic>`), unless they told you to work where you are.
+   Run the full suite once before you change anything: a failure there
+   isn't yours. Report it with the rest; don't fix it unasked.
 2. Test first (superpowers:test-driven-development): a failing test,
    then the code that makes it pass. A change no test can cover
    (configuration, docs) gets the cheapest check that can fail instead:
@@ -165,6 +169,9 @@ For software:
    that exception.
 3. Run the tests that cover the change, then the full suite once.
 4. Commit once, staging your own files by path, never with `-a` or `-A`.
+   A file step 1 showed as changed also holds someone else's edits:
+   stage only your hunks (`git apply --cached` with a patch of just them;
+   `git add -p` needs a terminal), or ask.
 5. Before you call it done, follow
    superpowers:verification-before-completion: name the commit, the
    command you ran, what it printed, and any changes in the tree that
@@ -173,7 +180,9 @@ For software:
 Your human partner reviews that commit; it is the only review a small
 change gets. Outside software, make the change and show it to them.
 
-If it grows mid-task, stop, say so, and step up a size.
+If it grows mid-task, stop before committing, say so, and step up a size:
+say what the uncommitted work holds, and ask whether the design should
+keep it or start clean. A plan never starts on top of it uncommitted.
 
 If this is really several independent projects, say so, agree on an
 order, and brainstorm them one at a time.

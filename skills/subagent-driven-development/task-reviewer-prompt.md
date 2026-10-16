@@ -203,7 +203,9 @@ more, nothing less) and is well-built (clean, tested, maintainable)
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
   report to
 - `[BASE_SHA]` — commit before this task
-- `[HEAD_SHA]` — current commit
+- `[HEAD_SHA]` — current commit; for a wave task that has not merged yet,
+  its branch tip (`git rev-parse sdd/<plan>/task-<N>`). Record this SHA:
+  it is the next re-review's FIX_BASE
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
   package to (`bash scripts/review-package PLAN_FILE BASE HEAD` prints the unique
   path it wrote; the package never enters the controller's context)
