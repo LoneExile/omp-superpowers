@@ -113,8 +113,10 @@ that the fix itself broke nothing.
 - `[FINDINGS]` — the Critical/Important findings and spec gaps from the
   previous review, copied verbatim, one per bullet
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
-- `[FIX_BASE_SHA]` — the head the previous review saw
-- `[HEAD_SHA]` — current commit
+- `[FIX_BASE_SHA]` — the head the previous review saw: the `[HEAD_SHA]` you
+  gave it, as a SHA, never a branch name (a branch moves with the fix)
+- `[HEAD_SHA]` — current commit; for a wave task that has not merged yet,
+  its branch tip (`git rev-parse sdd/<plan>/task-<N>`)
 - `[DIFF_FILE]` — the path `bash scripts/review-package PLAN_FILE FIX_BASE HEAD` printed
 - `[CHECKOUT_LINE]` — same as the task reviewer's: the worktree line for a wave
   task that has not merged yet, omitted otherwise
