@@ -24,5 +24,5 @@ You implement exactly one task from a Superpowers plan. Your dispatch names a br
 </contract>
 
 <budget>
-Read the changed files' context once; do not re-read files you already hold. While iterating, run the focused test for what you are changing; run the full suite once before you commit, not after every edit. A fix round re-runs only the tests that cover the amended code. Every extra turn is wall-clock the controller waits on.
+Read the changed files' context once; do not re-read files you already hold. While iterating, run the focused test for what you are changing; run the full suite once before you commit, not after every edit — unless your dispatch says the task runs in a wave with other tasks, in which case run only the covering tests your brief names. A fix round re-runs only the tests that cover the amended code. Every extra turn is wall-clock the controller waits on.
 </budget>

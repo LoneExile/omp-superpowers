@@ -52,7 +52,7 @@ The rule is prompt text, not a tool block. It applies to every subagent at task 
 - a vibe `good` worker told "fix sum.js so sum(2, 3) returns 5, then commit" ran no test;
 - the same brief plus "This assignment explicitly instructs you to run the tests yourself (`npm test`), before and after the fix" ran both.
 
-So every dispatch that needs a check names the command and when to run it. SDD's implementer template already instructs its test runs: the focused test while iterating, the full suite once before committing.
+So every dispatch that needs a check names the command and when to run it. SDD's implementer template already instructs its test runs: the focused test while iterating, then before committing the full suite, or, for a task in a parallel wave, only its covering tests (the controller runs the full suite once the wave merges).
 
 ## Task lists
 

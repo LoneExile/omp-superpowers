@@ -216,8 +216,11 @@ method; name the one you chose and why, and they can swap it in the same
 reply. Name the workspace too: a new branch in this checkout unless they
 already said otherwise. Approving it answers superpowers:using-git-worktrees'
 consent question with "no new worktree", so the run needs no `/move` from
-them; the execution skill creates the branch at its Setup. They can answer
-`/wt <branch>` instead to move the session into its own worktree:
+them; the execution skill creates the branch at its Setup. If `git status
+--porcelain` lists a change to a tracked file or anything staged, say so in
+the same message: a run in place needs those committed or stashed first.
+They can answer `/wt <branch>` instead to move the session into its own
+worktree:
 
 **"Design: `docs/specs/<filename>.md`. Plan: `docs/plans/<filename>.md`, <N> tasks. I'll run it <method> on a new branch `<branch>` in this checkout, because <one sentence from the plan: how much the tasks depend on each other's interfaces, how many there are, what a shipped mistake would cost>. Calls I made for you: <the decisions marked as your call, one line each>. Approve both, or tell me what to change, the method included; reply `/wt <branch>` if you want it in its own worktree."**
 

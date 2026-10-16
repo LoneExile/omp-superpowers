@@ -150,9 +150,13 @@ MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-tople
 cd "$MAIN_ROOT"
 ```
 
-Then clean up the worktree (Step 6) and force-delete the branch:
+Then clean up the worktree (Step 6) and force-delete the branch. In a
+normal repo (`GIT_DIR == GIT_COMMON`, for example a branch made in this
+checkout) the branch is still checked out here, and git refuses to delete
+it, so switch away first:
 
 ```bash
+git switch <base-branch>   # normal repo only
 git branch -D <feature-branch>
 ```
 
