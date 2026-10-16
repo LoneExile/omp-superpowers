@@ -6,9 +6,11 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+## [7.0.0-omp.4] - 2026-10-16
+
 ### Fixed
 
-Found by an independent review of 7.0.0-omp.3; a second review checked these fixes.
+Found by an independent review of 7.0.0-omp.3; a second review checked these fixes. Checked live on omp 18.11.1 with a three-task Python plan (an editable install in `.venv`). On the default workspace the controller ran `git status`, created the approved branch in place with no `/move`, ran tasks 1 and 2 in parallel worktrees, removed and recreated each cloned `.venv` and checked the import from `/` before dispatching, then merged both. Resumed from a ledger left mid-wave (task 1 merged but not ledgered, task 2 with no commits), it ledgered task 1 merged after the commit-count and ancestor checks, and re-dispatched task 2. The released 7.0.0-omp.3 text happened not to lose work in the same resume: its controller checked task 2's history before acting on the ancestor test.
 
 - **Resuming mid-wave no longer marks unstarted tasks as merged.** subagent-driven-development's resume rule ledgered a wave task `merged` when its branch tip was an ancestor of the plan branch, and a branch with no commits yet passes that test (`git merge-base --is-ancestor` exits 0). After a compaction or restart mid-wave, every unstarted sibling would have been ledgered merged and complete, its branch deleted, and its later work never merged. A wave task now counts as merged only when its branch also has commits past its BASE, and that check runs for every unfinished wave task, whatever its last ledger line. Resume then goes by each task's last line and covers `rebased` and `fix round` lines (read the agent first), review-list lines, `merge stuck`, a merge interrupted before its commit (`MERGE_HEAD`), and a wave whose suite has not passed. executing-plans finishes an open wave task under subagent-driven-development's rules instead of redoing it in place.
 - **The default workspace gets created.** writing-plans' approval names a new branch in this checkout, but both executors' Setup still sent the controller to make a worktree and wait for `/move`, or let it work on `main`, where the final review package comes out empty. Setup now creates the approved branch in place, runs project setup and baseline tests there, and ledgers the branch, so a resumed run only switches back to it. A change to a tracked file or anything staged goes back to the partner to commit or stash first, because a run in place commits from that index and tests that working tree; writing-plans' approval message says so up front, and implementers stage their own files by path. finishing-a-development-branch switches to the base branch before deleting a branch made in this checkout.
@@ -114,7 +116,8 @@ First release, synced to upstream [v6.4.2](https://github.com/obra/superpowers/b
 - The fork's rewritten subagent-driven-development text invokes its helper scripts through `bash` as well, so a package extractor that drops exec bits cannot break them.
 - `sdd-final-reviewer` carries upstream's new review rules from `code-reviewer.md`, the template it replaces in SDD's final review: the spec is a vision document (behavior it is silent on is graded by what a reasonable person expects), and a "Declined to judge" section that the controller rules on and ledgers like a plan conflict.
 
-[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.0-omp.3...HEAD
+[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.0-omp.4...HEAD
+[7.0.0-omp.4]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.0-omp.4
 [7.0.0-omp.3]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.0-omp.3
 [7.0.0-omp.2]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.0-omp.2
 [7.0.0-omp.1]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.0-omp.1
