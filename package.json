@@ -1,6 +1,6 @@
 {
   "name": "@loneexile/omp-superpowers",
-  "version": "7.0.0-omp.4",
+  "version": "7.0.1-omp.1",
   "description": "obra/superpowers adapted for Oh My Pi (omp): a truthful task/todo tool mapping and five subagent-driven-development agents, each with its own model, thinking level, and tools.",
   "type": "module",
   "keywords": [

@@ -6,6 +6,16 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+## [7.0.1-omp.1] - 2026-10-24
+
+Synced to upstream [v7.0.1](https://github.com/obra/superpowers/blob/v7.0.1/RELEASE-NOTES.md).
+
+### Changed
+
+- **Brainstorming takes most of v7.0.1's retune.** It reads the project and whatever you pointed at before its first message, plays a detailed request back with what it found and asks about the one thing still open, offers to skip the questions only when you didn't ask for brainstorming, and builds each question on your last answer. The ways to build it come with the last playback chunk, with a recommendation, and that message's one question is the pick; upstream sends them in a message of their own, one more wait for your reply. Upstream's short design doc and plan for every small change are not taken: the small-change path stays. Checked live once per scenario on omp 18.12.6, in a scratch Python todo app, with no run of the old text to compare against. A calendar-sync request that didn't name brainstorming got a first message built on what `todo.py` stores, one question, and the skip offer last; two answers later, one message carried the rest of the design, two ways to build it with a third ruled out, a recommendation, the size and one pick question. A request starting "Let's brainstorm" got no skip offer, and its small change ended on "Should I build it this way?" with no design doc.
+- **Synced with upstream v7.0.1** (from v7.0.0). What reaches omp unchanged: `writing-skills` moves its supporting docs into `references/` (SKILL.md 26,623 → 16,738 bytes); `executing-plans` drops its Example Workflow, whose fork copy still sent the final review to `code-reviewer.md` (25,983 → 23,591 bytes); `diagnosing-superpowers` drafts issues with "Who's filing" and "Human-authored summary" sections, says how "without Superpowers" was checked, files nothing while the summary is a placeholder, and its link for filing without `gh` opens the Bug Report template instead of the deleted Session Diagnosis Report one. The repo gets upstream's new issue and PR templates, its `AGENTS.md` contributor rules, and `tests/skill-size/test-skill-size.sh`, which CI does not run yet: SDD's SKILL.md (69,657 bytes) and executing-plans' (23,591) are over its 20,000-byte limit. Upstream's old `docs/superpowers/plans/` files are gone. `tests/brainstorm-server/server.test.js` stays at v7.0.0's version: v7.0.1's rewrite, which waits on file events instead of fixed sleeps, failed one or both of its "does NOT send reload" checks (`0 !== 1`) in 4 runs out of 4 on a Linux host, because it counts reloads before its own marker file's reload has reached the client; v7.0.0's passed 3 out of 3.
+- Upstream's `skills/subagent-driven-development/references/` is deleted. It holds upstream's own fix loop (5 rounds, a fresh implementer on a more capable model for rounds 4–5), final review and resume text, and nothing in this fork's SKILL.md points to it. The fork's SDD stays one SKILL.md for now.
+
 ## [7.0.0-omp.4] - 2026-10-16
 
 ### Fixed
@@ -116,7 +126,8 @@ First release, synced to upstream [v6.4.2](https://github.com/obra/superpowers/b
 - The fork's rewritten subagent-driven-development text invokes its helper scripts through `bash` as well, so a package extractor that drops exec bits cannot break them.
 - `sdd-final-reviewer` carries upstream's new review rules from `code-reviewer.md`, the template it replaces in SDD's final review: the spec is a vision document (behavior it is silent on is graded by what a reasonable person expects), and a "Declined to judge" section that the controller rules on and ledgers like a plan conflict.
 
-[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.0-omp.4...HEAD
+[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.1-omp.1...HEAD
+[7.0.1-omp.1]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.1-omp.1
 [7.0.0-omp.4]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.0-omp.4
 [7.0.0-omp.3]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.0-omp.3
 [7.0.0-omp.2]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.0-omp.2
