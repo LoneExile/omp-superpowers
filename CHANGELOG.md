@@ -6,6 +6,11 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+### Changed
+
+- **Brainstorming asks before building a fully specified request that leaves a visible choice open.** A request that names every detail is no longer a quick task when doing it means choosing something the person would see that the request leaves open (a format, a default, wording, what happens on bad input). In an A/B run on omp 18.12.6 in a scratch Python todo app, with memory and the advisor off, "add an `export` command that writes `todos.csv` with columns id, text, done, due…" was built straight away on `main`, without approval, in 6 of 8 runs with 7.0.1-omp.1's text and 0 of 8 with this one; all 8 asked who or what will read the file before building anything. That is the one request the rule was written against. On requests it was not written against, both texts behaved the same in 5 of 5 runs each: three fully settled edits (rename a function, change the JSON indent, add a line to `.gitignore`) were done straight away, and an `--sort` option and an `import` command were asked about before building. A typo fix stayed a quick task and a new `count` command still took the small-change path (a branch, one commit, test first, no design doc) with either text.
+- **Each question asks one thing, with any reason before it.** In the same run, first messages that asked instead of building put two asks into their question in 7 of 17 with the old text and 3 of 23 with this one, by a rough automatic count; one of those 3 is an either/or question. An explanation came after the question in 1 of 17 old messages and 0 of 23 new ones.
+
 ## [7.0.1-omp.1] - 2026-10-24
 
 Synced to upstream [v7.0.1](https://github.com/obra/superpowers/blob/v7.0.1/RELEASE-NOTES.md).
