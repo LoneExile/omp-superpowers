@@ -6,9 +6,15 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+## [7.0.1-omp.3] - 2026-10-24
+
 ### Added
 
-- **After a compaction, the bootstrap names the superpowers skills read before it and the plan's ledger.** The extension reads them from the session branch, so the note holds whatever the compaction method and after `omp -c`; it also hands the same lines to the compaction summarizer through `session.compacting`. Checked live on omp 18.12.6 from the installed plugin path: the note was computed at compaction and sent with the bootstrap on each request of the next turn. In a short brainstorm-then-build run compacted mid-conversation, agents re-read the brainstorming skill and kept the small-change path in 5 of 5 runs with and without this change, so it has not yet been shown to change behavior; it is aimed at long runs, such as subagent-driven development, whose summary drops a skill's rules.
+- **After a compaction, the bootstrap names the superpowers skills read before it and the plan's ledger.** The extension reads them from the session branch, so the note holds whatever the compaction method and after `omp -c`; it also hands the same lines to the compaction summarizer through `session.compacting`. Checked live on omp 18.12.6 from the installed plugin path: the note was computed at compaction and sent with the bootstrap on each request of the next turn. It has not yet been shown to change behavior. In a short brainstorm-then-build run compacted mid-conversation, agents re-read the brainstorming skill and kept the small-change path in 5 of 5 runs with and without this change. In a six-task subagent-driven-development run compacted with `/compact` after its first wave (`remote` summary compaction, memory and the advisor off), the controller re-read the SDD skill and the ledger before anything else, redid no finished task and finished the plan in 2 of 2 runs with and without it; the note named the SDD skill and the ledger, but that summary already did too. It is aimed at a compaction whose summary drops a skill's rules.
+
+### Changed
+
+- **The README is easier to read.** It opens with what the fork is and a short get-started section, adds a diagram of how a request flows by its size, and folds the reference material (other install routes, how a seat's model is chosen, the file-by-file list of changes, maintenance) into expandable sections. No fact was dropped; the `task.isolation` notes are now marked as re-checked live on omp 18.12.6.
 
 ## [7.0.1-omp.2] - 2026-10-24
 
@@ -137,7 +143,8 @@ First release, synced to upstream [v6.4.2](https://github.com/obra/superpowers/b
 - The fork's rewritten subagent-driven-development text invokes its helper scripts through `bash` as well, so a package extractor that drops exec bits cannot break them.
 - `sdd-final-reviewer` carries upstream's new review rules from `code-reviewer.md`, the template it replaces in SDD's final review: the spec is a vision document (behavior it is silent on is graded by what a reasonable person expects), and a "Declined to judge" section that the controller rules on and ledgers like a plan conflict.
 
-[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.1-omp.2...HEAD
+[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.1-omp.3...HEAD
+[7.0.1-omp.3]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.1-omp.3
 [7.0.1-omp.2]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.1-omp.2
 [7.0.1-omp.1]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.1-omp.1
 [7.0.0-omp.4]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.0-omp.4
