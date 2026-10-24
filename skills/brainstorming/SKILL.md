@@ -20,9 +20,12 @@ Before you reply, ask yourself: what do I know about what they want, and
 why?
 
 - **Everything that matters is in the request** ("make the icon cornflower
-  blue"). This is a quick, clear task. Do it, and say what you did. Nothing
-  on the never-small list (Size the Work) is a quick task, however complete
-  the request.
+  blue"). This is a quick, clear task. Do it, and say what you did. If
+  doing it means making choices they would see that the request leaves
+  open (a format, a default, wording, what happens on bad input), so you'd
+  have to tell them what you chose, it isn't a quick task: start the
+  conversation. Nothing on the never-small list (Size the Work) is a quick
+  task, however complete the request.
 - **Something non-trivial is missing.** Start the conversation.
 
 ## Look Before You Ask
@@ -76,11 +79,12 @@ That's the whole message.
 
 ## The Conversation
 
-Each message ends with one question: a single sentence with no list of
-example answers hanging off it. Use plain language, pitched just a little
-above where your human partner is. Match their vocabulary; never use
-process jargon. You never need to quote this skill to your human
-partner.
+Each message ends with one question: a single sentence that asks one
+thing, with no list of example answers hanging off it. Anything that
+explains the question, like why you're asking, goes before it. Use plain
+language, pitched just a little above where your human partner is. Match
+their vocabulary; never use process jargon. You never need to quote this
+skill to your human partner.
 
 Be clear and concise. Lead with what matters. Avoid jargon. When you
 report what you found, give them the most important findings and offer
