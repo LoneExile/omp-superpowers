@@ -6,6 +6,8 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+## [7.0.1-omp.2] - 2026-10-24
+
 ### Changed
 
 - **Brainstorming asks before building a fully specified request that leaves a visible choice open.** A request that names every detail is no longer a quick task when doing it means choosing something the person would see that the request leaves open (a format, a default, wording, what happens on bad input). In an A/B run on omp 18.12.6 in a scratch Python todo app, with memory and the advisor off, "add an `export` command that writes `todos.csv` with columns id, text, done, due…" was built straight away on `main`, without approval, in 6 of 8 runs with 7.0.1-omp.1's text and 0 of 8 with this one; all 8 asked who or what will read the file before building anything. That is the one request the rule was written against. On requests it was not written against, both texts behaved the same in 5 of 5 runs each: three fully settled edits (rename a function, change the JSON indent, add a line to `.gitignore`) were done straight away, and an `--sort` option and an `import` command were asked about before building. A typo fix stayed a quick task and a new `count` command still took the small-change path (a branch, one commit, test first, no design doc) with either text.
@@ -131,7 +133,8 @@ First release, synced to upstream [v6.4.2](https://github.com/obra/superpowers/b
 - The fork's rewritten subagent-driven-development text invokes its helper scripts through `bash` as well, so a package extractor that drops exec bits cannot break them.
 - `sdd-final-reviewer` carries upstream's new review rules from `code-reviewer.md`, the template it replaces in SDD's final review: the spec is a vision document (behavior it is silent on is graded by what a reasonable person expects), and a "Declined to judge" section that the controller rules on and ledgers like a plan conflict.
 
-[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.1-omp.1...HEAD
+[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.1-omp.2...HEAD
+[7.0.1-omp.2]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.1-omp.2
 [7.0.1-omp.1]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.1-omp.1
 [7.0.0-omp.4]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.0-omp.4
 [7.0.0-omp.3]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.0-omp.3
