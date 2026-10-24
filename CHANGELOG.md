@@ -6,6 +6,8 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+## [7.0.1-omp.4] - 2026-10-24
+
 ### Removed
 
 - **The post-compaction note from 7.0.1-omp.3.** After a compaction, the bootstrap no longer names the superpowers skills read before it and the SDD ledger, and `session.compacting` no longer hands those lines to the summarizer; the extension is back to 7.0.1-omp.2's. The note never changed behavior in testing on omp 18.12.6, with memory and the advisor off. With and without it, a brainstorm-then-build run compacted mid-conversation re-read the brainstorming skill in 5 of 5 runs. A six-task subagent-driven-development run compacted after its first wave re-read the SDD skill and the ledger before its next dispatch, redid no finished task and finished the plan in 2 of 2 runs, both with the usual summary and with a summary told to leave out skills, plans and ledgers plus a 1,000-token kept window. The note's only visible effect was an extra read of every skill it listed: both of those last runs also re-read `using-git-worktrees`. It has little to add on omp: each compaction method tried kept the list of files the session wrote, which in an SDD run includes the ledger under `.superpowers/sdd/`. With a plain-text summary that named the skill nowhere, the model still named the SDD skill and the ledger path from memory, without tools.
@@ -147,7 +149,8 @@ First release, synced to upstream [v6.4.2](https://github.com/obra/superpowers/b
 - The fork's rewritten subagent-driven-development text invokes its helper scripts through `bash` as well, so a package extractor that drops exec bits cannot break them.
 - `sdd-final-reviewer` carries upstream's new review rules from `code-reviewer.md`, the template it replaces in SDD's final review: the spec is a vision document (behavior it is silent on is graded by what a reasonable person expects), and a "Declined to judge" section that the controller rules on and ledgers like a plan conflict.
 
-[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.1-omp.3...HEAD
+[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.1-omp.4...HEAD
+[7.0.1-omp.4]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.1-omp.4
 [7.0.1-omp.3]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.1-omp.3
 [7.0.1-omp.2]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.1-omp.2
 [7.0.1-omp.1]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.1-omp.1
