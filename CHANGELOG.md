@@ -6,6 +6,10 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+### Added
+
+- **After a compaction, the bootstrap names the superpowers skills read before it and the plan's ledger.** The extension reads them from the session branch, so the note holds whatever the compaction method and after `omp -c`; it also hands the same lines to the compaction summarizer through `session.compacting`. Checked live on omp 18.12.6 from the installed plugin path: the note was computed at compaction and sent with the bootstrap on each request of the next turn. In a short brainstorm-then-build run compacted mid-conversation, agents re-read the brainstorming skill and kept the small-change path in 5 of 5 runs with and without this change, so it has not yet been shown to change behavior; it is aimed at long runs, such as subagent-driven development, whose summary drops a skill's rules.
+
 ## [7.0.1-omp.2] - 2026-10-24
 
 ### Changed

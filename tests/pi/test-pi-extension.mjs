@@ -194,6 +194,78 @@ test('context skips subagent sessions but injects for the main agent', async () 
   assert.equal(result.messages.length, 2);
 });
 
+function toolCall(name, args) {
+  return { role: 'assistant', content: [{ type: 'toolCall', name, arguments: args }], timestamp: 1 };
+}
+
+test('session.compacting keeps the superpowers skills in use and the ledger path in the summary', async () => {
+  const { handlers } = await loadExtension();
+  const compacting = firstHandler(handlers, 'session.compacting');
+  // sdd-workspace prints the workspace directory; the ledger is its progress.md.
+  const workspace = '/tmp/tmp.LyJIWeoPoX/.superpowers/sdd/2026-10-24-count';
+  const ledger = `${workspace}/progress.md`;
+  const messages = [
+    { role: 'user', content: [{ type: 'text', text: 'Execute the plan' }], timestamp: 1 },
+    toolCall('read', { path: 'skill://using-superpowers/references/pi-tools.md' }),
+    toolCall('read', { path: 'skill://subagent-driven-development' }),
+    toolCall('bash', { command: 'bash "$(realpath skill://subagent-driven-development/scripts)/sdd-workspace" docs/plans/x.md' }),
+    { role: 'toolResult', content: [{ type: 'text', text: `${workspace}\n` }], timestamp: 2 },
+    toolCall('read', { path: 'skill://another-plugin-skill' }),
+    toolCall('read', { path: 'skill://test-driven-development' }),
+  ];
+
+  const result = await compacting({ sessionId: 's', messages }, {});
+  const text = result.context.join('\n');
+
+  assert.match(text, /skill:\/\/subagent-driven-development, skill:\/\/test-driven-development/);
+  assert.doesNotMatch(text, /using-superpowers|another-plugin-skill/);
+  assert.ok(text.includes(ledger), 'ledger path should be named');
+});
+
+test('session.compacting adds nothing when no superpowers skill was read', async () => {
+  const { handlers } = await loadExtension();
+  const compacting = firstHandler(handlers, 'session.compacting');
+  const messages = [
+    { role: 'user', content: [{ type: 'text', text: 'Fix the typo' }], timestamp: 1 },
+    toolCall('read', { path: 'todo.py' }),
+    toolCall('read', { path: 'skill://another-plugin-skill' }),
+  ];
+
+  assert.equal(await compacting({ sessionId: 's', messages }, {}), undefined);
+});
+
+test('after a compaction the bootstrap names the superpowers skills and ledger used before it', async () => {
+  const { handlers } = await loadExtension();
+  const context = firstHandler(handlers, 'context');
+  await firstHandler(handlers, 'session_compact')({ type: 'session_compact', compactionEntry: {}, fromExtension: false }, {});
+
+  const ledger = '/tmp/tmp.LyJIWeoPoX/.superpowers/sdd/2026-10-24-count/progress.md';
+  const branch = [
+    { type: 'message', message: toolCall('read', { path: 'skill://subagent-driven-development' }) },
+    { type: 'message', message: toolCall('edit', { input: `[${ledger}#AB12]\nPUT >3:\n+Task 1: complete` }) },
+    { type: 'message', message: { role: 'toolResult', content: [{ type: 'text', text: 'see .superpowers/sdd/.gitignore and the old flat path `.superpowers/sdd/progress.md`' }], timestamp: 2 } },
+    { type: 'compaction', summary: 'Prior work summary' },
+    { type: 'message', message: toolCall('read', { path: 'skill://brainstorming' }) },
+  ];
+  const ctx = { sessionManager: { getBranch: () => branch } };
+  const summary = { role: 'compactionSummary', summary: 'Prior work summary', tokensBefore: 123, timestamp: 1 };
+  const user = { role: 'user', content: [{ type: 'text', text: 'Continue' }], timestamp: 2 };
+
+  const result = await context({ type: 'context', messages: [summary, user] }, ctx);
+  const injected = textOf(result.messages[1]);
+
+  assert.match(injected, /You have superpowers/);
+  assert.match(injected, /skill:\/\/subagent-driven-development/);
+  assert.doesNotMatch(injected, /skill:\/\/brainstorming/, 'skills read after the compaction are still in context');
+  assert.ok(injected.includes(ledger));
+
+  const noCompaction = await (await loadExtension()).handlers.get('context')[0](
+    { type: 'context', messages: [user] },
+    ctx,
+  );
+  assert.doesNotMatch(textOf(noCompaction.messages[0]), /Superpowers skills in use/);
+});
+
 test('.omp-plugin/plugin.json exists and is a JSON object', async () => {
   const manifestPath = resolve(repoRoot, '.omp-plugin/plugin.json');
   assert.equal(existsSync(manifestPath), true);
