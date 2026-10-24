@@ -6,6 +6,10 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+### Removed
+
+- **The post-compaction note from 7.0.1-omp.3.** After a compaction, the bootstrap no longer names the superpowers skills read before it and the SDD ledger, and `session.compacting` no longer hands those lines to the summarizer; the extension is back to 7.0.1-omp.2's. The note never changed behavior in testing on omp 18.12.6, with memory and the advisor off. With and without it, a brainstorm-then-build run compacted mid-conversation re-read the brainstorming skill in 5 of 5 runs. A six-task subagent-driven-development run compacted after its first wave re-read the SDD skill and the ledger before its next dispatch, redid no finished task and finished the plan in 2 of 2 runs, both with the usual summary and with a summary told to leave out skills, plans and ledgers plus a 1,000-token kept window. The note's only visible effect was an extra read of every skill it listed: both of those last runs also re-read `using-git-worktrees`. It has little to add on omp: each compaction method tried kept the list of files the session wrote, which in an SDD run includes the ledger under `.superpowers/sdd/`. With a plain-text summary that named the skill nowhere, the model still named the SDD skill and the ledger path from memory, without tools.
+
 ## [7.0.1-omp.3] - 2026-10-24
 
 ### Added
