@@ -6,6 +6,25 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+## [7.0.2-omp.1] - 2026-11-08
+
+Synced to upstream [v7.0.2](https://github.com/obra/superpowers/blob/v7.0.2/RELEASE-NOTES.md).
+
+### Fixed
+
+- **Every prompt gets the bootstrap, not just the first.** omp fires `agent_end` once per user prompt, and the messages an extension's `context` handler returns go to the model but are never saved in the session, so the extension's `agent_end` disarm dropped the using-superpowers bootstrap and the omp tool mapping from every request after the first prompt of a process. Measured on omp 18.18.1 with a stub provider and three prompts in one process: 7.0.1-omp.4 sent it on prompt 1 only (1, 0, 0), including both requests of a prompt that made a tool call, and its first message changed at prompt 2, so the prompt cache was rewritten there; this release sends it once on every request, with the first message byte-identical across requests. Upstream v7.0.2 fixed the same disarm for pi (#2083). `session_switch` re-arming had nothing left to re-arm and is gone. In the same stub runs, `scout`, `task` and `sdd-implementer` subagents got no bootstrap while every request of their parent carried it, a `/new` session got it from its first request, and after a compaction (local, or an LLM summary, once or twice) it came once, right after the summary. On a real model (claude-opus-5-5, 4 runs per version, a neutral first prompt, then "Let's make a react todo list"), both versions read the brainstorming skill and asked before building anything on the second prompt, since omp's own system prompt lists the skills; only this release opened with the "Using brainstorming to …" announcement using-superpowers asks for (4 of 4 against 0 of 4), and 7.0.1-omp.4's first request of the second prompt was about 2,400 tokens smaller than its last request of the first, the size of the missing bootstrap.
+
+### Changed
+
+- **Synced with upstream v7.0.2** (from v7.0.1). What reaches omp unchanged: the SDD and executing-plans helpers act on the git working tree of the current directory, as git does, take `-C DIR`, and stop with one message outside a working tree instead of writing into whatever directory they ran in (new `sdd-repo`); `task-brief` finds tasks with IDs like `A1`, `6b` and `2.1`, no longer takes a sibling Task 6b along with Task 6, says when a plan's task headings are not in English, and refuses a brief that an unclosed code fence ran to the end of the plan; `start-server.sh --project-dir .` starts the brainstorm companion; systematic-debugging's pressure-test scenarios and `CREATION-LOG.md` no longer ship (83 files, down from 87).
+- **The helper invocations say to run each one by its absolute path, from the working tree you're executing in.** Upstream's wording, ported into the fork's rewritten subagent-driven-development, executing-plans and reviewer template text; the review-per-task line still said "from this skill's directory". `tests/sdd-helper-paths/` passes on all 15 references. Checked live on omp 18.18.1 with the packed tarball unpacked and linked (`omp plugin link`) into an isolated profile, and claude-opus-5-5 as the controller. A subagent-driven run of a three-task Node plan resolved the scripts directory into the linked package, ran every helper by absolute path from the plan checkout, put tasks 1 and 2 in one wave of two worktrees, reviewed task 2 (plan-marked) and task 3 (ruled persisted format) per task, sent the final review to `sdd-final-reviewer`, and ran one fix and a scoped re-review on its findings: 21 of 21 tests on the branch, about $6.94. An inline executing-plans run of a two-task plan with tasks `A1` and `A2` briefed both letter-first tasks through `task-start`, ledgered both through `task-done`, and sent its final review to `sdd-final-reviewer`. Neither run hit the new "outside a working tree" stop.
+- **Brainstorming keeps 7.0.1-omp.4's text.** Upstream v7.0.2's retune (ask why first, ask only when the answer would change what gets built, options with a recommendation, text sketches) is not taken in this release; the rebase had merged four of its hunks into the fork's text, and they are reverted until the retune is ported and A/B-tested on omp.
+- `tests/brainstorm-server/server.test.js` is upstream's again: v7.0.2 waits for the server's pong before counting reloads, and it passed 15 of 15 runs on Linux.
+
+### Removed
+
+- **The extension's `resources_discover` handler.** Upstream removed it so pi's package `skills` filter applies. omp never calls it (`omp://extensions.md`: no callsites), and skills load from the package's `pi.skills` entry: a linked install without the handler lists all 15 superpowers skills.
+
 ## [7.0.1-omp.4] - 2026-10-24
 
 ### Removed
@@ -149,7 +168,8 @@ First release, synced to upstream [v6.4.2](https://github.com/obra/superpowers/b
 - The fork's rewritten subagent-driven-development text invokes its helper scripts through `bash` as well, so a package extractor that drops exec bits cannot break them.
 - `sdd-final-reviewer` carries upstream's new review rules from `code-reviewer.md`, the template it replaces in SDD's final review: the spec is a vision document (behavior it is silent on is graded by what a reasonable person expects), and a "Declined to judge" section that the controller rules on and ledgers like a plan conflict.
 
-[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.1-omp.4...HEAD
+[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.2-omp.1...HEAD
+[7.0.2-omp.1]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.2-omp.1
 [7.0.1-omp.4]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.1-omp.4
 [7.0.1-omp.3]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.1-omp.3
 [7.0.1-omp.2]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.1-omp.2
