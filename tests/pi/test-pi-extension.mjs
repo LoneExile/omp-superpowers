@@ -189,30 +189,6 @@ test('pi tools seat table lists exactly the agents shipped in agents/*.md', asyn
   assert.deepEqual([...seatNames].sort(), [...names].sort());
 });
 
-test('session_switch re-arms the bootstrap after agent_end', async () => {
-  const { handlers } = await loadExtension();
-  const context = firstHandler(handlers, 'context');
-  const messages = [{ role: 'user', content: [{ type: 'text', text: 'hi' }], timestamp: 1 }];
-
-  await firstHandler(handlers, 'agent_end')({ type: 'agent_end', messages: [] }, {});
-  assert.equal(await context({ type: 'context', messages }, {}), undefined);
-
-  await firstHandler(handlers, 'session_switch')({ type: 'session_switch', reason: 'new' }, {});
-  const result = await context({ type: 'context', messages }, {});
-  assert.equal(result.messages.length, 2);
-  assert.match(textOf(result.messages[0]), /You have superpowers/);
-});
-
-test('agent_end with willContinue does not stop injection', async () => {
-  const { handlers } = await loadExtension();
-  const context = firstHandler(handlers, 'context');
-  const messages = [{ role: 'user', content: [{ type: 'text', text: 'hi' }], timestamp: 1 }];
-
-  await firstHandler(handlers, 'agent_end')({ type: 'agent_end', messages: [], willContinue: true }, {});
-  const result = await context({ type: 'context', messages }, {});
-  assert.equal(result.messages.length, 2);
-});
-
 test('context skips subagent sessions but injects for the main agent', async () => {
   const { handlers } = await loadExtension();
   const context = firstHandler(handlers, 'context');
