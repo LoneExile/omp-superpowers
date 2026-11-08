@@ -43,6 +43,15 @@ This determines which menu to show and how cleanup works:
 | `GIT_DIR != GIT_COMMON`, named branch | Standard 3 options | Provenance-based (see Step 6) |
 | `GIT_DIR != GIT_COMMON`, detached HEAD | Reduced 2 options (no merge) | Externally managed — leave in place |
 
+**On omp, check for an ovnfs checkout too:** `git config --get ovnfs.checkout`
+prints the checkout's name inside one and nothing elsewhere. An ovnfs
+checkout is a copy-on-write copy of your human partner's folder with its
+own private git directory. The table calls it a normal repo
+(`GIT_DIR == GIT_COMMON`), but nothing committed in it is in their
+repository until it is applied, and the `MAIN_ROOT` lines below fail there
+(`fatal: not a git repository`). Present the standard 3 options and carry
+out the choice as *In an ovnfs checkout* (end of Step 5) says.
+
 ## Step 3: Determine Base Branch
 
 The base branch is whatever this work forked from — usually named in the
@@ -159,6 +168,47 @@ it, so switch away first:
 git switch <base-branch>   # normal repo only
 git branch -D <feature-branch>
 ```
+
+### In an ovnfs checkout
+
+`<checkout>` is the name Step 2 printed. Your human partner's repository is
+the folder `ovnfs ls` lists as that checkout's SOURCE. Run these from the
+checkout, still on `<feature-branch>`: ovnfs applies the checkout's HEAD.
+
+**Option 1:**
+
+```bash
+ovnfs apply <checkout> --branch <feature-branch>
+```
+
+That makes the checkout's commits `<feature-branch>` in the folder's
+repository and changes no file there. Then merge in the folder, with the
+`bash` tool's `cwd` set to it: if `git branch --show-current` prints
+`<base-branch>` and `git status --porcelain` prints nothing, run `git pull`,
+`git merge <feature-branch>` and the tests there, and once they pass,
+`git branch -d <feature-branch>`. Otherwise stop and tell your human partner
+that `<feature-branch>` is now in their repository and why you did not
+merge it. `ovnfs apply <checkout> --branch <base-branch>` while the folder
+has `<base-branch>` checked out moves that branch and its index but leaves
+the folder's files as they were, so the merge shows there as uncommitted
+changes that undo it. Plain `ovnfs apply <checkout>`, without `--branch`,
+brings the changes back as uncommitted edits, without the commits.
+
+**Option 2:** as above; the push goes from the checkout.
+
+**Option 3:** report "Keeping branch <name> in ovnfs checkout <checkout>
+(<path>). `ovnfs apply <checkout> --branch <name>` puts it in your
+repository."
+
+**Discard:** in the checkout, `git switch <base-branch>` and
+`git branch -D <feature-branch>`. The branch never reached the folder.
+
+**The checkout itself:** after Option 1 or a discard, remove it with
+`ovnfs rm <checkout>`, run from the folder, only if this session opened it
+with `ovnfs new`, the session's working directory is not inside it, and
+`git status --porcelain` in it prints nothing. Otherwise leave it and tell
+your human partner that `ovnfs rm <checkout>`, run from their folder,
+removes it.
 
 ## Step 6: Cleanup Workspace
 
