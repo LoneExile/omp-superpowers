@@ -629,7 +629,7 @@ your own checkout gained no changes. A task that wrote into your checkout
 goes back to its implementer with the paths. Then check the task's line in
 the review list.
 
-- **`review per-task`:** generate the review package (`bash scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task; for a wave task, its branch `sdd/<plan>/task-<N>` stands in for HEAD), then dispatch `sdd-reviewer` with the printed path.
+- **`review per-task`:** generate the review package (`bash scripts/review-package PLAN_FILE BASE HEAD` by its absolute path, from the working tree you're executing in — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task; for a wave task, its branch `sdd/<plan>/task-<N>` stands in for HEAD), then dispatch `sdd-reviewer` with the printed path.
 - **`review at final`:** run the covering test command from the brief yourself, once, in the task's checkout, with its output redirected to a file in the plan's workspace; read the tail. A brief that names no test (docs, configuration) gets the cheapest check that can fail instead (a build, a lint, a parse), or goes on the review list. That run is the only check this task gets before the final review, so never take the implementer's report in its place. A pass completes the task (step 5). A failure goes back to the implementer with the output file's path: rounds 1-2 resume it, round 3 is a fresh `sdd-escalation-implementer`, as in the fix loop, and each round ends when your rerun passes, with no re-review. A failure after round 3 is a plan the tests disagree with: stop and ask.
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review, and put a `review at final` task on the review list (`Task <N>: review per-task — <concern>`). A wave task that changed a file outside its brief's Files list broke its wave's independence: merge it after its wave's other tasks, and run their covering tests too on the merged tree. If the concerns are observations (e.g., "this file is getting large"), note them and proceed.
@@ -805,7 +805,8 @@ covering test files in the fix message — a one-line fix does not need the
 whole suite.
 
 **The re-review is scoped.** Run `bash scripts/review-package PLAN_FILE FIX_BASE HEAD`
-where FIX_BASE is the head the previous review saw, as a commit SHA (for a
+by its absolute path, from the working tree you're executing in, where
+FIX_BASE is the head the previous review saw, as a commit SHA (for a
 wave task, its branch tip then: `git rev-parse sdd/<plan>/task-<N>`; never
 the branch name, which moves with the fix), and dispatch
 `sdd-rereviewer` with [re-review-prompt.md](re-review-prompt.md): the
@@ -941,7 +942,8 @@ the cap.
 ## Final Review
 
 The final whole-branch review gets a package too: run
-`bash scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the commit the
+`bash scripts/review-package PLAN_FILE MERGE_BASE HEAD` by its absolute path,
+from the working tree you're executing in (MERGE_BASE = the commit the
 branch started from, e.g. `git merge-base main HEAD`) and include the
 printed path in the final review dispatch, so the final reviewer reads
 one file instead of re-deriving the branch diff with git commands. Dispatch
@@ -973,7 +975,8 @@ with the complete findings list — not one fixer per finding.
 Per-finding fixers each rebuild context and re-run suites; a real
 session's final-review fix wave cost more than all its tasks combined.
 Then run exactly one scoped re-review of the fix wave
-(`bash scripts/review-package PLAN_FILE FIX_BASE HEAD` over the fix range,
+(`bash scripts/review-package PLAN_FILE FIX_BASE HEAD` by its absolute path,
+from the working tree you're executing in, over the fix range,
 [re-review-prompt.md](re-review-prompt.md)).
 Adjudicate any residual findings as in the task loop's breaker: park with
 rulings, or rule on the load-bearing ones and ledger what you decided. Only

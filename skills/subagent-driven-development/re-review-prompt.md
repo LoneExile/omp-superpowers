@@ -118,6 +118,7 @@ that the fix itself broke nothing.
 - `[HEAD_SHA]` — current commit; for a wave task that has not merged yet,
   its branch tip (`git rev-parse sdd/<plan>/task-<N>`)
 - `[DIFF_FILE]` — the path `bash scripts/review-package PLAN_FILE FIX_BASE HEAD` printed
+  (run by its absolute path, from the working tree you're executing in)
 - `[CHECKOUT_LINE]` — same as the task reviewer's: the worktree line for a wave
   task that has not merged yet, omitted otherwise
 

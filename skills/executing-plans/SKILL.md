@@ -176,8 +176,9 @@ and the new one resumes from the same ledger.
   if that happens, recover from `git log`.
 - **On omp, resolve the scripts directories first.** The relative paths in
   this skill (`scripts/task-start`, `../subagent-driven-development/scripts/…`)
-  do not resolve from the repo root, and `omp read skill://…` lists the files
-  but gives no filesystem path. Once, before the first script, run
+  do not resolve from the repo root, so each script runs by its absolute path,
+  and `omp read skill://…` lists the files but gives no filesystem path. Once,
+  before the first script, run
   `realpath skill://executing-plans/scripts` and
   `realpath skill://subagent-driven-development/scripts` in the `bash` tool
   and add the printed paths to the ledger, after the identity line, as
@@ -188,11 +189,11 @@ and the new one resumes from the same ledger.
   `rtk ls`. Use the printed paths everywhere else. Ledger lines are found by
   their prefix, never by position. This ledger is shared with
   subagent-driven-development, which writes only `SDD scripts:`: add
-  whichever of the two lines it lacks. Then run
-  each script as `bash <dir>/<name>` — `scripts/task-start` and
-  `scripts/task-done` from the executing-plans directory, `sdd-workspace` and
-  `review-package` from the SDD one — with the working directory at the repo
-  root; the scripts call `git rev-parse`. The invocation lines in this skill
+  whichever of the two lines it lacks. Then run each script by its
+  absolute path, `bash <dir>/<name>`, from the working tree you're executing
+  in (the scripts act on its repository, as git does): `task-start` and
+  `task-done` from the executing-plans directory, `sdd-workspace` and
+  `review-package` from the SDD one. The invocation lines in this skill
   stay as upstream wrote them.
 
 Read the plan once, note its context and Global Constraints, and create a
