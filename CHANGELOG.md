@@ -6,6 +6,27 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+## [7.0.2-omp.2] - 2026-11-08
+
+Measured on omp 18.18.1 with ovnfs installed, so every system prompt carried omp's *Separate checkouts* section; claude-opus-5-5 as the controller, each arm linked into its own isolated profile, arms interleaved, results graded blind and then read by hand.
+
+### Fixed
+
+- **Finishing a branch inside an ovnfs checkout lands the work in your repository.** A checkout has its own private git directory, so option 1's local merge only moved `main` inside the checkout, and the skill's `MAIN_ROOT` line fails there. finishing-a-development-branch now checks `git config --get ovnfs.checkout`; inside a checkout, option 1 runs `ovnfs apply <checkout> --branch <feature-branch>`, then merges that branch in your folder, but only when the folder is on the base branch and clean, and runs the tests there. It says why not `ovnfs apply --branch <base-branch>` (it moves the branch and index but leaves the folder's files, so the folder shows the merge as uncommitted changes that undo it) or plain `ovnfs apply` (no commits). Merge locally from a checkout, 3 runs per version: 7.0.2-omp.1 left your folder unchanged 3 of 3 times while its final message cited commits that exist only in the checkout; this release landed the work in your folder's `main` 3 of 3 times, clean, tests passing there, and said the checkout was left for you to `ovnfs rm`. In a plain repo, 2 of 2 runs merged as before.
+
+### Changed
+
+- **Brainstorming takes upstream v7.0.2's retune, fitted to the fork's flow.** It asks a question only when the answer changes what gets built and nothing already answers it, and otherwise states its call as a proposal; writing up, file locations, looking further and how to show something are its own calls; it asks what you want something for when you haven't said; once it knows, it lays out nameable choices with their trade-offs and a pick; it reads from how you talk whether you want the technical choices; it does recon instead of offering it; it sketches in text and offers the visual companion only when the look is yours to decide. Kept from the fork: one question that asks one thing, the approaches riding with the last playback chunk, the small-change path, and one approval for a project's design and plan. When nothing is open, the first message is a short design that asks whether to go ahead and builds nothing before your yes: for a small change that yes is its approval, for a project it means writing it up with its plan for one approval. Measured on the first reply in a small Node todo app, against 7.0.2-omp.1. Three versions of the text were tried; the released one is the third, which adds a Red Flags row to the second:
+  - A spec giving Ctrl+K to two features, for "power users who want to do everything without the mouse": the choices laid out concretely with a pick in 4 of 4 runs with each of the first two texts, against 0 of 4.
+  - "Make `todo add` reject empty or whitespace-only text … exit with code 2", 12 runs per text: 7.0.2-omp.1 asked a scope question the request arguably settles already (also clean out old blank entries? trim the text?) in 12 of 12. With the released text, every run that loaded brainstorming (10 of 12) instead sent a short design with a go-ahead question, asked nothing else, and built nothing. The other 2 skipped brainstorming and built; that choice is made before any skill text is read, and the skill descriptions are the same in both versions. Over the three texts, 5 of 36 runs skipped the skill, against 0 of 12 for 7.0.2-omp.1, which a sample this size cannot tell from chance. The first two texts built in 2 of 21 runs that had loaded the skill, both reasoning that their instructions said to act instead of asking for confirmation; the released text says to build nothing before the yes, and its Red Flags row answers that reasoning.
+  - Sharing the list, a CSV export that leaves `due` open, and a design discussion, 4 runs each with the first text: no difference held, and no run in either version built anything.
+- **subagent-driven-development says why wave tasks keep `omp worktree add` when ovnfs is installed,** and what to do if a task's copy is an ovnfs checkout anyway: fetch its branch into the plan checkout with `git fetch`, never `ovnfs apply`, which from inside a checkout writes to your original folder instead. In 3 runs per version started inside a checkout and stopped at the first wave copy, 7.0.2-omp.1 used `omp worktree add` twice and was stopped once at an `ovnfs new` probe it ran after deciding on ovnfs copies; this release used `omp worktree add` 3 of 3. An earlier 7.0.2-omp.1 run on a similar plan made its wave copies with ovnfs and had to improvise that fetch. Too few runs to call a difference. One full run with this release, inside a checkout, landed all three tasks in your folder's `main`, 11 of 11 tests passing.
+- **The README is updated for this release and current omp.** A new *Separate copies: worktrees and ovnfs* section says what happens with ovnfs installed; the bootstrap paragraph now says it reaches every request; the install check lists omp 18.18.1's roster; `omp plugin upgrade` is the upgrade path; the sync recipe uses `-X theirs`; and a note covers how a skill change is A/B-tested before release.
+
+### Not changed
+
+- **using-git-worktrees keeps its text.** An ovnfs version of it (open the workspace with `ovnfs new`; count an ovnfs checkout as already isolated) changed nothing in an A/B run, 3 runs per version and scenario: in a plain repo both versions opened an ovnfs checkout and gave the right `ovnfs apply --branch` advice 3 of 3; asked from inside a checkout for a workspace "separate from this checkout", both opened a second copy 3 of 3; with that phrase removed, 7.0.2-omp.1 stayed in the checkout 2 of 3 and the candidate 3 of 3. omp's own *Separate checkouts* section already decides this.
+
 ## [7.0.2-omp.1] - 2026-11-08
 
 Synced to upstream [v7.0.2](https://github.com/obra/superpowers/blob/v7.0.2/RELEASE-NOTES.md).
@@ -168,7 +189,8 @@ First release, synced to upstream [v6.4.2](https://github.com/obra/superpowers/b
 - The fork's rewritten subagent-driven-development text invokes its helper scripts through `bash` as well, so a package extractor that drops exec bits cannot break them.
 - `sdd-final-reviewer` carries upstream's new review rules from `code-reviewer.md`, the template it replaces in SDD's final review: the spec is a vision document (behavior it is silent on is graded by what a reasonable person expects), and a "Declined to judge" section that the controller rules on and ledgers like a plan conflict.
 
-[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.2-omp.1...HEAD
+[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.2-omp.2...HEAD
+[7.0.2-omp.2]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.2-omp.2
 [7.0.2-omp.1]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.2-omp.1
 [7.0.1-omp.4]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.1-omp.4
 [7.0.1-omp.3]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.1-omp.3
