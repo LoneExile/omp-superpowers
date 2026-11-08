@@ -575,6 +575,20 @@ the wave's BASE.
   omp worktree add -b "sdd/<plan>/task-<N>" ~/.omp/wt/"$repo-<plan>-task-<N>"
   ```
 
+  **With ovnfs on PATH, wave tasks still use `omp worktree add`,** though
+  omp's system prompt then asks for ovnfs checkouts as second copies. A
+  wave task's branch must be in the plan checkout's repository, where the
+  review packages and the merge read it. `omp worktree add` puts it there,
+  inside an ovnfs checkout too. An ovnfs checkout keeps its commits in its
+  own private git directory, and its `ovnfs apply --branch` writes them to
+  the folder ovnfs copied, which is not the plan checkout when the plan
+  checkout is an ovnfs checkout itself. If a wave task's copy is an ovnfs
+  checkout anyway, bring its branch into the plan checkout with
+  `git fetch <its path> sdd/<plan>/task-<N>:sdd/<plan>/task-<N>` before
+  each review package and before the merge, never with `ovnfs apply`, and
+  remove it with `ovnfs rm <name>` where this skill says
+  `git worktree remove`.
+
   `<plan>` is the plan file's name without `.md`;
   superpowers:using-git-worktrees says why `omp worktree add` and
   `~/.omp/wt/`. Then, in each new worktree and before dispatching, run the
