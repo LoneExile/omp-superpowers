@@ -6,14 +6,22 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+## [7.0.2-omp.3] - 2026-11-09
+
+### Fixed
+
+- **On omp 18.18.3, a fully specified behavior change waits for your approval again.** omp 18.18.3's system prompt gained speed rules ("Every turn costs seconds… Once the change is verified, stop and report"; "Verify proportionally"), and with them a request like "Make `todo add` reject empty or whitespace-only text … exit with code 2" skipped brainstorming and was built straight away: 12 of 12 runs in a normal omp setup with 7.0.2-omp.2, and 46 of 48 skipped on an API key with either 7.0.2-omp.1 or 7.0.2-omp.2, all built before approval. On omp 18.18.1 the same request had read brainstorming in 10 of 12 runs and built nothing. The agents' reason was that the spec was complete. The extension's injected omp tool mapping now says that omp's act-without-asking and short-turn rules don't cover a Superpowers approval step, and that a request on brainstorming's never-small list (security, auth, concurrency, money, data migrations, changes to existing behavior, new config files, stored formats, interfaces or dependencies) goes through brainstorming before any edit, however completely it is specified. The pass rule was fixed before the runs. On omp 18.18.3, claude-opus-5-5 on an API key, both profiles given the same cached skill descriptions:
+  - That request, 12 runs per release: 7.0.2-omp.2 built it before approval 12 of 12; this release read brainstorming first and sent a short design with a go-ahead question 12 of 12, building nothing.
+  - Requests that leave something open (a spec with a shortcut conflict, "a way to share my todo list", "Let's make a react todo list"), 4 runs each: brainstorming first and nothing built, 12 of 12.
+  - A typo fix ("Todo Lisst" → "Todo List" in the README heading), 4 runs per release: fixed directly, without brainstorming, 4 of 4 in both.
+
 ### Changed
 
 - **The `task.isolation` notes are re-measured on omp 18.18.3 with ovnfs.** With `isolation.backend: auto` and ovnfs on `PATH`, isolated subagents run in ovnfs checkouts, which last until omp exits. With a stub model in both merge modes: `merge: patch` still applies an uncommitted patch; `merge: branch` still lands the work on your branch (same message and author, a new commit id only when the commit time differs) and deletes the task branch; a conflict still leaves `omp/task/<id>`; and a follow-up message to an isolated subagent is still delivered without its work ever reaching your branch, ending on a leftover `omp/task/<id>` branch after exit. `pi-tools.md` and the README now say so instead of citing omp's documentation as unmeasured.
 - **The README's A/B testing note** passes an API key to test runs as `ANTHROPIC_API_KEY` and keeps OAuth logins out of test profiles, since a token refresh there can sign your main profile out. It also says to fix the pass/fail rule before the runs, to give both arms the same cached skill descriptions (omp rewrites them per profile, so they differ), and never to reuse a scratch path with ovnfs.
 
-### Known issue
+### Correction
 
-- **On omp 18.18.3, a fully specified change is built without brainstorming's approval.** For "Make `todo add` reject empty or whitespace-only text … exit with code 2", the agent read only test-driven-development and built the change in 12 of 12 runs in a normal omp setup (a stored login, 7.0.2-omp.2). On an API key, with both test profiles given the same cached skill descriptions, it skipped brainstorming in 46 of 48 runs, 22 of 24 with 7.0.2-omp.1 and 24 of 24 with 7.0.2-omp.2 (41 of 48 in a first batch whose profiles had different descriptions); all 96 built before approval. On omp 18.18.1 with a stored login, the same request read brainstorming in 10 of 12 runs and built nothing. Its reasoning is that the spec is complete, so the questions aren't needed. Requests that leave something open are unaffected on 18.18.3: a spec with a shortcut conflict, "a way to share my todo list" and "Let's make a react todo list" all read brainstorming first and built nothing, 12 of 12. omp 18.18.3's system prompt gained speed rules ("Every turn costs seconds… Once the change is verified, stop and report"; "Verify proportionally"), which fit this, though nothing isolated them as the cause. Not fixed yet.
 - **7.0.2-omp.2's skip counts were confounded.** omp turns each skill description into a short routing hint with a model and caches it per profile, so that release's test profiles showed brainstorming under different wording even though the packages' descriptions are identical. Its "5 of 36 against 0 of 12" skip comparison is therefore not a comparison of the two releases; its counts among runs that loaded the skill are unaffected.
 
 ## [7.0.2-omp.2] - 2026-11-08
@@ -199,7 +207,8 @@ First release, synced to upstream [v6.4.2](https://github.com/obra/superpowers/b
 - The fork's rewritten subagent-driven-development text invokes its helper scripts through `bash` as well, so a package extractor that drops exec bits cannot break them.
 - `sdd-final-reviewer` carries upstream's new review rules from `code-reviewer.md`, the template it replaces in SDD's final review: the spec is a vision document (behavior it is silent on is graded by what a reasonable person expects), and a "Declined to judge" section that the controller rules on and ledgers like a plan conflict.
 
-[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.2-omp.2...HEAD
+[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.2-omp.3...HEAD
+[7.0.2-omp.3]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.2-omp.3
 [7.0.2-omp.2]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.2-omp.2
 [7.0.2-omp.1]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.2-omp.1
 [7.0.1-omp.4]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.1-omp.4
