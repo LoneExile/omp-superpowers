@@ -6,6 +6,11 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+### Changed
+
+- **The `task.isolation` notes are re-measured on omp 18.18.3 with ovnfs.** With `isolation.backend: auto` and ovnfs on `PATH`, isolated subagents run in ovnfs checkouts, which last until omp exits. With a stub model in both merge modes: `merge: patch` still applies an uncommitted patch; `merge: branch` still lands the work on your branch (same message and author, a new commit id only when the commit time differs) and deletes the task branch; a conflict still leaves `omp/task/<id>`; and a follow-up message to an isolated subagent is still delivered without its work ever reaching your branch, ending on a leftover `omp/task/<id>` branch after exit. `pi-tools.md` and the README now say so instead of citing omp's documentation as unmeasured.
+- **The README's A/B testing note** passes an API key to test runs as `ANTHROPIC_API_KEY` and keeps OAuth logins out of test profiles, since a token refresh there can sign your main profile out. It also says to fix the pass/fail rule before the runs and never to reuse a scratch path with ovnfs.
+
 ## [7.0.2-omp.2] - 2026-11-08
 
 Measured on omp 18.18.1 with ovnfs installed, so every system prompt carried omp's *Separate checkouts* section; claude-opus-5-5 as the controller, each arm linked into its own isolated profile, arms interleaved, results graded blind and then read by hand.
