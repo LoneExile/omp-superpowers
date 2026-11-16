@@ -253,8 +253,12 @@ a ledger file, not only in todos.
   working directory at the repo root — the scripts call `git rev-parse`.
   The invocation lines in this skill stay as upstream wrote them.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
-  line names your plan file, first find wave tasks that merged before the
-  ledger caught up: for every wave task whose branch still exists and that
+  line names your plan file, check for `Final: not accepted` before any
+  task recovery or dispatch. That entry is terminal even when every task
+  is `complete`: preserve the workspace/evidence, report the unmet
+  requirements/checks, and stop without another final reviewer or fix cycle.
+  Otherwise first find wave tasks that merged before the ledger caught up:
+  for every wave task whose branch still exists and that
   has no `merged` line, whatever its last line, the merge happened when the
   branch has commits past its BASE (`git rev-list --count <BASE>..<branch>`
   is 1 or more) AND its tip is an ancestor of the plan branch (`git
