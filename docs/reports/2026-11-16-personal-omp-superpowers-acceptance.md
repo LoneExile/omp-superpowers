@@ -63,3 +63,36 @@ SDK использует отдельные Settings/session directories и су
 ## Границы утверждений
 
 Ponytail остаётся оригинальным плагином с режимами по сессиям: off у родителя не обещает off у свежего worker. Глобальная память не используется как единственный источник SDD-инварианта и не изменяется. При единственной выбранной модели Sol повышение до max — повышение reasoning и новый контекст, не другая более сильная модель. Skill не повышает приоритет над системными инструкциями omp.
+
+## Глобальное переключение
+
+- Main личного GitHub-форка опубликован без force. Установлен immutable source `github:YarikMix/omp-superpowers#fb0cc8c6a58b6663b34eb986b92d4b8cc0257393`; отличие от проверенного dadb7c9 — только этот отчёт.
+- Оригинальный Ponytail установлен отдельно по release SHA7801d061243d7b753bad0e0b3c057cd250b11755.
+- Через штатный cfg approval сохранены только пять `task.agentModelOverrides` (Sol: medium/high/low/max/max для implementer/reviewer/rereviewer/escalation/final) и `task.showResolvedModelBadge=true`. Глобальные structured/perCallModel/isolation и прочие настройки не менялись.
+- Все14 проверенных vendor symlinks перемещены за пределы discovery, а не удалены вместе с исходниками. Официальный vendor сохранён.
+- Свежий `omp skill list --json`:117 skills, включая14 личных Superpowers и6 оригинального Ponytail; ровно один bare receiving-code-review, владелец @omp-utils/code-review; aliases и warnings отсутствуют. Все97 посторонних skills сохранили источники.
+- Проверены неизменность7 защищённых файлов (receiving, память, Codex config) и исходной linked-установки @omp-utils/code-review.
+- Функциональные события, fixture, git bundle с реальными smoke-коммитами и исходник harness сохранены приватно. AuthStorage и session databases не копировались.
+- Отдельный свежий Bun process завершился exit0: native discovery загрузил ровно по одному extension Superpowers, Ponytail и code-review без ошибок; все5 sdd-* ролей найдены однократно и разрешились в Sol с точными medium/high/low/max/max, без warnings или clamping. Это проверка загрузки/roster/resolution без model requests и без session_start; реальный bootstrap проверялся отдельно в изолированном live run и lifecycle tests.
+- Для воспроизведения offline probe нужен `Settings.loadReadOnly({cwd})`, а не `Settings.init({readOnly:true})`: последний вызывает другой load-path и пропускает глобальный YAML при persist=false. Каталог моделей гидратируется локальным `hydrateCredentialScopedModelCaches()`, без online discovery. Пустые overrides в ошибочной заготовке probe не были проблемой сохранённой установки.
+- После архивирования удалены оба собственных временных config roots, fixture repos, cloned sources, databases и throwaway scripts. В отдельном smoke supervisor перед удалением не осталось процессов (`omp ps list --all --json` → `[]`).
+
+## Откат и новая сессия
+
+Приватный архив: `~/.ai/omp-superpowers-cutover-20261116.zsh51mp0` (вне skill discovery). `cutover-baseline.json` фиксирует точные targets ссылок и protected hashes, `settings-touched.json` — прежние и применённые значения двух config keys; `evidence/` содержит до/после discovery, установочные результаты и smoke.
+
+Откат — только при необходимости, сейчас не выполнялся:
+1. Штатно удалить только @yarikmix/omp-superpowers и @dietrichgebert/ponytail через `omp plugin uninstall <имя>`, предварительно проверив отсутствие последующих операторских изменений.
+2. Вернуть14 ссылок из `links/` на исходные пути, только если там ничего нового не появилось; receiving-code-review не восстанавливать.
+3. Через cfg approval вернуть прежние значения только двух изменённых keys, сравнив текущие с applied. Не восстанавливать config/lock целиком: это затрёт независимые изменения.
+4. Повторить `omp skill list --json` и проверить источник единственного receiving.
+
+Текущая сессия не считается перезагруженной: для нового plugin bootstrap требуется новая omp-сессия.
+
+## Решения controller ledger
+
+- Per-call model остаётся off; разрешение модели идёт через operator-owned named-role routing, не обход ограничения API.
+- Покрывающие команды задаются явно в assignments; evidence различает выполненные проверки и неподтверждённые сообщения исполнителя.
+- Ponytail — отдельный pinned native plugin с per-session modes, без изобретённого наследования.
+- Native eval commit capability предоставлена только двум editing seats; reviewers не расширены.
+- Terminal non-acceptance сохраняется между SDD и Native executor; смена executor не обнуляет лимит и не разрешает parking невыполненного scope.
