@@ -1,10 +1,18 @@
 # Changelog
 
-Releases of [`@loneexile/omp-superpowers`](https://www.npmjs.com/package/@loneexile/omp-superpowers), the omp (Oh My Pi) adaptation of [obra/superpowers](https://github.com/obra/superpowers).
+Releases of [`@yarikmix/omp-superpowers`](https://github.com/YarikMix/omp-superpowers), a personal fork of [LoneExile/omp-superpowers](https://github.com/LoneExile/omp-superpowers), itself the omp (Oh My Pi) adaptation of [obra/superpowers](https://github.com/obra/superpowers). Earlier entries below retain their original provenance.
 
 A version is `<upstream version>-omp.<n>`: the upstream release this fork is synced to, then the fork's own iteration on top of it. Upstream's changes are described in its [release notes](https://github.com/obra/superpowers/blob/main/RELEASE-NOTES.md); this file records what the fork adds or changes.
 
 ## [Unreleased]
+
+## [7.0.2-omp.4] - 2026-11-16
+
+### Changed
+
+- Rebrand package and native manifest as `@yarikmix/omp-superpowers`; install from pinned personal GitHub commits without automatic npm publication.
+- Remove this fork's `receiving-code-review` skill; its sole owner is `@omp-utils/code-review`. Keep the other fourteen skills unchanged.
+- Ship the native `.omp-plugin` manifest and `SOURCE.md` provenance in the package and validate the exact tarball file set.
 
 ## [7.0.2-omp.3] - 2026-11-09
 

@@ -1,6 +1,6 @@
 {
-  "name": "@loneexile/omp-superpowers",
-  "version": "7.0.2-omp.3",
+  "name": "@yarikmix/omp-superpowers",
+  "version": "7.0.2-omp.4",
   "description": "obra/superpowers adapted for Oh My Pi (omp): a truthful task/todo tool mapping and five subagent-driven-development agents, each with its own model, thinking level, and tools.",
   "type": "module",
   "keywords": [
@@ -22,16 +22,18 @@
     ]
   },
   "license": "MIT",
-  "homepage": "https://github.com/LoneExile/omp-superpowers#readme",
+  "homepage": "https://github.com/YarikMix/omp-superpowers#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/LoneExile/omp-superpowers.git"
+    "url": "git+https://github.com/YarikMix/omp-superpowers.git"
   },
   "files": [
+    ".omp-plugin",
     ".pi/extensions",
     "agents",
     "skills",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "SOURCE.md"
   ],
   "publishConfig": {
     "access": "public",

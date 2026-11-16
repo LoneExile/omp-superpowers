@@ -1,8 +1,10 @@
 # omp-superpowers
 
-[obra/superpowers](https://github.com/obra/superpowers), adapted for **omp (Oh My Pi)**.
+Personal fork [`@yarikmix/omp-superpowers`](https://github.com/YarikMix/omp-superpowers), based on [LoneExile/omp-superpowers](https://github.com/LoneExile/omp-superpowers), which adapts [obra/superpowers](https://github.com/obra/superpowers) for **omp (Oh My Pi)**. See [SOURCE.md](SOURCE.md) for pinned provenance.
 
 Superpowers gives your coding agent a way of working: it talks an idea through with you, writes a plan, builds it task by task with fresh subagents, reviews the work, and wraps up the branch. This fork keeps those skills and makes them fit omp.
+
+This package ships fourteen Superpowers skills and five SDD agents. It deliberately excludes `receiving-code-review`: install and retain `@omp-utils/code-review` as its sole owner. Do not restore an upstream receiving alias when upgrading.
 
 ## Why a fork
 
@@ -21,10 +23,10 @@ This fork keeps the skills and fixes the omp side:
 
 ## Get started
 
-Install it:
+Install an immutable commit from the personal repository (replace `<sha>` with the approved full commit SHA):
 
 ```bash
-omp plugin install npm:@loneexile/omp-superpowers
+omp plugin install github:YarikMix/omp-superpowers#<sha>
 ```
 
 Check that it loaded. Your `task` tool's roster should now include the five `sdd-*` agents beside omp's own:
@@ -37,21 +39,21 @@ omp -p --no-session --no-skills --model anthropic/claude-haiku-4-5 \
 
 That's all. The skills drive themselves once loaded: start a new omp session and ask for what you want to build.
 
-To move to the newest release later, run `omp plugin upgrade @loneexile/omp-superpowers` and restart omp.
+To upgrade, install a newly approved immutable commit from `YarikMix/omp-superpowers` and restart omp. This fork does not publish to npm.
 
 <details>
 <summary><b>Versions, upgrading and other ways to install</b></summary>
 
-Releases are versioned `<upstream version>-omp.<n>`: `7.0.2-omp.1` is upstream v7.0.2 plus this fork's first iteration on it. [CHANGELOG.md](CHANGELOG.md) lists each release. To pin another one, uninstall and install it by version:
+Releases are versioned `<upstream version>-omp.<n>`; this personal fork starts at `7.0.2-omp.4`. [CHANGELOG.md](CHANGELOG.md) preserves earlier fork history. To switch commits:
 
 ```bash
-omp plugin uninstall @loneexile/omp-superpowers
-omp plugin install npm:@loneexile/omp-superpowers@<version>
+omp plugin uninstall @yarikmix/omp-superpowers
+omp plugin install github:YarikMix/omp-superpowers#<sha>
 ```
 
 **After an upgrade, restart omp.** Agent definitions are read **per dispatch**, so a new version takes effect on the next `task` call in a running session. The extension, the injected tool mapping and the skill catalog are read at process start, so they need the restart. The extension injects the using-superpowers bootstrap, with the omp tool mapping, into every model request of the main session, after a compaction summary when there is one. Subagents never get it.
 
-**Unreleased `main`** installs from GitHub under the same plugin name, pinned to a commit: `omp plugin install github:LoneExile/omp-superpowers#<sha>`.
+**Source installation** uses the same package identity and the repository root directly, with no distribution branch or build staging.
 
 **Coming from before 6.4.2-omp.1?** Those installs used the plugin name `superpowers`; run `omp plugin uninstall superpowers` before installing this package.
 
@@ -266,26 +268,24 @@ In short: the omp extension and `pi-tools.md` describe omp's real tools; five `s
 - `skills/finishing-a-development-branch/` — in a normal repo (a branch made in this checkout), the discard path switches to the base branch before `git branch -D`, which git refuses on the checked-out branch; an additive section for ovnfs checkouts: option 1 applies the feature branch to the user's folder with `ovnfs apply --branch` and merges it there, the other options say where the branch is, and the checkout is removed only if this session opened it
 - `README.md` — this file: rewritten for omp (install, seats, overrides, ovnfs, maintenance); upstream's multi-harness README is gone
 - `tests/pi/test-pi-extension.mjs` — covers the extension's lifecycle (bootstrap on every request of every prompt, after a compaction summary, and none for subagents), the action table in `pi-tools.md`, the seat table against the names in `agents/*.md`, and the `.omp-plugin/plugin.json` manifest; the package-name assertion is gone (`scripts/check-npm-package.sh` checks the published name)
-- `package.json` — the npm identity: `@loneexile/omp-superpowers`, `<upstream version>-omp.<n>` versions, a `files` allowlist (the extension, `skills/`, `agents/`), `publishConfig`, `omp`/`oh-my-pi` keywords; `main` is dropped, since it pointed at the OpenCode plugin this package does not ship
+- `package.json` — the personal identity `@yarikmix/omp-superpowers`, `<upstream version>-omp.<n>` versions, and a `files` allowlist for `.omp-plugin`, the extension, `skills/`, `agents/`, changelog and provenance; `main` is dropped, since it pointed at the OpenCode plugin this package does not ship
 - Spec and plan paths — `docs/specs/` and `docs/plans/` instead of upstream's `docs/superpowers/specs/` and `docs/superpowers/plans/`: brainstorming's *Where it goes*, writing-plans' save path and handoff lines, and the example plan paths in executing-plans, subagent-driven-development and requesting-code-review. `.superpowers/` (the SDD workspace, brainstorm companion files) is unchanged. `scripts/check-npm-package.sh` fails if a shipped file names `docs/superpowers/`
-- `CHANGELOG.md`, `.github/workflows/` (CI, npm release), `scripts/check-npm-package.sh` — new
+- `CHANGELOG.md`, `.github/workflows/`, `scripts/check-npm-package.sh` — fork history and validation; release validation never publishes to npm
 
 </details>
 
-Everything else is upstream, unmodified.
+The personal fork additionally removes `skills/receiving-code-review/`; `@omp-utils/code-review` owns receiving behavior. The other fourteen skills remain unchanged by this packaging cutover.
 
 ## Maintaining the fork
 
 <details>
 <summary><b>Syncing with upstream</b></summary>
 
-```bash
-git fetch upstream --tags
-git rebase -X theirs upstream/main
-git push --force-with-lease origin main
-```
+Keep `origin` pointing to `YarikMix/omp-superpowers`. Track `LoneExile/omp-superpowers` and `obra/superpowers` as separate upstream remotes and inspect their changes on a review branch before merging them. Preserve personal changes rather than force-pushing or automatically accepting upstream conflicts. [SOURCE.md](SOURCE.md) records the starting base; update provenance when deliberately adopting a new base.
 
 Expect conflicts in `skills/subagent-driven-development/`, `skills/brainstorming/`, `skills/writing-plans/`, `skills/executing-plans/`, `skills/requesting-code-review/SKILL.md`, `skills/finishing-a-development-branch/SKILL.md`, `.pi/extensions/superpowers.ts`, `pi-tools.md`, `README.md`, and `package.json` whenever upstream touches them — this fork rewrites those files rather than appending to them (README.md is never a partial conflict). A sync that takes upstream's side of executing-plans or requesting-code-review brings back "review after every task" text that contradicts subagent-driven-development's review list: keep the fork's lines. In `package.json` keep the fork's identity and set `version` to `<new upstream version>-omp.1`: CI's package check fails until the version's base matches the upstream version in `.claude-plugin/plugin.json`. `agents/`, the extension's mapping paragraph, the omp blocks in `using-git-worktrees`, and the ovnfs section in `finishing-a-development-branch` are additive.
+
+During every sync, retain the personal package and native manifest identity, the `.omp-plugin` and `SOURCE.md` package entries, and the exclusion of `skills/receiving-code-review/`. Never restore the upstream npm publishing job. Keep `@omp-utils/code-review`, the official vendor, global memory and Codex configuration outside this fork's mutations.
 
 A clean rebase is not the whole sync. Upstream's edits to text this fork replaced never reach the replacement, so read upstream's diff for those files and port what still applies. The v6.4.x sync needed two: `bash scripts/...` invocations in the SDD text, and `code-reviewer.md`'s new review rules. The v7.0.1 sync took the fork's side of brainstorming and ported the retune by hand, all but its small-change gate, and deleted upstream's `skills/subagent-driven-development/references/`; when upstream edits a file there, the rebase stops on a modify/delete conflict: keep it deleted (`git rm`), then read upstream's diff of that file for rule changes to port into the fork's SDD text. Upstream edits to `code-reviewer.md`'s What to Check, Calibration, severity definitions and Critical Rules now reach `sdd-final-reviewer` without porting, because it reads the file at run time. Edits to the vision-document or Declined-to-judge sections still need porting into the agent body, which carries them itself.
 
@@ -305,14 +305,9 @@ A change to a skill's text changes agent behavior, so it ships after a live A/B 
 <details>
 <summary><b>Releasing</b></summary>
 
-1. Set `version` in `package.json`, move CHANGELOG.md's *Unreleased* entries under that version, commit, push, and wait for CI.
-2. Publish a GitHub release for the tag `v<version>`; the [release workflow](.github/workflows/release.yml) publishes it to npm through Trusted Publishing, with provenance:
-
-```bash
-v=$(node -p "require('./package.json').version")
-awk -v h="## [$v]" 'index($0, h) == 1 {f = 1; next} f && /^(## )?\[/ {exit} f' CHANGELOG.md > /tmp/notes.md
-gh release create "v$v" --target main --title "v$v" --notes-file /tmp/notes.md
-```
+1. Set `version` in `package.json`, record changes in CHANGELOG.md, commit and push to the personal repository, and wait for validation CI.
+2. Optionally create a GitHub release tagged `v<version>`. The [release workflow](.github/workflows/release.yml) validates the version and package only; it has no publishing credentials or npm publication step.
+3. Install the approved immutable GitHub commit as described above, then restart omp. Do not run `npm publish`.
 
 </details>
 

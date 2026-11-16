@@ -1,13 +1,7 @@
-name: Release
+name: Release validation
 
-# Publishes to npm when a GitHub Release is published. The release tag is "v"
-# plus package.json's version, e.g. v6.4.2-omp.1. To re-fire a publish that
-# flaked, run this workflow by hand on the release tag.
-#
-# Tokenless: npm Trusted Publishing (OIDC) authenticates the publish and
-# attaches provenance. The trusted publisher configured on npmjs.com names this
-# repository and the workflow file "release.yml"; renaming this file breaks
-# publishing.
+# Personal releases are installed from pinned GitHub commits, never published
+# to npm. Keep package validation on GitHub releases and manual dispatch.
 
 on:
   release:
@@ -16,10 +10,9 @@ on:
 
 permissions:
   contents: read
-  id-token: write # npm Trusted Publishing (OIDC) + provenance
 
 jobs:
-  publish:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -27,19 +20,8 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org
           package-manager-cache: false
 
-      # Node 24 bundles npm 11 (11.19.0 in 24.21.0), the same npm CI runs the
-      # package check with; installing npm@latest would release with a toolchain
-      # CI never ran.
-      - name: npm supports Trusted Publishing (>= 11.5.1)
-        run: |
-          v=$(npm --version)
-          node -e '
-            const [a, b, c] = process.argv[1].split(".").map(Number);
-            process.exit(a > 11 || (a === 11 && (b > 5 || (b === 5 && c >= 1))) ? 0 : 1);
-          ' "$v" || { echo "::error::npm $v cannot use Trusted Publishing (needs >= 11.5.1)"; exit 1; }
 
       - name: Tag matches package.json version
         run: |
@@ -52,19 +34,3 @@ jobs:
       - name: Check package
         run: bash scripts/check-npm-package.sh
 
-      - name: Publish
-        run: |
-          # Trusted Publishing cannot create a package, so the first version
-          # was published by hand and its release finds it already on npm; so
-          # does a re-run after a publish that succeeded. Skip those instead of
-          # failing on "cannot publish over".
-          status=$(node -e '
-            const { name, version } = require("./package.json");
-            fetch("https://registry.npmjs.org/" + name.replace("/", "%2f") + "/" + version)
-              .then((r) => console.log(r.status), () => console.log("unreachable"));
-          ')
-          case "$status" in
-            200) echo "::notice::$(node -p "require('./package.json').version") is already on npm; nothing to publish" ;;
-            404) npm publish ;;
-            *) echo "::error::npm registry lookup returned '$status'"; exit 1 ;;
-          esac

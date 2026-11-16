@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# Verify the npm package this fork publishes: its name, its version scheme, the
-# exact file set of the tarball, and the fork's spec and plan paths. CI runs it
-# on every push; the release workflow runs it again before publishing.
+# Verify this personal fork's package identity, version scheme, exact tarball
+# file set, and spec and plan paths. CI and release validation run this check;
+# neither workflow publishes to npm.
 #
 # Usage: scripts/check-npm-package.sh
 set -euo pipefail
@@ -20,8 +20,13 @@ upstream=$(node -p "require('./.claude-plugin/plugin.json').version")
 
 # Resolving an upstream sync's package.json conflict with upstream's side
 # would retarget the squatted `superpowers` name on npm.
-[ "$name" = "@loneexile/omp-superpowers" ] ||
-  fail "name is '$name', expected '@loneexile/omp-superpowers'"
+[ "$name" = "@yarikmix/omp-superpowers" ] ||
+  fail "name is '$name', expected '@yarikmix/omp-superpowers'"
+native_name=$(node -p "require('./.omp-plugin/plugin.json').name")
+[ "$native_name" = "$name" ] ||
+  fail "native manifest name '$native_name' differs from package name '$name'"
+[ ! -e skills/receiving-code-review ] ||
+  fail "receiving-code-review belongs only to @omp-utils/code-review"
 
 # A version is <upstream version>-omp.<n>. Its base is the obra/superpowers
 # release this branch is synced to; upstream's bump-version keeps that version
@@ -37,8 +42,8 @@ base=${BASH_REMATCH[1]}
 # the docs npm always ships: nothing missing, nothing extra.
 expected=$(
   {
-    git ls-files .pi/extensions agents skills
-    printf '%s\n' CHANGELOG.md LICENSE README.md package.json
+    git ls-files .omp-plugin .pi/extensions agents skills
+    printf '%s\n' CHANGELOG.md LICENSE README.md SOURCE.md package.json
   } | LC_ALL=C sort
 )
 # npm 11 prints `pack --json` as an array of results, npm 12 as an object keyed
