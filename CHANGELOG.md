@@ -9,7 +9,7 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 ### Changed
 
 - Carry the literal SDD/Ponytail invariant, explicit spec/plan paths and named check assignments across initial, resumed, escalation, merge/wave and final review/fix contracts.
-- Unmet accepted requirements or mandatory checks stop as not accepted at the three-round cap; no administrative completion by parking or extra round.
+- Unmet accepted requirements or mandatory checks stop as not accepted at the three-round cap; no administrative completion by parking or extra round. Both SDD and inline ledger recovery preserve task/final terminal non-acceptance across executor switches unless the human partner explicitly reopens the run.
 - Enable structured output only for the two schema reviewer roles; preserve role output over native Ponytail closings, document separate pinned 5.3.3 session modes and configured named-agent routing.
 - Bootstrap identifies `@omp-utils/code-review` as sole receiving owner without fallback; lifecycle tests inspect returned provider context across later requests and compaction.
 

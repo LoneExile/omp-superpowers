@@ -160,8 +160,16 @@ and the new one resumes from the same ledger.
   artifact for THIS plan: ledger, briefs, review packages. Another plan's
   directory is never yours to read or write.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
-  line names your plan file, tasks with a `Task <N>: complete` line are
-  DONE — do not redo them; resume at the first task without one. Their
+  line names your plan file, check for `Final: not accepted` or any
+  `Task <N>: not accepted` before any task recovery or dispatch. Either
+  entry is terminal even when every other task is `complete`: preserve the
+  workspace/evidence, report the unmet requirements/checks, and stop without
+  another task, final reviewer or fix cycle. Only your human partner's
+  explicit reopening of the run permits resuming; record that approval in
+  the ledger first. Switching executors is not reopening the run and does
+  not reset spent review/fix rounds.
+  Otherwise tasks with a `Task <N>: complete` line are DONE — do not redo
+  them; resume at the first task without one. Their
   commits exist in git even when your context no longer remembers making
   them: after compaction, trust the ledger and `git log` over your own
   recollection. A ledger whose first line names a different plan file is
@@ -289,6 +297,11 @@ A failing run records nothing; the task is not complete. When it records,
 mark the todo complete and take the next task.
 
 ## Final Review
+
+Before creating the review package or dispatching a reviewer, apply Setup's
+terminal non-acceptance check to this plan's ledger again. Completed tasks
+or switching from SDD to inline execution do not authorize a new final
+review or fix cycle after terminal non-acceptance.
 
 Run `../subagent-driven-development/scripts/review-package PLAN_FILE MERGE_BASE HEAD`
 by its absolute path, from the working tree you're executing in (MERGE_BASE = the commit the branch started from, e.g.

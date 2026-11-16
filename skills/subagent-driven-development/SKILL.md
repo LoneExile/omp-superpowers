@@ -253,10 +253,14 @@ a ledger file, not only in todos.
   working directory at the repo root — the scripts call `git rev-parse`.
   The invocation lines in this skill stay as upstream wrote them.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
-  line names your plan file, check for `Final: not accepted` before any
-  task recovery or dispatch. That entry is terminal even when every task
-  is `complete`: preserve the workspace/evidence, report the unmet
-  requirements/checks, and stop without another final reviewer or fix cycle.
+  line names your plan file, check for `Final: not accepted` or any
+  `Task <N>: not accepted` before any task recovery or dispatch. Either
+  entry is terminal even when every other task is `complete`: preserve the
+  workspace/evidence, report the unmet requirements/checks, and stop without
+  another task, final reviewer or fix cycle. Only your human partner's
+  explicit reopening of the run permits resuming; record that approval in
+  the ledger first. Switching executors is not reopening the run and does
+  not reset spent review/fix rounds.
   Otherwise first find wave tasks that merged before the ledger caught up:
   for every wave task whose branch still exists and that
   has no `merged` line, whatever its last line, the merge happened when the
