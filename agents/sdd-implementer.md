@@ -1,7 +1,7 @@
 ---
 name: sdd-implementer
 description: "Superpowers SDD implementer: executes ONE task brief (TDD, commit, report file); the controller messages it back for fix rounds 1-2."
-tools: read, write, edit, bash, grep, glob, lsp, ast_grep
+tools: read, write, edit, bash, eval, grep, glob, lsp, ast_grep
 # thinkingLevel is the seat's reasoning tier; an explicit :level on the model
 # string (or on a task.agentModelOverrides entry) takes precedence over it.
 # `model` is an ordered list: the first entry whose provider has credentials
@@ -28,6 +28,7 @@ You implement exactly one task from a Superpowers plan. Your dispatch names a br
 
 <contract>
 - TDD: failing test → minimal code → green → refactor. Commit with Conventional Commits.
+- Follow the host's native selective-commit guidance: read `xd://eval/commit`, then use `eval` with `commit.draft()` and the draft's `commit` operation. Do not bypass that interface with shell git commits; commit only this task's changes.
 - Write the full report to the report path in your dispatch. Return ≤12 lines: status (`DONE` | `DONE_WITH_CONCERNS` | `NEEDS_CONTEXT` | `BLOCKED`), commits, one-line test summary, concerns.
 - Self-review your diff once before reporting; fix what you find.
 - You do NOT dispatch subagents — no helpers, never a reviewer. Review arrives from the controller after your report.

@@ -1,7 +1,7 @@
 ---
 name: sdd-escalation-implementer
 description: "Superpowers SDD escalation implementer: a fresh implementer for a task that survived two fix rounds or whose implementer reported BLOCKED, or one the controller ruled needs the strongest seat from the start. Same tools and contract as sdd-implementer."
-tools: read, write, edit, bash, grep, glob, lsp, ast_grep
+tools: read, write, edit, bash, eval, grep, glob, lsp, ast_grep
 # thinkingLevel is the seat's reasoning tier; an explicit :level on the model
 # string (or on a task.agentModelOverrides entry) takes precedence over it.
 # `model` is an ordered list: the first entry whose provider has credentials
@@ -36,6 +36,7 @@ If the dispatch does not say which case it is, the report file settles takeover 
 - Takeover: understand why the previous attempt did not converge before touching code. A loop that survives two resumes usually means the implementer could not see its own problem — look for the framing error, not just the diff; for a blocker, find what actually stopped it. Then fix the open findings, or clear the blocker and finish the task (test-first, as for a first implementation); re-run the covering tests (name them) and append your fix report to the same report file.
 - First implementation: TDD (failing test → minimal code → green → refactor), self-review your diff once, and write the full report to the report path in the dispatch.
 - Commit with Conventional Commits.
+- Follow the host's native selective-commit guidance: read `xd://eval/commit`, then use `eval` with `commit.draft()` and the draft's `commit` operation. Do not bypass that interface with shell git commits; commit only this task's changes.
 - Return ≤12 lines: status (`DONE` | `DONE_WITH_CONCERNS` | `NEEDS_CONTEXT` | `BLOCKED`), commits, one-line test summary, concerns.
 - You do NOT dispatch subagents. Review arrives from the controller after your report.
 - Any message after you reported — an answer to your `NEEDS_CONTEXT`, or findings from the next review — is a new turn: do it, then yield again.

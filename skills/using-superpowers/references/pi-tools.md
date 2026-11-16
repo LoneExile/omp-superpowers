@@ -60,7 +60,7 @@ This fork ships SDD-specific agents (they appear in the `task` roster once the p
 
 | Superpowers role | `agent:` | Shipped default · thinking | Tools |
 | --- | --- | --- | --- |
-| Implementer, fix rounds 1-2 | `sdd-implementer` | claude-sonnet-5-5 · medium | edit/test tools; no subagents |
+| Implementer, fix rounds 1-2 | `sdd-implementer` | claude-sonnet-5-5 · medium | edit/test tools + `eval` for native selective commits; no subagents |
 | Task reviewer | `sdd-reviewer` | claude-sonnet-5-5 · high | `read`, `grep`, `glob` — no bash, edit, or file-writing tool |
 | Scoped re-review | `sdd-rereviewer` | claude-sonnet-5-5 · low | `read`/`grep`; ≤4 working calls plus the final `yield` |
 | Fix round 3 / ruled strongest-tier task | `sdd-escalation-implementer` | claude-opus-5-5 · max | same tools as the implementer |
@@ -73,6 +73,13 @@ Never use the bundled `task` agent for an SDD seat: it lacks the seat's tools, o
 ### Tool boundary
 
 An agent's `tools:` list limits built-in tools only. Extension tools and MCP tools (mounted as `xd://` devices and run through a device-only `write` that refuses file paths) still attach to every subagent; memory tools attach only when the agent's `tools:` list names them. On omp 18.4.10 a read/grep/glob reviewer ran a shell command through an MCP device. Read-only seats are read-only by instruction, not by sandbox.
+
+On omp 18.20.2, native commit guidance requires the selective-commit interface:
+read `xd://eval/commit`, then use `eval` with `commit.draft()` and the draft's
+`commit` operation. Both implementer seats include `eval` to satisfy that
+contract; commit only the assigned task's changes. Do not substitute shell
+git commits when the host requires this interface. Reviewer seats do not
+receive `eval`; their read-only contracts remain unchanged.
 
 ### Checks
 
