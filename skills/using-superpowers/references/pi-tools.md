@@ -20,9 +20,41 @@ Agent types: pick the most specific one per item from the roster in the `task` t
 
 The tool is lowercase `task`; `Task` does not exist. `task.isolation.enabled` (default off) only lets a dispatch mark items `isolated: true`. With `isolation.backend: auto` and ovnfs on `PATH`, each isolated subagent works in its own ovnfs checkout; without ovnfs, in a native copy-on-write clone. Under the default `task.isolation.merge: patch`, isolated work comes back as an applied, uncommitted patch when the subagent finishes. Under `merge: branch`, omp commits the subagent's work onto your branch when it finishes (same message and author, a new commit id whenever the commit time differs) and deletes the task branch; a conflict leaves `omp/task/<id>` for you to resolve. Never send an isolated subagent a follow-up. Measured on omp 18.11.0, and again on 18.18.3 with ovnfs in both merge modes: its result says it "cannot be resumed or messaged", yet `write agent://<id>` answers `Delivered`, and the work it does then never reaches your branch while the session runs; after the session ended it sat on a leftover `omp/task/<id>` branch that also repeats the already-merged commit. Dispatch a fresh subagent instead. If a follow-up already went out, cherry-pick only its new commits from that branch, never merge the branch. Superpowers SDD does not use isolation.
 
+## Personal SDD and native Ponytail
+
+`receiving-code-review` belongs only to `@omp-utils/code-review`, with no
+fallback to the excluded fork skill, official vendor, or upstream aliases.
+
+При работе по Superpowers SDD сохраняй обязательные этапы, артефакты, согласования, тестирование и ревью. Ponytail применяй для выбора простейшей реализации, полностью выполняющей согласованную спецификацию. Упрощение не должно сокращать требования или обходить этапы SDD.
+
+Every initial and follow-up assignment carries this literal paragraph,
+explicit Spec/Plan paths, and task-scoped requirements, including resumed
+fix/context turns, escalation, merge/wave fixes, final review/fixer and
+re-reviews. Main bootstrap alone does not cover workers. Explicitly name
+covering commands, timing and report evidence: command, exit status, output,
+and applicable RED/GREEN evidence. The task description may still say skip
+mid-flight checks; the system's explicit assignment exception authorizes
+named checks, not a skill override of higher-priority instructions.
+
+Use separate native `@dietrichgebert/ponytail` 5.3.3 pinned to
+`7801d061243d7b753bad0e0b3c057cd250b11755`; never copy its ruleset.
+Preserve existing effective defaults; absent one, this installation initially
+uses `full`. Modes are per-session: `/ponytail off` disables that session,
+not new workers reading the shared default. No inheritance mechanism is added,
+and the SDD rule never reactivates off-mode. Role-specific structured
+review and report/status contracts override Ponytail's generic closing.
+
+Actual unmet accepted requirements or mandatory checks at round three mean
+not accepted: stop and preserve evidence, never complete via parking,
+scope reduction, a fourth round or extra reviewer. Nonmandatory/contested
+findings keep adjudication; risk-based reviews and worktree waves remain.
+
 ### Model selection on omp
 
-The `task` tool has **no `model:` field**. Every `model: [...]` line in a Superpowers template is inert here — the agent TYPE carries model, thinking level, and tool set. The bundled `task` is a general agent with the widest tool set and whatever `modelRoles.task` names, not an SDD seat's contract.
+This installation uses `task.perCallModel=off`: route through named agents
+and operator-owned `task.agentModelOverrides`, not ordinary per-call model
+overrides. The API may expose a model field in other configurations; do not
+claim it never has one. Bundled `task` is not an SDD seat's output contract.
 
 This fork ships SDD-specific agents (they appear in the `task` roster once the plugin is installed):
 

@@ -6,12 +6,29 @@ Superpowers gives your coding agent a way of working: it talks an idea through w
 
 This package ships fourteen Superpowers skills and five SDD agents. It deliberately excludes `receiving-code-review`: install and retain `@omp-utils/code-review` as its sole owner. Do not restore an upstream receiving alias when upgrading.
 
+### Personal SDD integration
+
+Native Ponytail remains separate: `@dietrichgebert/ponytail` 5.3.3, pinned to
+`7801d061243d7b753bad0e0b3c057cd250b11755`. Preserve existing effective defaults;
+absent one, this installation initially uses `full`. Modes are per-session:
+parent `/ponytail off` does not disable new workers reading the shared default.
+SDD does not reactivate off-mode or copy Ponytail's ruleset.
+
+The controller sends explicit spec/plan paths and the literal SDD invariant
+on initial and follow-up assignments, including fixes and final review.
+Role-specific structured/report output wins over Ponytail's generic closing.
+Assignments explicitly authorize covering commands and report evidence;
+skills do not override higher-priority check restrictions. At the three-round
+cap unmet accepted requirements or mandatory checks mean **not accepted**,
+never complete by parking, scope reduction, a fourth round or extra reviewer.
+Risk-based task review and parallel worktree waves remain unchanged.
+
 ## Why a fork
 
 Upstream ships a Pi/omp compatibility layer, and on omp it is wrong:
 
 - It tells the agent there is no subagent tool and no todo tool. omp has both.
-- Its *Model Selection* rules use a `model:` field that the omp `task` tool does not have. Under those rules every subagent silently inherits the slowest configured model, with the widest tool set. In a real 157-subagent session, that was where most of the wall-clock time went.
+- Model selection depends on the installed omp configuration. This installation disables ordinary per-call overrides (`task.perCallModel=off`) and routes SDD through named roles and operator-owned `task.agentModelOverrides`, not template-level model hints.
 
 This fork keeps the skills and fixes the omp side:
 

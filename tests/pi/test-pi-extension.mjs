@@ -50,6 +50,17 @@ function textOf(message) {
     .join('\n');
 }
 
+// Check returned provider context, not source text or an echoed user prompt.
+function assertPersonalBootstrap(message) {
+  const text = textOf(message);
+  assert.match(text, /sole receiving-code-review owner is `@omp-utils\/code-review`/);
+  assert.match(text, /never fall back to upstream\/vendor copies/);
+  assert.ok(text.includes('При работе по Superpowers SDD сохраняй обязательные этапы, артефакты, согласования, тестирование и ревью. Ponytail применяй для выбора простейшей реализации, полностью выполняющей согласованную спецификацию. Упрощение не должно сокращать требования или обходить этапы SDD.'));
+  assert.match(text, /literal paragraph above and explicit Spec and Plan paths/);
+  assert.match(text, /never complete via parking/);
+  assert.equal(text.split('superpowers:using-superpowers bootstrap for pi').length - 1, 1);
+}
+
 test('package.json declares a pi package with skills and extension resources', async () => {
   const pkg = await readPackageJson();
 
@@ -81,12 +92,14 @@ test('startup context injects the bootstrap as one user message', async () => {
   const result = await context({ type: 'context', messages: originalMessages }, {});
 
   assert.equal(result.messages.length, 2);
+  assertPersonalBootstrap(result.messages[0]);
   assert.equal(result.messages[0].role, 'user');
   assert.match(textOf(result.messages[0]), /You have superpowers/);
   assert.match(textOf(result.messages[0]), /omp tool mapping/);
   assert.equal(result.messages[1], originalMessages[0]);
 
   const repeatedProviderRequest = await context({ type: 'context', messages: originalMessages }, {});
+  assertPersonalBootstrap(repeatedProviderRequest.messages[0]);
   assert.equal(repeatedProviderRequest.messages.length, 2);
   assert.match(textOf(repeatedProviderRequest.messages[0]), /You have superpowers/);
 
@@ -120,6 +133,7 @@ test('every provider request of every prompt in a session carries the bootstrap'
       assert.ok(result, `${label}: bootstrap missing`);
       assert.equal(result.messages.length, history.length + 1, `${label}: expected exactly one bootstrap message`);
       assert.match(textOf(result.messages[0]), /You have superpowers/, `${label}: bootstrap not first`);
+      assertPersonalBootstrap(result.messages[0]);
       history.push({ role: 'assistant', content: [{ type: 'text', text: 'ok' }], timestamp: promptIndex });
       await emit(handlers, 'turn_end', {});
     }
@@ -144,6 +158,7 @@ test('session_compact injects bootstrap after compaction summaries, not before c
   assert.equal(result.messages[1].role, 'user');
   assert.match(textOf(result.messages[1]), /You have superpowers/);
   assert.equal(result.messages[2], user);
+  assertPersonalBootstrap(result.messages[1]);
 });
 
 test('pi tools reference documents pi-specific mappings', async () => {

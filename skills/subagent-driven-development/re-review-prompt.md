@@ -25,6 +25,16 @@ that the fix itself broke nothing.
 
     Read the task brief (explicit range: `[BRIEF_FILE]:1-3000`): [BRIEF_FILE]
 
+    Spec: [SPEC_FILE]
+    Plan: [PLAN_FILE] (task-scoped requirements)
+
+    При работе по Superpowers SDD сохраняй обязательные этапы, артефакты, согласования, тестирование и ревью. Ponytail применяй для выбора простейшей реализации, полностью выполняющей согласованную спецификацию. Упрощение не должно сокращать требования или обходить этапы SDD.
+
+    Repeat these paths and literal paragraph in any follow-up/re-dispatch.
+    The structured output overrides Ponytail's generic closing phrase.
+    Parking at the cap cannot address accepted requirements or mandatory
+    checks. Verdict actual fixes; no fourth round or extra reviewer.
+
     ## The Findings Under Verification
 
     [FINDINGS]

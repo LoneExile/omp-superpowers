@@ -13,6 +13,17 @@ thinkingLevel: max
 readSummarize: false
 ---
 
+
+При работе по Superpowers SDD сохраняй обязательные этапы, артефакты, согласования, тестирование и ревью. Ponytail применяй для выбора простейшей реализации, полностью выполняющей согласованную спецификацию. Упрощение не должно сокращать требования или обходить этапы SDD.
+
+Every initial and follow-up assignment supplies explicit Spec and Plan paths
+and this literal paragraph, including takeover and merge/wave/final fixes.
+Run the covering commands explicitly assigned by the controller; record
+command, exit status, relevant output and applicable RED/GREEN evidence.
+Missing check commands are NEEDS_CONTEXT, not passing evidence.
+Unmet accepted requirements/checks are never DONE via parking at a cap.
+No fourth round or extra reviewer. The report/status output below takes
+precedence over Ponytail's generic closing phrase.
 You own one task from a Superpowers plan. Your dispatch names the brief (requirements, exact values verbatim), the report file, and which of three cases this is:
 
 - **Takeover:** a prior implementer attempted the task and either could not clear the review findings across two fix rounds, or reported `BLOCKED`. The dispatch lists the open findings, or the blocker that implementer reported. Read the report file first — it records what was tried and, for findings, what the reviewer rejected.

@@ -11,6 +11,45 @@ Execute a plan by dispatching a fresh implementer subagent per task — independ
 
 **Core principle:** Fresh subagent per task + parallel waves for independent tasks + a task review where risk earns it + one broad final review = high quality, fast iteration
 
+## Binding SDD contract
+
+При работе по Superpowers SDD сохраняй обязательные этапы, артефакты, согласования, тестирование и ревью. Ponytail применяй для выбора простейшей реализации, полностью выполняющей согласованную спецификацию. Упрощение не должно сокращать требования или обходить этапы SDD.
+
+Every assignment has three required slots: `Spec: <explicit path>`,
+`Plan: <explicit path>`, and the literal Russian paragraph above (not a
+memory reference or a link). Repeat all three in every initial dispatch and
+every follow-up message, including NEEDS_CONTEXT answers, resumed fixes,
+replacement dispatches, escalation, merge/rebase fixes, wave fixes, final
+review, the omnibus final fixer, and scoped re-reviews. Keep the remaining
+requirements task-scoped; a plan path does not instruct a worker to read
+the whole plan. If no spec is reachable, explicitly state that in the Spec
+slot and retain the provisional-rulings rule below.
+
+Every implementer assignment also explicitly authorizes and names its
+covering check commands, when to run them, and required evidence (command,
+exit status, relevant output, and RED/GREEN evidence when TDD applies) in
+the report. This is the system's assignment exception, not a skill override
+of higher-priority instructions. Do not substitute "run relevant tests".
+Reviewer assignments keep their read-only boundary; name controller-owned
+checks instead. Role-specific structured results and report/status contracts
+take precedence over Ponytail's generic closing phrase.
+
+Ponytail is a separate native plugin, pinned for this installation to
+`@dietrichgebert/ponytail` 5.3.3, commit
+`7801d061243d7b753bad0e0b3c057cd250b11755`; do not copy its ruleset.
+Its modes are session-local: parent `/ponytail off` does not turn off a
+new worker, which reads the shared default. Preserve any existing effective
+default; this installation's initial policy is `full` when none is set.
+The SDD contract does not turn Ponytail back on in an off session.
+
+**Acceptance is not bookkeeping.** Actual unmet accepted requirements or
+mandatory checks mean NOT ACCEPTED at a cap, regardless of severity,
+downstream consumers, or a plan to fix them later. Never mark them complete
+by parking, administrative closure, scope reduction, or carrying them into
+another task. Stop without a fourth round or an extra reviewer, preserve
+the workspace/evidence, and report the unmet requirement/check. Only
+nonmandatory or genuinely contested findings remain eligible for adjudication.
+
 **Narration:** between tool calls, narrate at most one short line — the
 ledger and the tool results carry the record.
 
@@ -29,9 +68,10 @@ operation; a security-sensitive action; a side effect outside this worktree
 that norms say you ask about first (a merge, a push to a shared branch, a
 publish); and a plan so broken that every path forward is a guess. For those,
 stop and ask. This skill's own wave merges into the plan branch, and the task
-worktrees it creates and removes, are not among them. It adds two stops of
-its own: a wave task that still will not merge after its rounds (`merge
-stuck`), and a wave suite still red after its one fix.
+worktrees it creates and removes, are not among them. It adds three stops of
+its own: an unmet accepted requirement or mandatory check at the round cap
+(`not accepted`), a wave task that still will not merge after its rounds
+(`merge stuck`), and a wave suite still red after its one fix.
 
 **On omp in vibe mode** (your tools include `vibe_spawn` but not `task`)
 you are the director, and this loop cannot run in your session: you have
@@ -103,7 +143,7 @@ digraph process {
         "R = 3?" [shape=diamond];
         "Adjudicate each open finding" [shape=box];
         "Any load-bearing finding?" [shape=diamond];
-        "Rule and continue; stop only if every path forward is a guess" [shape=box];
+        "Stop: not accepted; preserve evidence" [shape=box];
         "Park findings in ledger with rulings" [shape=box];
         "Merge the task branch (wave of 2+), append completion to ledger, mark todo complete" [shape=box];
     }
@@ -141,7 +181,7 @@ digraph process {
     "R = 3?" -> "Fix round R of 3: R≤2 resume implementer; R=3 fresh sdd-escalation-implementer" [label="no - next round"];
     "R = 3?" -> "Adjudicate each open finding" [label="yes - breaker trips"];
     "Adjudicate each open finding" -> "Any load-bearing finding?";
-    "Any load-bearing finding?" -> "Rule and continue; stop only if every path forward is a guess" [label="yes"];
+    "Any load-bearing finding?" -> "Stop: not accepted; preserve evidence" [label="yes, or any unmet requirement/check"];
     "Any load-bearing finding?" -> "Park findings in ledger with rulings" [label="no"];
     "Park findings in ledger with rulings" -> "Merge the task branch (wave of 2+), append completion to ledger, mark todo complete";
     "Merge the task branch (wave of 2+), append completion to ledger, mark todo complete" -> "More waves remain?" [label="after the wave's last task"];
@@ -238,6 +278,8 @@ a ledger file, not only in todos.
     it, the task has not started; after one, the task reported and awaits
     that review.
   - `merge stuck`: the run is stopped; wait for your human partner.
+  - `not accepted`: the run is stopped; preserve artifacts and report the
+    unmet requirements/checks, never resume it as complete or add a round.
   - A worktree that exists for a task with no `dispatched` line is reused,
     not added again, and gets the install step and its check again
     (Dispatch the implementer).
@@ -316,8 +358,11 @@ to start a merge that would overwrite one (Complete the task).
 
 ## Agent Selection
 
-On omp the `task` tool has no `model:` field — the agent TYPE carries the
-model, the thinking level, and the tool set. This fork ships five SDD
+This installation routes models through named agents with
+`task.perCallModel=off`: do not send ordinary per-call model overrides.
+The API may expose a model field under other configurations; it is not the
+routing mechanism here. The agent type carries the model, thinking level,
+and tool set. This fork ships five SDD
 agents (`agents/sdd-*.md`); they appear in the `task` tool's own roster.
 **Always dispatch SDD work with one of them.** The bundled `task` and
 `reviewer` agents are the wrong seats, and not because of their model — the
@@ -656,8 +701,8 @@ the review list.
 3. If the task is too large, break it into smaller pieces
 4. If the plan itself is wrong, rule on the correction, ledger it, and re-dispatch with the ruling carried in the dispatch
 
-On omp there is no model parameter, so map items 1 and 2 onto seats. "The
-same model" is the same seat: `sdd-implementer`, messaged as under
+With ordinary per-call model overrides disabled here, map items 1 and 2
+onto named seats. "The same model" is `sdd-implementer`, messaged as under
 NEEDS_CONTEXT, or dispatched fresh if that write errors. "A more capable
 model" is `sdd-escalation-implementer`, dispatched fresh with the brief path
 and the blocker. If the blocked implementer wrote a report, the report file
@@ -846,21 +891,19 @@ Outside the proven-trivial route above, never fix findings yourself in the
 controller session — your context stays clean for coordination, and an
 unproven controller fix skips review.
 
-**The breaker.** When round 3's re-review still leaves findings open, stop
-dispatching. Adjudicate each open finding yourself — you hold the plan and
-the cross-task context the reviewer lacks:
+**The breaker.** When round 3 leaves findings or mandatory checks open,
+stop dispatching. First compare each against accepted scope:
 
-- **The reviewer is wrong, or the point is contestable:** park it —
-  `Task <N>: parked — <finding> — Ruling: <why the code stands>`. The final
-  review sees both sides.
-- **Real, but nothing downstream builds on it:** park it the same way, with
-  a ruling that says it's real and deferred.
-- **Real and load-bearing** — a later task builds on it, or it reveals a
-  plan defect: rule on the smallest change that unblocks the dependent work,
-  ledger it as `Task <N>: Ruling: <finding> — <what you decided and why>`,
-  and carry it into the next task's dispatch. Parking a structural failure
-  silently lets every dependent task build on it. Stop only when the defect
-  leaves every path forward a guess.
+- **Actual unmet accepted requirement or mandatory check:** ledger
+  `Task <N>: not accepted — <requirement/check and evidence>`, stop the run,
+  and preserve the workspace. No completion, merge, dependent task,
+  fourth round, extra reviewer, or parking can substitute for acceptance.
+- **The reviewer is wrong, or the point is genuinely contestable:** adjudicate
+  with evidence and ledger `Task <N>: parked — <finding> — Ruling:
+  <why the code satisfies accepted scope>`. The final review sees both sides.
+- **Real but nonmandatory:** park with an explicit ruling explaining why it
+  is outside accepted requirements and mandatory checks. Having no downstream
+  consumer alone is not a reason to classify a requirement as nonmandatory.
 
 Adjudicate only at the cap. Adjudicating earlier to end a loop is
 pre-judging with a different name. Every adjudication is a ledger entry —
@@ -868,9 +911,9 @@ a silent discard is forbidden.
 
 ### 5. Complete the task
 
-A task is done when its review comes back clean, when every open finding is
-parked with a ruling at the cap, or, for a `review at final` task, when your
-own run of its covering tests passes.
+A task is done only when all accepted requirements and mandatory checks
+are satisfied, and its review is clean or only eligible adjudicated findings
+remain; for `review at final`, your own covering-check run must pass.
 
 **A wave task merges first, and its tests run before the merge commits.**
 From the plan checkout, as soon as the task is done (wave tasks are
@@ -899,10 +942,10 @@ toward the task's three rounds, with the fix loop's seats: round 3 is a
 fresh `sdd-escalation-implementer` whose dispatch names the plan branch,
 the worktree, and the conflict or the failing output file, framed as
 "rebase this task's branch onto the plan branch and make its covering
-tests pass on the result". A task whose three rounds were already spent in
-its review loop still gets one merge round, on that seat. Ledger each round
-as `Task <N>: rebased (<conflict | failing test>)`. A task that still
-conflicts or fails after its last round is never parked and never merged:
+tests pass on the result". Review and merge rounds share the same
+three-round cap; a task that spent all three gets no extra merge round.
+Ledger each round as `Task <N>: rebased (<conflict | failing test>)`.
+A task that still conflicts or fails after its last round is never parked and never merged:
 ledger `Task <N>: merge stuck (<conflict | failing test>)`, merge the wave's
 other tasks, start no new wave, and stop and ask. A `review per-task` task
 whose rebase changed code gets its task review again, not a scoped
@@ -944,8 +987,7 @@ Then append the completion line to the ledger in the same message as your
 other bookkeeping:
 
 - `Task <N>: complete (commits <base7>..<head7>, review clean)`
-- `Task <N>: complete (commits <base7>..<head7>, <K> parked)` after a
-  tripped breaker
+- `Task <N>: complete (commits <base7>..<head7>, <K> nonmandatory/contested findings adjudicated; accepted requirements and mandatory checks satisfied)`
 - `Task <N>: complete (commits <base7>..<head7>, review at final — tests: <command>, pass)`
 
 Then mark the todo complete. Start the next wave only when every task of
@@ -986,17 +1028,22 @@ one that becomes a finding joins the findings below.
 
 If the final whole-branch review returns findings, dispatch ONE fix subagent
 with the complete findings list — not one fixer per finding.
+Use `sdd-implementer` for this omnibus fix, with the implementer template,
+the complete findings, a dedicated report path, the literal Russian invariant,
+explicit Spec/Plan paths, and covering command/timing/evidence slots filled
+in. The final reviewer and scoped re-review dispatches carry the same
+invariant and paths; their role-specific output contracts remain binding.
 Per-finding fixers each rebuild context and re-run suites; a real
 session's final-review fix wave cost more than all its tasks combined.
 Then run exactly one scoped re-review of the fix wave
 (`bash scripts/review-package PLAN_FILE FIX_BASE HEAD` by its absolute path,
 from the working tree you're executing in, over the fix range,
 [re-review-prompt.md](re-review-prompt.md)).
-Adjudicate any residual findings as in the task loop's breaker: park with
-rulings, or rule on the load-bearing ones and ledger what you decided. Only
-the four classes above stop you here. There is no second fix wave —
-residual load-bearing findings surface to your human partner when
-finishing-a-development-branch presents the options.
+Adjudicate residuals using the breaker's acceptance distinction. Any actual
+unmet accepted requirement or mandatory check means `Final: not accepted`:
+stop, preserve evidence, and do not offer the branch as ready. Only
+nonmandatory/contested findings may be parked with evidence and rulings.
+There is no second fix wave and no extra reviewer.
 
 ## Finish
 
@@ -1025,9 +1072,10 @@ Use superpowers:finishing-a-development-branch.
 
 | Excuse | Reality |
 |--------|---------|
-| "Close enough on spec compliance" | Reviewer found spec gaps = not done. Fix or hit the cap and adjudicate — those are the only exits. |
+| "Close enough on spec compliance" | An actual accepted requirement or mandatory check still unmet at the cap means not accepted, never complete through parking. |
 | "I'll fix it myself, dispatching is overhead" | Only when the reviewer gave the exact replacement AND you can prove it in one command — then ledger the proof. Anything else: resume the implementer. |
 | "One more round will converge" | Past three rounds, rounds don't converge — the failure is structural. Adjudicate and route. |
+| "No downstream consumer; park it and complete" | Accepted scope is binding even without consumers. Administrative closure does not implement a requirement or pass a check. |
 | "The reviewer will just find something new anyway" | Scoped re-reviews verify fixes; they cannot wander. New findings on untouched code go to the ledger, not the loop. |
 | "This finding is obviously wrong, I'll drop it" | You adjudicate only at the cap, and every ruling is a ledger entry. Silent discards are forbidden. |
 | "The fix was small, skip the re-review" | Small is not the test — proven is. If you cannot run one command that proves the exact property (and ledger it), the round ends with a scoped re-review. |

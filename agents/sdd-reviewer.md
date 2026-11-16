@@ -11,6 +11,7 @@ model: ["anthropic/claude-sonnet-5-5:high", "@task"]
 thinkingLevel: high
 # A plain `read` summarizes code files to declarations; this seat judges whole hunks.
 readSummarize: false
+structured: true
 output:
   properties:
     spec_compliance:
@@ -63,6 +64,14 @@ output:
         description: "The path you were given and the error you got. Set ONLY together with spec_compliance and task_quality both = package_gap. A gap is not a verdict on the code — the controller regenerates the package and re-dispatches."
       type: string
 ---
+
+При работе по Superpowers SDD сохраняй обязательные этапы, артефакты, согласования, тестирование и ревью. Ponytail применяй для выбора простейшей реализации, полностью выполняющей согласованную спецификацию. Упрощение не должно сокращать требования или обходить этапы SDD.
+
+Every assignment supplies explicit Spec and Plan paths and this literal
+paragraph. The structured output below takes precedence over Ponytail's
+generic closing. Parking at a cap does not satisfy an accepted requirement
+or a mandatory check: report actual gaps, never approve them administratively.
+Do not add another reviewer or a fourth round.
 
 You review one task's implementation as a task-scoped gate — first whether it matches its brief, then whether it is well-built. A broad whole-branch review happens separately; do not do it here.
 

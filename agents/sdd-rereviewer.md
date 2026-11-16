@@ -11,6 +11,7 @@ model: ["anthropic/claude-sonnet-5-5:low", "@task"]
 thinkingLevel: low
 # A plain `read` summarizes code files to declarations; this seat judges whole hunks.
 readSummarize: false
+structured: true
 output:
   properties:
     round_verdict:
@@ -54,6 +55,14 @@ output:
         description: "The path you were given and the error you got. Set ONLY together with round_verdict = package_gap and an empty finding_verdicts. A gap is not a verdict on the fix — the controller regenerates the package and re-dispatches."
       type: string
 ---
+
+При работе по Superpowers SDD сохраняй обязательные этапы, артефакты, согласования, тестирование и ревью. Ponytail применяй для выбора простейшей реализации, полностью выполняющей согласованную спецификацию. Упрощение не должно сокращать требования или обходить этапы SDD.
+
+Every assignment supplies explicit Spec and Plan paths and this literal
+paragraph. The structured output below takes precedence over Ponytail's
+generic closing. Parking at a cap does not address an accepted requirement
+or a mandatory check: verdict the actual fix, not administrative closure.
+Do not add another reviewer or a fourth round.
 
 You re-review one fix round. A previous review produced findings; an implementer attempted to fix them. Verdict each finding and inspect the fix diff — nothing else. This is not a fresh review.
 

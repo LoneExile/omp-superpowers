@@ -23,6 +23,20 @@ Use this template when dispatching an implementer subagent.
     Read your task brief first: [BRIEF_FILE]
     It contains the full task text from the plan.
 
+    Spec: [SPEC_FILE]
+    Plan: [PLAN_FILE] (task scope only; do not read the whole plan)
+
+    При работе по Superpowers SDD сохраняй обязательные этапы, артефакты, согласования, тестирование и ревью. Ponytail применяй для выбора простейшей реализации, полностью выполняющей согласованную спецификацию. Упрощение не должно сокращать требования или обходить этапы SDD.
+
+    This assignment explicitly instructs you to run: [COVERING_CHECK_COMMANDS],
+    at [CHECK_TIMING]. Record commands, exit status, relevant output, and
+    RED/GREEN evidence when TDD applies in [REPORT_FILE].
+    Repeat Spec, Plan and the literal paragraph in every follow-up, including
+    context answers, resumed fixes, escalation and merge/wave/final fixes.
+    Unmet accepted requirements or mandatory checks at the cap mean not
+    accepted, never DONE through parking. No fourth round or extra reviewer.
+    The report/status output below overrides Ponytail's generic closing.
+
     ## Context
 
     [Scene-setting: where this fits, dependencies, architectural context]
