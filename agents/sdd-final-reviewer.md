@@ -11,6 +11,8 @@ model: ["anthropic/claude-opus-5-5:max", "@slow"]
 thinkingLevel: max
 # A plain `read` summarizes code files to declarations; this seat judges whole hunks.
 readSummarize: false
+autoloadSkills:
+  - ponytail-review
 ---
 
 

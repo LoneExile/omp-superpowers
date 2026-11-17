@@ -11,6 +11,8 @@ model: ["anthropic/claude-sonnet-5-5:high", "@task"]
 thinkingLevel: high
 # A plain `read` summarizes code files to declarations; this seat judges whole hunks.
 readSummarize: false
+autoloadSkills:
+  - ponytail-review
 structured: true
 output:
   properties:
