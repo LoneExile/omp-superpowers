@@ -32,10 +32,10 @@ Check that it loaded. Your `task` tool's roster should now include the five `sdd
 ```bash
 omp -p --no-session --no-skills --model anthropic/claude-haiku-4-5 \
   'List the agent type names your `task` tool offers, comma-separated, nothing else.'
-# sdd-escalation-implementer, sdd-final-reviewer, sdd-implementer, sdd-rereviewer, sdd-reviewer, scout, task, sonic, reviewer, security-reviewer, seance
+# sdd-escalation-implementer, sdd-final-reviewer, sdd-implementer, sdd-rereviewer, sdd-reviewer, scout, reviewer, security-reviewer, task, sonic
 ```
 
-That's all. The skills drive themselves once loaded: start a new omp session and ask for what you want to build.
+That's all. The skills drive themselves once loaded: start a new omp session and ask for what you want to build. Three omp settings, all off by default, let the plugin use everything it is written for; see [Recommended omp settings](#recommended-omp-settings).
 
 To move to the newest release later, run `omp plugin upgrade @loneexile/omp-superpowers` and restart omp.
 
@@ -139,7 +139,7 @@ The helper scripts (`sdd-workspace`, `task-brief`, `review-package`, and executi
 
 The shipped defaults are Anthropic: sonnet for the seats that run on every task, opus for the two that run once per plan or once per stuck task. The tiers are a **thinking ladder** as much as a model ladder — re-reviews reason at `low`, escalation and the final review at `max`.
 
-`lsp` and `ast_grep` are listed for the seats that benefit, but omp only activates them in subagents when `task.enableLsp` / `astGrep.enabled` are on (both default off).
+`ast_grep` is listed for the seats that benefit, but omp gives it to no agent until `astGrep.enabled` is on (default off). `lsp` stays available to the seats either way; `task.enableLsp` only adds LSP formatting and diagnostics to their edits.
 
 <details>
 <summary><b>Which model a seat actually runs on</b></summary>
@@ -179,7 +179,7 @@ Two ovnfs facts the skills work around, measured on ovnfs with omp 18.18.1:
 - `ovnfs apply <checkout> --branch main`, while your folder has `main` checked out, moves `main` and the index but not the files, so the folder then shows the merge as uncommitted changes that undo it. Plain `ovnfs apply <checkout>` brings changes back as uncommitted edits, without the commits.
 - `.superpowers/` (the SDD workspace and ledger) is ignored, so it never comes back with `ovnfs apply`; it is scratch either way.
 
-omp also runs `task.isolation` subagents in ovnfs checkouts when its `isolation.backend` is `auto` (measured on omp 18.18.3); each checkout lasts until omp exits. subagent-driven-development does not use that switch (see *Settings worth knowing*).
+omp also runs `task.isolation` subagents in ovnfs checkouts when its `isolation.backend` is `auto` (measured on omp 18.18.3); each checkout lasts until omp exits. subagent-driven-development does not use that switch (see [Other settings](#other-settings)).
 
 ## Changing models (no file edits)
 
@@ -235,16 +235,51 @@ Measured on a real fix-round re-review with identical inputs: a grok-4.6 seat to
 
 </details>
 
-## Settings worth knowing
+## Recommended omp settings
+
+The plugin runs on omp's defaults. These three settings, all off by default, let it do everything it is written to do. Put them in `~/.omp/agent/config.yml`:
+
+```yaml
+task:
+  enableEffort: true            # high-risk task reviews run at the model's top thinking level
+  showResolvedModelBadge: true  # shows the model each seat actually ran on
+astGrep:
+  enabled: true                 # the ast_grep tool the implementer and final-review seats list
+```
+
+or set them from a shell, then start a new omp session:
+
+```bash
+omp config set task.enableEffort true
+omp config set task.showResolvedModelBadge true
+omp config set astGrep.enabled true
+```
+
+| setting | what it changes |
+|---|---|
+| `task.enableEffort` | adds the per-dispatch `effort` field (`"lo"`, `"med"`, `"hi"`). subagent-driven-development sends `effort: "hi"` to the reviewer of every task on its review list (tasks marked for security, auth, concurrency, migrations, money or destructive changes, and any it rules high-risk): the resolved model's top thinking level, capped by `task.maxEffort` (default `max`). Off, those reviews run at the seat's own `high` |
+| `task.showResolvedModelBadge` | shows in the task widget which model each subagent really ran on. A seat whose pinned provider has no credentials falls back to `@task` / `@slow`, or to your session model when those roles are unset, without a warning |
+| `astGrep.enabled` | turns on `ast_grep`, omp's structural code search. `sdd-implementer`, `sdd-escalation-implementer` and `sdd-final-reviewer` list it; off, omp drops it from every agent. On, omp also gives it to every agent that has `grep`, the two reviewers included; it only reads |
+
+**Not on Anthropic?** The seats are pinned to Anthropic models. Without Anthropic credentials, the three per-task seats fall back to `modelRoles.task` and the escalation and final-review seats to `modelRoles.slow`, so set both roles, or point each seat at a model with `task.agentModelOverrides` (see [Changing models](#changing-models-no-file-edits)).
+
+**Optional:** `task.enableLsp: true` runs LSP formatting and diagnostics on subagents' edits, as on the main session's, at some cost per edit. In vibe mode, a long plan needs `task.softRequestBudget: 0` (see *Vibe mode*).
+
+**Leave at the default:**
+
+- `task.batch: true`: the skills dispatch in its `{ context, tasks[] }` shape.
+- `task.perCallModel: off`: the skills choose models through the seats, not per call.
+- `retry.modelFallback: true`: makes each seat's model list its retry chain on rate-limit and usage-limit errors.
+- `task.structured`: either value works. The two reviewer seats set `structured: true` themselves, and the other seats return text reports.
+- `task.isolation.enabled: false`: subagent-driven-development does not use it (see [Other settings](#other-settings)).
+
+### Other settings
 
 | setting | why |
 |---|---|
 | `task.isolation.enabled` (+ `isolation.backend`, default `auto`) | off by default, and SDD does not use it. Under the default `merge: patch` isolated work returns as an uncommitted patch; `merge: branch` keeps commits but applies them as each task ends, before review. Either way, an isolated subagent cannot take a fix round: a message to one is delivered, but its fix never reaches your branch while the session runs, and after the session it sits on a leftover `omp/task/<id>` branch (measured on omp 18.11.0, and on 18.18.3 with ovnfs in both merge modes). With `auto` and ovnfs on `PATH`, isolated subagents run in ovnfs checkouts. Parallel tasks get their own `omp worktree add` worktrees instead |
 | `ovnfs.path` | where omp finds the ovnfs binary (default: `ovnfs` on `PATH`). Found means the *Separate checkouts* section is in every system prompt; see [Separate copies](#separate-copies-worktrees-and-ovnfs) |
-| `task.enableEffort` | exposes per-dispatch `effort` (`"lo"`, `"med"`, `"hi"`); `"hi"` maps to the model's top supported level, capped by `task.maxEffort`. SDD uses `effort: "hi"` for high-risk task reviews, and for escalation only when a host override lowers that seat |
-| `task.showResolvedModelBadge` (default off) | shows the model each subagent actually ran. A seat whose pinned provider has no credentials silently runs on another model |
-| `task.enableLsp`, `astGrep.enabled` (both default off) | omp only activates `lsp` and `ast_grep` in subagents when these are on |
-| `autolearn.autoContinue` | omp's auto-learn mints managed skills every session; the whole catalog is injected into every subagent's prompt. Keep it pruned or off — a 2,500-skill catalog was ~220k tokens per subagent turn |
+| `autolearn.enabled`, `autolearn.autoContinue` (both default off) | omp's auto-learn mints managed skills, and the whole catalog is injected into every subagent's prompt. Keep it pruned or off — a 2,500-skill catalog was ~220k tokens per subagent turn |
 
 ## What changed from upstream
 

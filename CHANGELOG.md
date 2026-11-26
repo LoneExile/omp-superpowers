@@ -6,6 +6,10 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+### Changed
+
+- **The README recommends three omp settings**, all off by default: `task.enableEffort` (high-risk task reviews get `effort: "hi"`), `task.showResolvedModelBadge` (see which model each seat ran on) and `astGrep.enabled` (the `ast_grep` tool three seats list), as a `config.yml` block and as `omp config set` commands, plus what to set without Anthropic credentials and which settings to leave at their defaults. It also corrects the `lsp` note: on omp 19.2.1 the `lsp` tool stays available to subagents, and `task.enableLsp` only adds LSP formatting and diagnostics to their edits. The install check's sample roster matches omp 19.2.1.
+
 ## [7.0.2-omp.4] - 2026-11-26
 
 ### Fixed
