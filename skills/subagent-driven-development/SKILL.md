@@ -413,12 +413,14 @@ before 19.1.0 they were `xd://` devices reached through a device-only `write`
 that refuses filesystem paths (read in 19.2.1's `task/executor.ts`: a
 subagent loses MCP and extension tools only when omp restricts its tool
 names, which agent frontmatter cannot do). A memory host's `recall`,
-`retain`, and `reflect` (`memory_edit` on mnemopi) are a different case:
-omp creates them for such a subagent, but activates only the tools the
-agent's `tools:` list names. Measured on a hindsight host on omp 18.4.10:
-a `read, grep, glob` seat had no top-level `recall` and no `xd://recall`
-device, while a seat that listed `recall` had it top-level (`memory_edit`
-takes the same path; not run). A live probe on 18.4.10 had `sdd-reviewer`
+`retain`, and `reflect` (`memory_edit` on mnemopi) may attach too.
+Measured on a hindsight host on omp 18.4.10, omp activated only the ones
+the agent's `tools:` list named: a `read, grep, glob` seat had no top-level
+`recall` and no `xd://recall` device, while a seat that listed `recall` had
+it top-level (`memory_edit` takes the same path; not run). omp 19.2.1's
+source adds all three to every subagent's tool list on a hindsight or
+mnemopi host, yet a live 19.2.1 `sdd-reviewer` run on a hindsight host had
+none of them; treat them as possibly present. A live probe on 18.4.10 had `sdd-reviewer`
 run a shell command through `write xd://mcp__context_mode_ctx_execute`. So
 "read-only" is enforced by the prompt, not by the harness: the three
 reviewer agents are told never to invoke an extension or MCP tool, however

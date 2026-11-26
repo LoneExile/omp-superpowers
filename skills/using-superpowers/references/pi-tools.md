@@ -42,7 +42,7 @@ Never use the bundled `task` agent for an SDD seat: it lacks the seat's tools, o
 
 ### Tool boundary
 
-An agent's `tools:` list limits built-in tools only. Extension tools and MCP tools still attach to every subagent: from omp 19.1.0 as ordinary tools, or as commands run through `bash` in a seat that has it; before 19.1.0 as `xd://` devices run through a device-only `write` that refuses file paths. Memory tools attach only when the agent's `tools:` list names them. On omp 18.4.10 a read/grep/glob reviewer ran a shell command through an MCP device. Read-only seats are read-only by instruction, not by sandbox.
+An agent's `tools:` list limits built-in tools only. Extension tools and MCP tools still attach to every subagent: from omp 19.1.0 as ordinary tools, or as commands run through `bash` in a seat that has it; before 19.1.0 as `xd://` devices run through a device-only `write` that refuses file paths. Memory tools (`recall`, `retain`, `reflect`) may attach too: on omp 18.4.10 they attached only when the agent's `tools:` list named them; omp 19.2.1's source adds them to every subagent's list on a hindsight or mnemopi host, though a live 19.2.1 `sdd-reviewer` run on a hindsight host had none. On omp 18.4.10 a read/grep/glob reviewer ran a shell command through an MCP device. Read-only seats are read-only by instruction, not by sandbox.
 
 ### Checks
 
