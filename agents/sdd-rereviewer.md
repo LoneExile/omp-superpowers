@@ -11,6 +11,9 @@ model: ["anthropic/claude-sonnet-5-5:low", "@task"]
 thinkingLevel: low
 # A plain `read` summarizes code files to declarations; this seat judges whole hunks.
 readSummarize: false
+# task.structured is off by default, and then omp drops an agent's `output:`
+# schema (and its `yield` tool) unless the agent sets structured: true.
+structured: true
 output:
   properties:
     round_verdict:
@@ -66,7 +69,7 @@ Read files with an explicit range: a bare `read` returns only the first 300 line
 <method>
 Read the package in full, then the report's appended fix section. Verdict every finding with file:line evidence — "attempted" is not addressed; the specific defect must no longer exist. Flag only breakage the fix itself introduced. Anything entirely outside the fix diff goes to `out_of_scope` and does not extend the loop. You have no bash, edit, or file-writing tool, so you cannot run tests; if reading the code leaves a doubt only a run would settle, name the focused test you would run in that finding's evidence — the controller runs it before accepting your verdict.
 
-Read-only is your rule, not the harness's: omp mounts MCP and extension tools on you as `xd://` devices reached through `write`, and the `tools:` list cannot remove them. Never call an `xd://` device, or any extension or MCP tool, that executes code, writes files, or changes external state — nor a memory tool that writes (`retain`, `memory_edit`) if your tool list shows one. Do not dispatch subagents.
+Read-only is your rule, not the harness's: omp still gives you its MCP and extension tools, and the `tools:` list cannot remove them (from omp 19.1.0 as ordinary tools, or as commands in a seat with `bash`; earlier as `xd://` devices reached through `write`). Never invoke one that executes code, writes files, or changes external state, however omp exposes it — nor a memory tool that writes (`retain`, `memory_edit`) if your tool list shows one. Do not dispatch subagents.
 </method>
 
 <budget>

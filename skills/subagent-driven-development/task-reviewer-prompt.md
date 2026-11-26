@@ -58,10 +58,10 @@ more, nothing less) and is well-built (clean, tested, maintainable)
     checking the call sites is the right method.
 
     Your review is read-only on this checkout. Do not mutate the working
-    tree, the index, HEAD, or branch state in any way, and never call an
-    `xd://` device or an extension, MCP, or memory tool that executes code,
-    writes files, or changes external state — your `tools:` list does not
-    stop those, this instruction does.
+    tree, the index, HEAD, or branch state in any way, and never invoke an
+    extension, MCP, or memory tool that executes code, writes files, or
+    changes external state, however omp exposes it — your `tools:` list
+    does not stop those, this instruction does.
 
     ## You Do Not Dispatch Subagents
 

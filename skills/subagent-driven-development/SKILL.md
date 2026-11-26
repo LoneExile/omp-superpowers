@@ -316,15 +316,18 @@ to start a merge that would overwrite one (Complete the task).
 
 ## Agent Selection
 
-On omp the `task` tool has no `model:` field — the agent TYPE carries the
-model, the thinking level, and the tool set. This fork ships five SDD
-agents (`agents/sdd-*.md`); they appear in the `task` tool's own roster.
+On omp the `task` tool has no `model:` field (unless `task.perCallModel`,
+default `off`, adds one) — the agent TYPE carries the model, the thinking
+level, and the tool set. This fork ships five SDD agents
+(`agents/sdd-*.md`); they appear in the `task` tool's own roster.
 **Always dispatch SDD work with one of them.** The bundled `task` and
 `reviewer` agents are the wrong seats, and not because of their model — the
 SDD seats fall back to `@task` / `@slow` themselves. The SDD agents carry
 what the loop depends on: a `tools:` list sized to the seat (no `task` tool,
 so they cannot dispatch subagents at all), an `output:` schema the
-controller reads field by field, and the report-file and status contract in
+controller reads field by field (the two reviewer seats set `structured:
+true`, so omp keeps it while `task.structured` is at its default, `off`),
+and the report-file and status contract in
 the agent's own definition. The bundled `task` agent has no tool limit,
 may spawn subagents (`spawns: "*"`), has no output schema, and knows
 nothing of the report file or the status line. The bundled `reviewer` has
@@ -399,27 +402,30 @@ catalog refreshes; when a seat's speed or quality shifts overnight, read
 (Discovery-only ids accept `:level` in config and overrides but not on the
 `--model` CLI flag.)
 
-**What the reviewers' `tools:` list enforces (measured, omp 18.4.10).** A
-`tools:` list restricts built-in tools only. `sdd-reviewer` (`read`, `grep`,
-`glob`) gets no `bash`, `edit`, or file-writing tool, and the device-only
-`write` that omp adds to carry `xd://` devices refuses filesystem paths.
-Everything else still attaches: every subagent that omp itself has not
-restricted (only its internal commit-message, compression, and security
-sessions are) also gets the host's extension tools and MCP tools, mounted as
-`xd://` devices reached through that same `write`. A memory host's `recall`,
-`retain`, and `reflect` (`memory_edit` on mnemopi) are a different case: omp
-creates them for such a subagent, but activates only the tools the agent's
-`tools:` list names. Measured on a hindsight host: a `read, grep, glob` seat
-had no top-level `recall` and no `xd://recall` device, while a seat that
-listed `recall` had it top-level (`memory_edit` takes the same path; not run).
-A live probe on 18.4.10 had `sdd-reviewer`
+**What the reviewers' `tools:` list enforces.** A `tools:` list restricts
+built-in tools only. `sdd-reviewer` (`read`, `grep`, `glob`) gets no
+`bash`, `edit`, or file-writing tool. Everything else still attaches: every
+subagent that omp itself has not restricted (only its internal
+commit-message, compression, and security sessions are) also gets the
+host's extension tools and MCP tools. From omp 19.1.0 they arrive as
+ordinary tools, or as commands run through `bash` in a seat that has it;
+before 19.1.0 they were `xd://` devices reached through a device-only `write`
+that refuses filesystem paths (read in 19.2.1's `task/executor.ts`: a
+subagent loses MCP and extension tools only when omp restricts its tool
+names, which agent frontmatter cannot do). A memory host's `recall`,
+`retain`, and `reflect` (`memory_edit` on mnemopi) are a different case:
+omp creates them for such a subagent, but activates only the tools the
+agent's `tools:` list names. Measured on a hindsight host on omp 18.4.10:
+a `read, grep, glob` seat had no top-level `recall` and no `xd://recall`
+device, while a seat that listed `recall` had it top-level (`memory_edit`
+takes the same path; not run). A live probe on 18.4.10 had `sdd-reviewer`
 run a shell command through `write xd://mcp__context_mode_ctx_execute`. So
-"read-only" is enforced by the prompt, not by the harness: the three reviewer
-agents are told never to call an `xd://` device, or an extension or MCP tool,
-that executes code, writes files, or changes external state, nor a memory
-tool that writes (`retain`, `memory_edit`) should one ever be present. If a
-reviewer's transcript ever shows one, say so in the ledger and re-dispatch
-that review.
+"read-only" is enforced by the prompt, not by the harness: the three
+reviewer agents are told never to invoke an extension or MCP tool, however
+omp exposes it, that executes code, writes files, or changes external
+state, nor a memory tool that writes (`retain`, `memory_edit`) should one
+ever be present. If a reviewer's transcript ever shows one, say so in the
+ledger and re-dispatch that review.
 
 **Turn count beats token price.** Wall-clock and context cost scale with how
 many turns a subagent takes, and the cheapest models routinely take 2-3× the

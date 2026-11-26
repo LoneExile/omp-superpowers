@@ -22,7 +22,7 @@ The tool is lowercase `task`; `Task` does not exist. `task.isolation.enabled` (d
 
 ### Model selection on omp
 
-The `task` tool has **no `model:` field**. Every `model: [...]` line in a Superpowers template is inert here — the agent TYPE carries model, thinking level, and tool set. The bundled `task` is a general agent with the widest tool set and whatever `modelRoles.task` names, not an SDD seat's contract.
+The `task` tool has **no `model:` field** unless `task.perCallModel` (default `off`) adds one; this fork does not rely on it. Every `model: [...]` line in a Superpowers template is inert here — the agent TYPE carries model, thinking level, and tool set. The bundled `task` is a general agent with the widest tool set and whatever `modelRoles.task` names, not an SDD seat's contract.
 
 This fork ships SDD-specific agents (they appear in the `task` roster once the plugin is installed):
 
@@ -36,11 +36,13 @@ This fork ships SDD-specific agents (they appear in the `task` roster once the p
 
 Shipped defaults are Anthropic; the tiers are a thinking ladder (low / medium / high / max). Re-point any seat per host with `task.agentModelOverrides` in `~/.omp/agent/config.yml` (or `/agents`) — it beats the agent file's `model:`, applies on the next dispatch, and a bare model keeps the agent's `thinkingLevel:` while an explicit `:level` replaces it. Turn on `task.showResolvedModelBadge` (default off) to see the model each subagent actually ran.
 
+The two reviewer seats set `structured: true` in their agent files. With `task.structured` at its default, `off`, omp ignores an agent's `output:` schema and gives it no `yield` tool unless the agent sets that, so without it their results arrive as prose instead of the fields the fix loop reads.
+
 Never use the bundled `task` agent for an SDD seat: it lacks the seat's tools, output contract and no-subagent rule, and runs whatever `modelRoles.task` names (else the session model). If `task.enableEffort` is on, `effort: "hi"` on a dispatch raises that one subagent's thinking without changing its model — the only accepted values are `"lo"`, `"med"`, `"hi"`. `"hi"` maps to the model's top supported level, capped by `task.maxEffort`.
 
 ### Tool boundary
 
-An agent's `tools:` list limits built-in tools only. Extension tools and MCP tools (mounted as `xd://` devices and run through a device-only `write` that refuses file paths) still attach to every subagent; memory tools attach only when the agent's `tools:` list names them. On omp 18.4.10 a read/grep/glob reviewer ran a shell command through an MCP device. Read-only seats are read-only by instruction, not by sandbox.
+An agent's `tools:` list limits built-in tools only. Extension tools and MCP tools still attach to every subagent: from omp 19.1.0 as ordinary tools, or as commands run through `bash` in a seat that has it; before 19.1.0 as `xd://` devices run through a device-only `write` that refuses file paths. Memory tools attach only when the agent's `tools:` list names them. On omp 18.4.10 a read/grep/glob reviewer ran a shell command through an MCP device. Read-only seats are read-only by instruction, not by sandbox.
 
 ### Checks
 

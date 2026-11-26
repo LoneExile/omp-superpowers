@@ -307,7 +307,7 @@ explicitly; an omitted model inherits the session's, which may not be the
 most capable. This is the one fresh context the whole run buys. Do not
 skip it, and do not replace it with your own read of the diff.
 
-**On omp:** the `task` tool has no `model:` field — the agent type
+**On omp:** the `task` tool has no `model:` field by default — the agent type
 carries the model — so choosing the reviewer's model means choosing its
 agent. Dispatch `sdd-final-reviewer`, the whole-branch reviewer this
 plugin ships, not the bundled `reviewer` or `task` agent. Give it the

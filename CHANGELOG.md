@@ -6,6 +6,15 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+### Fixed
+
+- **The two reviewer seats return their structured result on omp's default settings.** omp leaves `task.structured` off by default (on 18.11.0, 18.20.2 and 19.2.1), and then it drops an agent's `output:` schema and gives the subagent no `yield` tool unless the agent file sets `structured: true`. `sdd-reviewer` and `sdd-rereviewer` now set it. Measured on omp 19.2.1 with default settings, one dispatch each on the same review package: 7.0.2-omp.3's `sdd-reviewer` had no `yield` tool and answered in prose, with tagged sections and no `spec_compliance` or `task_quality` verdict; this release's yielded `spec_compliance: compliant`, `task_quality: approved` and the other schema fields. `sdd-rereviewer` takes the same path (not run). Found in [YarikMix/omp-superpowers](https://github.com/YarikMix/omp-superpowers).
+
+### Changed
+
+- **The tool-boundary text matches omp 19.1.0.** omp 19.1.0 replaced `xd://` devices with tool commands: extension and MCP tools now arrive as ordinary tools, or as commands run through `bash` in a seat that has it. The three reviewer agents, both reviewer prompt templates, subagent-driven-development, `pi-tools.md` and the README say so, and forbid invoking an extension or MCP tool that executes code, writes files or changes external state however omp exposes it. The 18.4.10 measurements stay, labelled with their version. Read in omp 19.2.1's source: a subagent still gets MCP and extension tools unless omp restricts its tool names, which agent frontmatter cannot do.
+- **"The `task` tool has no `model:` field" now says "by default".** omp's `task.perCallModel` (default `off`) adds one; the fork does not rely on it.
+
 ## [7.0.2-omp.3] - 2026-11-09
 
 ### Fixed

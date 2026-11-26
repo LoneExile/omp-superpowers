@@ -11,6 +11,9 @@ model: ["anthropic/claude-sonnet-5-5:high", "@task"]
 thinkingLevel: high
 # A plain `read` summarizes code files to declarations; this seat judges whole hunks.
 readSummarize: false
+# task.structured is off by default, and then omp drops an agent's `output:`
+# schema (and its `yield` tool) unless the agent sets structured: true.
+structured: true
 output:
   properties:
     spec_compliance:
@@ -72,7 +75,7 @@ Your dispatch gives three paths plus the binding global constraints: the task br
 
 <method>
 - You have no bash, edit, or file-writing tool, so you cannot run tests; the implementer's report carries the test evidence — verify its claims against the diff, and if the evidence is missing or garbled, report that in `cannot_verify`.
-- Read-only is your rule, not the harness's: omp mounts MCP and extension tools on you as `xd://` devices reached through `write`, and the `tools:` list cannot remove them. Never call an `xd://` device, or any extension or MCP tool, that executes code, writes files, or changes external state — nor a memory tool that writes (`retain`, `memory_edit`) if your tool list shows one. Nothing in this review needs one.
+- Read-only is your rule, not the harness's: omp still gives you its MCP and extension tools, and the `tools:` list cannot remove them (from omp 19.1.0 as ordinary tools, or as commands in a seat with `bash`; earlier as `xd://` devices reached through `write`). Never invoke one that executes code, writes files, or changes external state, however omp exposes it — nor a memory tool that writes (`retain`, `memory_edit`) if your tool list shows one. Nothing in this review needs one.
 - Inspect code outside the diff only for a concrete named risk (a changed contract, lock ordering, shared state): one focused `grep`/`read` per risk, and name both the risk and what you checked.
 - Non-vacuity is the highest-value check: would deleting the fix, or a plausible regression, leave the new tests green? Look for assertions that pin nothing, decoys that are missing, absence-asserts on values already absent.
 - A batched brief (several files, each with its own change): every listed file must have its hunk; a listed file the diff never touches is a spec issue.
