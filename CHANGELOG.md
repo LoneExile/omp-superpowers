@@ -6,6 +6,8 @@ A version is `<upstream version>-omp.<n>`: the upstream release this fork is syn
 
 ## [Unreleased]
 
+## [7.0.2-omp.4] - 2026-11-26
+
 ### Fixed
 
 - **The two reviewer seats return their structured result on omp's default settings.** omp leaves `task.structured` off by default (on 18.11.0, 18.20.2 and 19.2.1), and then it drops an agent's `output:` schema and gives the subagent no `yield` tool unless the agent file sets `structured: true`. `sdd-reviewer` and `sdd-rereviewer` now set it. Measured on omp 19.2.1 with default settings, one dispatch each on the same review package: 7.0.2-omp.3's `sdd-reviewer` had no `yield` tool and answered in prose, with tagged sections and no `spec_compliance` or `task_quality` verdict; this release's yielded `spec_compliance: compliant`, `task_quality: approved` and the other schema fields. `sdd-rereviewer` takes the same path (not run). Found in [YarikMix/omp-superpowers](https://github.com/YarikMix/omp-superpowers).
@@ -216,7 +218,8 @@ First release, synced to upstream [v6.4.2](https://github.com/obra/superpowers/b
 - The fork's rewritten subagent-driven-development text invokes its helper scripts through `bash` as well, so a package extractor that drops exec bits cannot break them.
 - `sdd-final-reviewer` carries upstream's new review rules from `code-reviewer.md`, the template it replaces in SDD's final review: the spec is a vision document (behavior it is silent on is graded by what a reasonable person expects), and a "Declined to judge" section that the controller rules on and ledgers like a plan conflict.
 
-[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.2-omp.3...HEAD
+[Unreleased]: https://github.com/LoneExile/omp-superpowers/compare/v7.0.2-omp.4...HEAD
+[7.0.2-omp.4]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.2-omp.4
 [7.0.2-omp.3]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.2-omp.3
 [7.0.2-omp.2]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.2-omp.2
 [7.0.2-omp.1]: https://github.com/LoneExile/omp-superpowers/releases/tag/v7.0.2-omp.1
